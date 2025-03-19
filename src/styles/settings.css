@@ -1,0 +1,33 @@
+.settings {
+    padding: 20px;
+  }
+  
+  .settings h2 {
+    margin-bottom: 20px;
+  }
+  
+  .settings-option {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  
+  .settings-option input,
+  .settings-option button {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  
+  .settings-option button {
+    background-color: #4f46e5;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  
+  .settings-option button:hover {
+    background-color: #4338ca;
+  }
+  
