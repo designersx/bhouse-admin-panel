@@ -61,3 +61,23 @@ export const getUserProfile = async () => {
     const res = await axios.put(`${url}/auth/editUser/${user.user.id}` , data);
     return res.data;
   };
+
+  export const getRoles = async () => {
+    try {
+      const response = await axios.get(`${url}/roles`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      return [];
+    }
+  };
+  
+  export const createRole = async (roleData) => {
+    try {
+      const response = await axios.post(`${url}/roles`, roleData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating role:', error);
+      throw error;
+    }
+  };

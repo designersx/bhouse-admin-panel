@@ -41,6 +41,9 @@ const Sidebar = () => {
         <li className={location.pathname === '/profile' ? 'active' : ''}>
           <Link to="/profile"><FiUser /> Profile</Link>
         </li>
+        <li className={location.pathname === '/roles' ? 'active' : ''}>
+          <Link to="/roles"><FiUser /> Roles</Link>
+        </li>
         <li className={location.pathname === '/settings' ? 'active' : ''}>
           <Link to="/settings"><FiSettings /> Settings</Link>
         </li>
