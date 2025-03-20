@@ -8,7 +8,18 @@ export const registerUser = async (userData) => {
     throw error.response.data;
   }
 };
-
+export const getAllUsers = async () => {
+  try {
+    const response = await fetch(`${url}/auth/getAllUsers`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
 export const login = async(email , pass)=>{
     try {
         let res = await axios.post(`${url}/auth/login` , {
@@ -22,7 +33,17 @@ export const login = async(email , pass)=>{
     }
 
 }
+export const deleteUser = async (id) => {
+  const response = await fetch(`http://localhost:5000/api/auth/deleteUser/${id}`, {
+    method: "DELETE",
+  });
 
+  if (!response.ok) {
+    throw new Error("Failed to delete user");
+  }
+
+  return response.json();
+};
 export const getUserProfile = async () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const res = await axios.get(`${url}/auth/profile`, {
