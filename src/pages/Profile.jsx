@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaPen } from 'react-icons/fa';
+import { FaPen, FaUserCircle } from 'react-icons/fa';
 import Layout from '../components/Layout';
 import '../styles/profile.css';
 import { getUserProfile, updateUserProfile } from '../lib/api';
@@ -116,21 +116,28 @@ const Profile = () => {
           </form>
         </div>
 
-        {/* Right Side: Profile Card */}
-        <div className="profile-card">
-          <div className="profile-pic-container">
-            <div className="profile-initial">
-              {formData.firstName.charAt(0).toUpperCase()}
-            </div>
-            <button className="edit-btn">
-              <FaPen size={14} />
-            </button>
-          </div>
-          <h3>
-            {formData.firstName} {formData.lastName}
-          </h3>
-          <p className="email-text">@{formData.email.split('@')[0]}</p>
-        </div>
+      {/* Right Side: Profile Card */}
+<div className="profile-card">
+  <div className="profile-pic-container">
+    {formData.profileImage ? (
+      <img src={formData.profileImage} alt="Profile" className="profile-pic" />
+    ) : (
+      <img
+        src={`${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+        alt="Default Profile"
+        className="profile-pic default-pic"
+      />
+    )}
+    <button className="edit-btn">
+      <FaPen size={14} />
+    </button>
+  </div>
+  <h3 className="profile-name">
+    {formData.firstName || "User"} {formData.lastName || ""}
+  </h3>
+  <p className="email-text">{formData.email || "No Email Provided"}</p>
+</div>
+
       </div>
     </Layout>
   );

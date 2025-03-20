@@ -45,6 +45,7 @@
     background-color: #4f46e5;
     color: #fff;
     padding: 12px;
+    margin-top: 24px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -58,40 +59,78 @@
   /* Profile Card */
   .profile-card {
     background-color: #fff;
-    padding: 24px;
+    padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
+    width: 280px;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
-  
+
+  /* Profile Picture Container */
   .profile-pic-container {
     position: relative;
-    display: inline-block;
-  }
-  
-  .profile-pic {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    object-fit: cover;
+    background: #f0f0f0;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid #4f46e5;
   }
-  
+
+  /* Profile Picture */
+  .profile-pic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  /* Default Profile Image */
+  .default-pic {
+    opacity: 0.6;
+  }
+
+  /* Edit Button */
   .edit-btn {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 10px;
+    right: 16px;
     background-color: #4f46e5;
-    color: #fff;
+    color: white;
     padding: 6px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    z-index: 1;
+    transition: background 0.3s ease-in-out;
   }
-  
+
   .edit-btn:hover {
     background-color: #4338ca;
   }
+
+  /* Profile Name */
+  .profile-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  /* Email Text */
+  .email-text {
+    font-size: 14px;
+    color: #666;
+  }
+
   
   .social-links i {
     font-size: 24px;
