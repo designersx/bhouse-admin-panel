@@ -3,7 +3,8 @@ import Layout from "../components/Layout";
 import Modal from "../components/Modal/Model";
 import { registerUser, getAllUsers , deleteUser } from "../lib/api"; // Fetch users API add kiya
 import "../styles/users.css";
-
+import { MdDelete} from "react-icons/md";
+import { GrAdd } from "react-icons/gr";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -73,7 +74,7 @@ const Users = () => {
     <Layout>
       <h2>Users</h2>
       <button onClick={() => setModalOpen(true)} className="add-user-btn">
-        ➕ Add User
+      <GrAdd /> Add User
       </button>
 
       <table>
@@ -102,7 +103,7 @@ const Users = () => {
                   : "Self / N/A"}
               </td>
               <td>
-                <button onClick={() => handleDeleteUser(user.id)}>🗑️ Delete</button>
+                <button className="deleteBtn" onClick={() => handleDeleteUser(user.id)}><MdDelete /></button>
               </td>
             </tr>
           ))}

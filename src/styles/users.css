@@ -49,4 +49,12 @@
   button:hover {
     background-color: #dc2626;
   }
+  .deleteBtn{
+    background-color: #f9f9f9;
+    color:#dc2626;
+  }
+  .deleteBtn:hover{
+    background-color: #dc2626;
+    color:#f9f9f9;
+  }
   

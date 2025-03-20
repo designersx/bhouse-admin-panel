@@ -4,63 +4,102 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  
-  .modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    width: 450px;
-    text-align: center;
+    z-index: 1000;
     animation: fadeIn 0.3s ease-in-out;
-  }
-  
-  .modal-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 15px;
-  }
-  
-  .close-btn {
-    margin-top: 10px;
-    background: red;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .submit-btn {
-    margin-top: 15px;
-    background: blue;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .form-container input, .form-container select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .form-container select {
+}
+
+.modal-content {
     background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    width: 480px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.9);
+    animation: scaleUp 0.3s ease-in-out forwards;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 18px;
     cursor: pointer;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  
+    color: #666;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: rgb(248, 241, 241);
+}
+
+.submit-btn {
+    background: #4f46e5;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+.submit-btn:hover {
+    background: linear-gradient(135deg, #0B60B0, #4A90E2);
+    transform: translateY(-2px);
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.form-container input,
+.form-container select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.form-container input{
+    width: 94%;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+    border-color: #4A90E2;
+}
+
+.form-container select {
+    background: #fff;
+    cursor: pointer;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.9); }
+    to { transform: scale(1); }
+}
