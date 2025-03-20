@@ -40,6 +40,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
+      console.log(err,'090880909999999')
       setError('❌ Invalid email or password.');
       console.error("Login Error:", err);
     }
@@ -68,6 +69,7 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
+          maxLength={10} 
           required
         />
 

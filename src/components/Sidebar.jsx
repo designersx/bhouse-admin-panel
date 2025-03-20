@@ -4,13 +4,28 @@ import '../styles/components.css';
 import Logout from './Logout/Logout';
 import { CiLogout } from "react-icons/ci";
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 const Sidebar = () => {
       const navigate = useNavigate()
   const location = useLocation();
-  const handleLogout = ()=>{
-    localStorage.clear()
-    navigate('/')
-  }
+
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Logout!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.clear();
+        navigate('/');
+      }
+    });
+  };
+
   let user = JSON.parse(localStorage.getItem('user'))
   console.log({user})
   return (
