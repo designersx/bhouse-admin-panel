@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import Modal from "../components/Modal/Model";
-import { registerUser, getAllUsers , deleteUser } from "../lib/api"; // Fetch users API add kiya
+import { registerUser, getAllUsers, deleteUser } from "../lib/api"; // Fetch users API add kiya
 import "../styles/users.css";
-import { MdDelete} from "react-icons/md";
+import { MdDelete } from "react-icons/md";
 import { GrAdd } from "react-icons/gr";
+import "../styles/Roles.css";
+import { FaEdit, FaTrash } from "react-icons/fa";
+
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -16,12 +19,14 @@ const Users = () => {
     password: "",
     mobileNumber: "",
     userRole: "",
-    createdBy : createdBYId.user.id
+    createdBy: createdBYId.user.id
   });
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [isModalOpen]);
+
   const handleDeleteUser = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
@@ -37,22 +42,23 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       const data = await getAllUsers();
-  
+
       // LocalStorage se logged-in user ka data lo
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-  
+
       if (!loggedInUser) {
         console.error("No logged-in user found");
         return;
       }
-  
-     
+
+
       if (loggedInUser?.user.userRole === "superadmin") {
         setUsers(data);
       } else {
-      
-        const filteredUsers = data.filter(user => user.createdBy === loggedInUser.id);
-        setUsers(filteredUsers);
+        if (loggedInUser) {
+          const filteredUsers = data.filter(user => user.createdBy === loggedInUser.id);
+          setUsers(filteredUsers);
+        }
       }
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -64,6 +70,15 @@ const Users = () => {
       const res = await registerUser(newUser);
       setUsers([...users, res.user]);
       setModalOpen(false);
+      setNewUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        mobileNumber: "",
+        userRole: "",
+        createdBy: createdBYId.user.id
+      })
       alert("User Registered Successfully");
     } catch (error) {
       alert(error.message || "Error registering user");
@@ -72,43 +87,55 @@ const Users = () => {
 
   return (
     <Layout>
-      <h2>Users</h2>
-      <button onClick={() => setModalOpen(true)} className="add-user-btn">
-      <GrAdd /> Add User
-      </button>
-
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Created By</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>
-                {user.firstName} {user.lastName}
-              </td>
-              <td>{user.email}</td>
-              <td>{user.userRole || "N/A"}</td>
-              <td>
-                {user.creator
-                  ? `${user.creator.firstName} (${user.creator.email})`
-                  : "Self / N/A"}
-              </td>
-              <td>
-                <button className="deleteBtn" onClick={() => handleDeleteUser(user.id)}><MdDelete /></button>
-              </td>
+      <div className="roles-container">
+        <h2>Users</h2>
+        <div className="roles-header">
+          <button onClick={() => setModalOpen(true)} className="add-user-btn">
+            <GrAdd /> Add User
+          </button>
+          <input
+            type="text"
+            placeholder="Search user..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+        </div>
+        <table className="roles-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created By</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>
+                  {user.firstName} {user.lastName}
+                </td>
+                <td>{user.email}</td>
+                <td>{user.userRole || "N/A"}</td>
+                <td>
+                  {user.creator
+                    ? `${user.creator.firstName} (${user.creator.email})`
+                    : "Self / N/A"}
+                </td>
+                <td className="actions">
+                  <FaEdit className="edit-icon" title="Edit" />
+                  <FaTrash className="delete-icon" title="Delete" onClick={() => handleDeleteUser(user.id)} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Modal for Adding User */}
       <Modal

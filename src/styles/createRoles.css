@@ -58,17 +58,18 @@
   .submit-btn,
   .cancel-btn {
     padding: 10px 20px;
-    margin: 0 10px;
+    margin: 0 1px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-family: 'Montserrat', sans-serif;
   }
   
-  .submit-btn {
+  
+  /* .submit-btn {
     background-color: #4caf50;
     color: white;
-  }
+  } */
   
   .cancel-btn {
     background-color: #f44336;
