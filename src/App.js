@@ -5,17 +5,18 @@ import Settings from './pages/Settings';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
-
+import ProtectedRoute from './components/ProtectedRoute';
 const App = () => {
   return (
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/profile" element={<Profile />} />
+        <Route path="/" element={<Login />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
+        
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
