@@ -8,13 +8,13 @@
   
   .add-user-btn {
     background-color: #4f46e5;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
+    color: #fff;
     border: none;
-    margin-bottom: 20px;
+    padding: 10px 15px;
     cursor: pointer;
-    transition: background 0.2s ease;
+    border-radius: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
   }
   
   .add-user-btn:hover {
