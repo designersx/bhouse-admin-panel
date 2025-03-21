@@ -22,7 +22,7 @@ const useSessionTimeout = (token) => {
         text: "Your session has expired. Please log in again.",
         confirmButtonText: "OK",
       }).then(() => {
-        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/"); // Redirect to login
       });
     };
