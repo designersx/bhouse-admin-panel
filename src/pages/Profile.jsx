@@ -120,11 +120,11 @@ const Profile = () => {
 <div className="profile-card">
   <div className="profile-pic-container">
     {formData.profileImage ? (
-      <img src={formData.profileImage} alt="Profile" className="profile-pic" />
+      <img src={formData.profileImage} alt="profile" className="profile-pic" />
     ) : (
       <img
         src={`${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
-        alt="Default Profile"
+        alt="profile"
         className="profile-pic default-pic"
       />
     )}

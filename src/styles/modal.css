@@ -59,7 +59,7 @@
 }
 
 .submit-btn:hover {
-    background: linear-gradient(135deg, #0B60B0, #4A90E2);
+    background: linear-gradient(135deg, #0B60B0, #0B60B0);
     transform: translateY(-2px);
 }
 

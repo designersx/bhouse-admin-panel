@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
@@ -8,12 +8,21 @@ import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Roles from './pages/Roles';
 import CreateRole from './pages/CreateRole';
+
 import EditRole from './pages/EditRole';
 
+
+import useSessionTimeOut from './customHook/useSessionTimeOut';
+
 const App = () => {
+  const userData = JSON.parse(localStorage.getItem("user"));
+const token = userData?.token;
+
+console.log(token, "JWT Token");
+
+  useSessionTimeOut(token);
   return (
     <ThemeProvider>
-      <BrowserRouter>
         <Routes>
         <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
@@ -29,7 +38,6 @@ const App = () => {
 
           
         </Routes>
-      </BrowserRouter>
     </ThemeProvider>
   );
 };
