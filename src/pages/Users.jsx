@@ -18,7 +18,7 @@ const Users = () => {
     password: "",
     mobileNumber: "",
     userRole: "",
-    createdBy: createdBYId.user.id
+    createdBy: createdBYId?.user.id
   });
   const [search, setSearch] = useState("");
 
