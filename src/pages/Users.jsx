@@ -22,13 +22,14 @@ const Users = () => {
     createdBy: createdBYId?.user.id
   });
   const [search, setSearch] = useState("");
+  const [errors, setErrors] = useState({});
 
 
   useEffect(() => {
     fetchUsers();
   }, [isModalOpen]);
 
-  useEffect(()=> {
+  useEffect(() => {
     setNewUser({
       firstName: "",
       lastName: "",
@@ -38,7 +39,8 @@ const Users = () => {
       userRole: "",
       // createdBy: createdBYId?.user.id
     })
-  },[isModalOpen])
+    setErrors({})
+  }, [isModalOpen])
 
   const handleDeleteUser = async (id) => {
     const confirmResult = await Swal.fire({
@@ -50,12 +52,12 @@ const Users = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
     });
-  
+
     if (confirmResult.isConfirmed) {
       try {
         await deleteUser(id);
         setUsers(users.filter(user => user.id !== id));
-  
+
         Swal.fire({
           icon: "success",
           title: "Deleted!",
@@ -73,7 +75,7 @@ const Users = () => {
       }
     }
   };
-  
+
   const fetchUsers = async () => {
     try {
       const data = await getAllUsers();
@@ -100,6 +102,39 @@ const Users = () => {
     }
   };
 
+  const validateField = (field, value) => {
+    let error = "";
+
+    switch (field) {
+      case "firstName":
+      case "lastName":
+        if (!/^[A-Za-z\s]+$/.test(value)) {
+          error = "Only letters are allowed.";
+        }
+        break;
+        case "email":
+          if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+            error = "Please enter a valid email address.";
+          }
+          break;
+      case "password":
+        if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(value)) {
+          error = "Min 6 characters with 1 number.";
+        }
+        break;
+      case "mobileNumber":
+        if (!/^[0-9]{10}$/.test(value)) {
+          error = "Enter 10 digit number.";
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prev) => ({ ...prev, [field]: error }));
+  };
+
+
   const addUser = async () => {
     try {
       const res = await registerUser(newUser);
@@ -113,12 +148,19 @@ const Users = () => {
         mobileNumber: "",
         userRole: "",
         createdBy: createdBYId.user.id
-      })
-      alert("User Registered Successfully");
+      });
+      Swal.fire({
+        icon: "success",
+        title: "Registered!",
+        text: "User Registered Successfully",
+        timer: 1000,
+        showConfirmButton: false
+      });
     } catch (error) {
       alert(error.message || "Error registering user");
     }
   };
+
 
   return (
     <Layout>
@@ -195,47 +237,65 @@ const Users = () => {
             type="text"
             placeholder="First Name"
             value={newUser.firstName}
-            onChange={(e) =>
-              setNewUser({ ...newUser, firstName: e.target.value })
-            }
+            onChange={(e) => {
+              setNewUser({ ...newUser, firstName: e.target.value });
+              validateField("firstName", e.target.value);
+            }}
             required
           />
+          {errors.firstName && <small className="error-text">{errors.firstName}</small>}
+
           <input
             type="text"
             placeholder="Last Name"
             value={newUser.lastName}
-            onChange={(e) =>
+            onChange={(e) => {
               setNewUser({ ...newUser, lastName: e.target.value })
-            }
+              validateField("lastName", e.target.value);
+            }}
             required
           />
+          {errors.lastName && <small className="error-text">{errors.firstName}</small>}
+
           <input
             type="email"
             placeholder="Email"
             value={newUser.email}
-            onChange={(e) =>
+            onChange={(e) => {
               setNewUser({ ...newUser, email: e.target.value })
-            }
+              validateField("email", e.target.value);
+            }}
             required
           />
+          {errors.email && <small className="error-text">{errors.firstName}</small>}
+
           <input
             type="password"
             placeholder="Password"
             value={newUser.password}
-            onChange={(e) =>
+            onChange={(e) => {
               setNewUser({ ...newUser, password: e.target.value })
-            }
+              validateField("password", e.target.value);
+            }}
+            maxLength={6}
             required
           />
+          {errors.password && <small className="error-text">{errors.firstName}</small>}
+
           <input
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Mobile Number"
             value={newUser.mobileNumber}
-            onChange={(e) =>
-              setNewUser({ ...newUser, mobileNumber: e.target.value })
-            }
+            onChange={(e) => {
+              const onlyNums = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setNewUser({ ...newUser, mobileNumber: onlyNums });
+              validateField("mobileNumber", onlyNums);
+            }}
             required
           />
+          {errors.mobileNumber && <small className="error-text">{errors.mobileNumber}</small>}
 
           {/* Role Dropdown */}
           <select

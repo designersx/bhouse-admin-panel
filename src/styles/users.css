@@ -57,4 +57,11 @@
     background-color: #dc2626;
     color:#f9f9f9;
   }
+  .error-text {
+    color: red;
+    font-size: 12px;
+    margin-top: 2px;
+    text-align: left;
+  }
+  
   
