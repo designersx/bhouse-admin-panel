@@ -51,7 +51,7 @@
   
   .button-group {
     display: flex;
-    justify-content: center;
+    justify-content: end;
     margin-top: 20px;
   }
   
@@ -74,5 +74,22 @@
   .cancel-btn {
     background-color: #f44336;
     color: white;
+  }
+  .create-role-container {
+    max-width: 100%;
+    margin: auto;
+  }
+  
+  .submit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .submit-btn:hover {
+    background-color: #0056b3;
   }
   

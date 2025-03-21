@@ -22,16 +22,33 @@ const CreateRole = () => {
     "Customer Dashboard",
   ];
 
-  const actions = ["Create", "Read", "Update", "Delete", "View"];
+  const actions = ["Create", "Delete", "View", "Edit", "Full Access"];
 
   const handleCheckboxChange = (module, action) => {
-    setPermissions((prev) => ({
-      ...prev,
-      [module]: {
-        ...prev[module],
-        [action]: !prev[module]?.[action] || false,
-      },
-    }));
+    setPermissions((prev) => {
+      let newPermissions = {
+        ...prev,
+        [module]: {
+          ...prev[module],
+          [action]: !prev[module]?.[action] || false,
+        },
+      };
+
+      // Auto-check View when Edit is selected
+      if (action === "Edit" && newPermissions[module][action]) {
+        newPermissions[module]["View"] = true;
+      }
+
+      // Check all when Full Access is selected
+      if (action === "Full Access") {
+        const isFullAccess = newPermissions[module][action];
+        actions.forEach((act) => {
+          newPermissions[module][act] = isFullAccess;
+        });
+      }
+
+      return newPermissions;
+    });
   };
 
   const handleSubmit = async () => {
@@ -53,20 +70,12 @@ const CreateRole = () => {
 
         <div className="input-group">
           <label>Role Title:</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
         <div className="input-group">
           <label>Description:</label>
-          <input
-            type="text"
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-          />
+          <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} />
         </div>
 
         <table className="permissions-table">
@@ -99,9 +108,6 @@ const CreateRole = () => {
         <div className="button-group">
           <button className="submit-btn" onClick={handleSubmit}>
             Save Role
-          </button>
-          <button className="cancel-btn" onClick={() => navigate("/roles")}>
-            Cancel
           </button>
         </div>
       </div>
