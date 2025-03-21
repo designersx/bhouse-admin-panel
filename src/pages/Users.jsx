@@ -93,7 +93,7 @@ const Users = () => {
         setUsers(data);
       } else {
         if (loggedInUser) {
-          const filteredUsers = data.filter(user => user.createdBy === loggedInUser.id);
+          const filteredUsers = data.filter(user => user.createdBy === loggedInUser?.user.id);
           setUsers(filteredUsers);
         }
       }

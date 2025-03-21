@@ -81,3 +81,13 @@ export const getUserProfile = async () => {
       throw error;
     }
   };
+  export const getRoleById = async (id) => {
+    return await axios.get(`${url}/roles/${id}`).then((res) => res.data);
+  };
+  export const updateRole = async (id, roleData) => {
+    return await axios.put(`${url}/roles/${id}`, roleData);
+  };
+  
+  export const deleteRole = async (id) => {
+    return await axios.delete(`${url}/roles/${id}`);
+  };

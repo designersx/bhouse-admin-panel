@@ -8,7 +8,12 @@ import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Roles from './pages/Roles';
 import CreateRole from './pages/CreateRole';
+
+import EditRole from './pages/EditRole';
+
+
 import useSessionTimeOut from './customHook/useSessionTimeOut';
+
 const App = () => {
   const userData = JSON.parse(localStorage.getItem("user"));
 const token = userData?.token;
@@ -27,6 +32,9 @@ console.log(token, "JWT Token");
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
           <Route path="/create-role" element={<ProtectedRoute><CreateRole /></ProtectedRoute>} />
+          <Route path="/edit-role/:id" element={<ProtectedRoute><EditRole /></ProtectedRoute>} />
+
+
 
           
         </Routes>
