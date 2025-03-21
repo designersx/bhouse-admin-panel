@@ -6,6 +6,7 @@ import "../styles/users.css";
 import { GrAdd } from "react-icons/gr";
 import "../styles/Roles.css";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -27,18 +28,52 @@ const Users = () => {
     fetchUsers();
   }, [isModalOpen]);
 
+  useEffect(()=> {
+    setNewUser({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      mobileNumber: "",
+      userRole: "",
+      // createdBy: createdBYId?.user.id
+    })
+  },[isModalOpen])
+
   const handleDeleteUser = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to delete this user?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+  
+    if (confirmResult.isConfirmed) {
       try {
         await deleteUser(id);
-        setUsers(users.filter(user => user.id !== id)); // Remove user from state
-        alert("User deleted successfully");
+        setUsers(users.filter(user => user.id !== id));
+  
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "User has been deleted successfully.",
+          timer: 2000,
+          showConfirmButton: false
+        });
       } catch (error) {
         console.error("Error deleting user:", error);
-        alert("Error deleting user");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong while deleting the user.",
+        });
       }
     }
   };
+  
   const fetchUsers = async () => {
     try {
       const data = await getAllUsers();
@@ -66,13 +101,6 @@ const Users = () => {
   };
 
   const addUser = async () => {
-    const { firstName, lastName, email, password, mobileNumber, userRole } = newUser;
-
-    // Basic form validation
-    if (!firstName || !lastName || !email || !password || !mobileNumber || !userRole) {
-      alert("Please fill in all fields before submitting.");
-      return;
-    }
     try {
       const res = await registerUser(newUser);
       setUsers([...users, res.user]);
@@ -155,7 +183,14 @@ const Users = () => {
         onClose={() => setModalOpen(false)}
         title="Register New User"
       >
-        <div className="form-container">
+        <form
+          className="form-container"
+          onSubmit={(e) => {
+            e.preventDefault(); // prevent page reload
+            addUser(); // trigger user registration
+          }}
+        >
+
           <input
             type="text"
             placeholder="First Name"
@@ -216,10 +251,10 @@ const Users = () => {
             <option value="sr_designer">Senior Designer</option>
           </select>
 
-          <button onClick={addUser} className="submit-btn">
+          <button type="submit" className="submit-btn">
             Register
           </button>
-        </div>
+        </form>
       </Modal>
     </Layout>
   );
