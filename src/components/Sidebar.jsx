@@ -1,7 +1,6 @@
 import { FiHome, FiUsers, FiSettings, FiUser } from 'react-icons/fi';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/components.css';
-import Logout from './Logout/Logout';
 import { CiLogout } from "react-icons/ci";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';

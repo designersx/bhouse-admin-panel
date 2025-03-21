@@ -3,7 +3,6 @@ import Layout from "../components/Layout";
 import Modal from "../components/Modal/Model";
 import { registerUser, getAllUsers, deleteUser } from "../lib/api"; // Fetch users API add kiya
 import "../styles/users.css";
-import { MdDelete } from "react-icons/md";
 import { GrAdd } from "react-icons/gr";
 import "../styles/Roles.css";
 import { FaEdit, FaTrash } from "react-icons/fa";
@@ -22,6 +21,7 @@ const Users = () => {
     createdBy: createdBYId.user.id
   });
   const [search, setSearch] = useState("");
+
 
   useEffect(() => {
     fetchUsers();
@@ -66,6 +66,13 @@ const Users = () => {
   };
 
   const addUser = async () => {
+    const { firstName, lastName, email, password, mobileNumber, userRole } = newUser;
+
+    // Basic form validation
+    if (!firstName || !lastName || !email || !password || !mobileNumber || !userRole) {
+      alert("Please fill in all fields before submitting.");
+      return;
+    }
     try {
       const res = await registerUser(newUser);
       setUsers([...users, res.user]);
@@ -113,26 +120,31 @@ const Users = () => {
             </tr>
           </thead>
           <tbody>
-
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>
-                  {user.firstName} {user.lastName}
-                </td>
-                <td>{user.email}</td>
-                <td>{user.userRole || "N/A"}</td>
-                <td>
-                  {user.creator
-                    ? `${user.creator.firstName} (${user.creator.email})`
-                    : "Self / N/A"}
-                </td>
-                <td className="actions">
-                  <FaEdit className="edit-icon" title="Edit" />
-                  <FaTrash className="delete-icon" title="Delete" onClick={() => handleDeleteUser(user.id)} />
-                </td>
-              </tr>
-            ))}
+            {users
+              .filter((user) =>
+                `${user.firstName} ${user.lastName} ${user.email} ${user.userRole}`
+                  .toLowerCase()
+                  .includes(search.toLowerCase())
+              )
+              .map((user) => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>
+                    {user.firstName} {user.lastName}
+                  </td>
+                  <td>{user.email}</td>
+                  <td>{user.userRole || "N/A"}</td>
+                  <td>
+                    {user.creator
+                      ? `${user.creator.firstName} (${user.creator.email})`
+                      : "Self / N/A"}
+                  </td>
+                  <td className="actions">
+                    <FaEdit className="edit-icon" title="Edit" />
+                    <FaTrash className="delete-icon" title="Delete" onClick={() => handleDeleteUser(user.id)} />
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -151,6 +163,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, firstName: e.target.value })
             }
+            required
           />
           <input
             type="text"
@@ -159,6 +172,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, lastName: e.target.value })
             }
+            required
           />
           <input
             type="email"
@@ -167,6 +181,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, email: e.target.value })
             }
+            required
           />
           <input
             type="password"
@@ -175,6 +190,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, password: e.target.value })
             }
+            required
           />
           <input
             type="text"
@@ -183,6 +199,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, mobileNumber: e.target.value })
             }
+            required
           />
 
           {/* Role Dropdown */}
@@ -191,6 +208,7 @@ const Users = () => {
             onChange={(e) =>
               setNewUser({ ...newUser, userRole: e.target.value })
             }
+            required
           >
             <option value="">Select Role</option>
             <option value="superadmin">Super Admin</option>

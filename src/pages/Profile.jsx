@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaPen, FaUserCircle } from 'react-icons/fa';
+import { FaPen } from 'react-icons/fa';
 import Layout from '../components/Layout';
 import '../styles/profile.css';
 import { getUserProfile, updateUserProfile } from '../lib/api';
