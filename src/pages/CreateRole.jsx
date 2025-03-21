@@ -1,24 +1,28 @@
-import React, { useState } from 'react';
-import Layout from '../components/Layout';
-import { useNavigate } from 'react-router-dom';
-import { createRole } from '../lib/api';
-import '../styles/createRoles.css';
+import React, { useState } from "react";
+import Layout from "../components/Layout";
+import { useNavigate } from "react-router-dom";
+import { createRole } from "../lib/api";
+import "../styles/createRoles.css";
 
 const CreateRole = () => {
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
   const [permissions, setPermissions] = useState({});
   const navigate = useNavigate();
 
   const modules = [
-    'Project Management',
-    'User Management',
-    'Reports',
-    'Settings',
-    'Billing',
+    "User Management",
+    "Project Management",
+    "Notification Management",
+    "Invoicing and Payment",
+    "Installation & Delivery Scheduling",
+    "Document Management",
+    "Reports & Analytics",
+    "Reviews/Feedback & Comments",
+    "Customer Dashboard",
   ];
 
-  const actions = ['Module', 'Create', 'Read', 'Update', 'Delete'];
+  const actions = ["Create", "Read", "Update", "Delete", "View"];
 
   const handleCheckboxChange = (module, action) => {
     setPermissions((prev) => ({
@@ -35,10 +39,10 @@ const CreateRole = () => {
 
     try {
       await createRole(roleData);
-      alert('Role Created Successfully!');
-      navigate('/roles');
+      alert("Role Created Successfully!");
+      navigate("/roles");
     } catch (error) {
-      alert('Error Creating Role!');
+      alert("Error Creating Role!");
     }
   };
 
@@ -69,7 +73,7 @@ const CreateRole = () => {
           <thead>
             <tr>
               <th>Module</th>
-              {actions.slice(1).map((action) => (
+              {actions.map((action) => (
                 <th key={action}>{action}</th>
               ))}
             </tr>
@@ -78,7 +82,7 @@ const CreateRole = () => {
             {modules.map((module) => (
               <tr key={module}>
                 <td>{module}</td>
-                {actions.slice(1).map((action) => (
+                {actions.map((action) => (
                   <td key={action}>
                     <input
                       type="checkbox"
@@ -96,7 +100,7 @@ const CreateRole = () => {
           <button className="submit-btn" onClick={handleSubmit}>
             Save Role
           </button>
-          <button className="cancel-btn" onClick={() => navigate('/roles')}>
+          <button className="cancel-btn" onClick={() => navigate("/roles")}>
             Cancel
           </button>
         </div>
