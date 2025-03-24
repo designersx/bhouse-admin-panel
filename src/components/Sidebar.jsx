@@ -26,7 +26,7 @@ const Sidebar = () => {
   };
 
   let user = JSON.parse(localStorage.getItem('user'))
-  console.log({user})
+  
   return (
     <div className="sidebar">
       <div className="logo">Hi, {user?.user?.firstName}</div>

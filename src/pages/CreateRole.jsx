@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { createRole } from "../lib/api";
 import "../styles/createRoles.css";
+import useRolePermissions from "../hooks/useRolePermissions";
 
 const CreateRole = () => {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [permissions, setPermissions] = useState({});
   const navigate = useNavigate();
+  const { rolePermissions, loading, error } = useRolePermissions(17);
 
   const modules = [
     "User Management",
@@ -22,28 +24,48 @@ const CreateRole = () => {
     "Customer Dashboard",
   ];
 
-  const actions = ["Create", "Delete", "View", "Edit", "Full Access"];
+  const actions = ["create", "delete", "view", "edit", "fullAccess"]; // ✅ First letter small
+
+  // ✅ API se jo data aaya, usko default permissions me set karna
+  useEffect(() => {
+    if (rolePermissions) {
+      const formattedPermissions = {};
+      modules.forEach((module) => {
+        const formattedModule = module.replace(/\s+/g, ""); // ✅ Remove spaces from keys
+        formattedPermissions[formattedModule] = {};
+
+        actions.forEach((action) => {
+          formattedPermissions[formattedModule][action] =
+            rolePermissions[module]?.[action.charAt(0).toUpperCase() + action.slice(1)] || false;
+        });
+      });
+
+      setPermissions(formattedPermissions);
+    }
+  }, [rolePermissions]);
 
   const handleCheckboxChange = (module, action) => {
+    const formattedModule = module.replace(/\s+/g, ""); // ✅ Remove spaces for backend consistency
+
     setPermissions((prev) => {
       let newPermissions = {
         ...prev,
-        [module]: {
-          ...prev[module],
-          [action]: !prev[module]?.[action] || false,
+        [formattedModule]: {
+          ...prev[formattedModule],
+          [action]: !prev[formattedModule]?.[action],
         },
       };
 
-      // Auto-check View when Edit is selected
-      if (action === "Edit" && newPermissions[module][action]) {
-        newPermissions[module]["View"] = true;
+      // ✅ Auto-check View when Edit is selected
+      if (action === "edit" && newPermissions[formattedModule][action]) {
+        newPermissions[formattedModule]["view"] = true;
       }
 
-      // Check all when Full Access is selected
-      if (action === "Full Access") {
-        const isFullAccess = newPermissions[module][action];
+      // ✅ Check all when Full Access is selected
+      if (action === "fullAccess") {
+        const isFullAccess = newPermissions[formattedModule][action];
         actions.forEach((act) => {
-          newPermissions[module][act] = isFullAccess;
+          newPermissions[formattedModule][act] = isFullAccess;
         });
       }
 
@@ -52,7 +74,20 @@ const CreateRole = () => {
   };
 
   const handleSubmit = async () => {
-    const roleData = { title, desc, permissions, createdBy: 1 };
+    // ✅ Backend me jo bhi select nahi hua usko explicitly `false` bhejna
+    const finalPermissions = {};
+    modules.forEach((module) => {
+      const formattedModule = module.replace(/\s+/g, "");
+      finalPermissions[formattedModule] = {};
+
+      actions.forEach((action) => {
+        finalPermissions[formattedModule][action] = permissions[formattedModule]?.[action] || false;
+      });
+    });
+
+    const roleData = { title, desc, permissions: finalPermissions, createdBy: 1 };
+
+    console.log("Final Role Data to Send:", roleData); // ✅ Backend me jo jayega usko check karne ke liye log
 
     try {
       await createRole(roleData);
@@ -83,25 +118,28 @@ const CreateRole = () => {
             <tr>
               <th>Module</th>
               {actions.map((action) => (
-                <th key={action}>{action}</th>
+                <th key={action}>{action.charAt(0).toUpperCase() + action.slice(1)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {modules.map((module) => (
-              <tr key={module}>
-                <td>{module}</td>
-                {actions.map((action) => (
-                  <td key={action}>
-                    <input
-                      type="checkbox"
-                      checked={permissions[module]?.[action] || false}
-                      onChange={() => handleCheckboxChange(module, action)}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {modules.map((module) => {
+              const formattedModule = module.replace(/\s+/g, ""); // ✅ Remove spaces
+              return (
+                <tr key={module}>
+                  <td>{module}</td>
+                  {actions.map((action) => (
+                    <td key={action}>
+                      <input
+                        type="checkbox"
+                        checked={permissions[formattedModule]?.[action] || false}
+                        onChange={() => handleCheckboxChange(module, action)}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

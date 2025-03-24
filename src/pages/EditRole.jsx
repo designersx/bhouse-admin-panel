@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getRoleById, updateRole } from "../lib/api"; // API functions import karo
+import { getRoleById, updateRole } from "../lib/api";
 import Layout from "../components/Layout";
 
 const modules = [
-  "Regular Entries",
-  "Type of Entries",
-  "Roles",
   "User Management",
   "Project Management",
   "Notification Management",
@@ -23,11 +20,9 @@ const actions = ["Create", "Delete", "View", "Edit", "FullAccess"];
 const EditRole = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [roleData, setRoleData] = useState({
-    title: "",
-    description: "",
-    permissions: [],
-  });
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [permissions, setPermissions] = useState({});
 
   useEffect(() => {
     fetchRoleData();
@@ -36,51 +31,50 @@ const EditRole = () => {
   const fetchRoleData = async () => {
     const response = await getRoleById(id);
     if (response.success) {
-      // Convert permission object to array format
       const parsedPermissions = JSON.parse(response.data.permissions || "{}");
-
-      const updatedPermissions = modules.map((module) => ({
-        moduleName: module,
-        actions: actions.filter((action) => parsedPermissions[module]?.[action] || false),
-      }));
-
-      setRoleData({
-        title: response.data.title,
-        description: response.data.description,
-        permissions: updatedPermissions,
-      });
+      setTitle(response.data.title);
+      setDesc(response.data.description || "");
+      setPermissions(parsedPermissions);
     }
   };
 
-  const handleCheckboxChange = (moduleName, action) => {
-    setRoleData((prev) => {
-      const updatedPermissions = prev.permissions.map((module) =>
-        module.moduleName === moduleName
-          ? {
-              ...module,
-              actions: module.actions.includes(action)
-                ? module.actions.filter((act) => act !== action)
-                : [...module.actions, action],
-            }
-          : module
-      );
+  const handleCheckboxChange = (module, action) => {
+    setPermissions((prev) => {
+      let newPermissions = {
+        ...prev,
+        [module]: {
+          ...prev[module],
+          [action]: !prev[module]?.[action] || false,
+        },
+      };
 
-      return { ...prev, permissions: updatedPermissions };
+      // Auto-check View when Edit is selected
+      if (action === "Edit" && newPermissions[module][action]) {
+        newPermissions[module]["View"] = true;
+      }
+
+      // Check all when FullAccess is selected
+      if (action === "FullAccess") {
+        const isFullAccess = newPermissions[module][action];
+        actions.forEach((act) => {
+          newPermissions[module][act] = isFullAccess;
+        });
+      }
+
+      return newPermissions;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formattedPermissions = roleData.permissions.reduce((acc, module) => {
-      acc[module.moduleName] = actions.reduce((obj, action) => {
-        obj[action] = module.actions.includes(action);
-        return obj;
-      }, {});
-      return acc;
-    }, {});
-
-    await updateRole(id, { ...roleData, permissions: JSON.stringify(formattedPermissions) });
-    navigate("/roles");
+    const roleData = { title, desc, permissions, updatedBy: 1 };
+    try {
+      await updateRole(id, roleData);
+      alert("Role Updated Successfully!");
+      navigate("/roles");
+    } catch (error) {
+      alert("Error Updating Role!");
+    }
   };
 
   return (
@@ -90,19 +84,12 @@ const EditRole = () => {
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <label>Role Title:</label>
-            <input
-              type="text"
-              value={roleData.title}
-              onChange={(e) => setRoleData({ ...roleData, title: e.target.value })}
-            />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
+
           <div className="input-group">
             <label>Description:</label>
-            <input
-              type="text"
-              value={roleData.description || ""}
-              onChange={(e) => setRoleData({ ...roleData, description: e.target.value })}
-            />
+            <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} />
           </div>
 
           <table className="permissions-table">
@@ -115,15 +102,15 @@ const EditRole = () => {
               </tr>
             </thead>
             <tbody>
-              {roleData.permissions.map((moduleData, index) => (
-                <tr key={index}>
-                  <td>{moduleData.moduleName}</td>
+              {modules.map((module) => (
+                <tr key={module}>
+                  <td>{module}</td>
                   {actions.map((action) => (
                     <td key={action}>
                       <input
                         type="checkbox"
-                        checked={moduleData.actions.includes(action)}
-                        onChange={() => handleCheckboxChange(moduleData.moduleName, action)}
+                        checked={permissions[module]?.[action] || false}
+                        onChange={() => handleCheckboxChange(module, action)}
                       />
                     </td>
                   ))}
