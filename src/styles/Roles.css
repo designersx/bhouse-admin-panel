@@ -76,3 +76,51 @@
 .delete-icon {
   color: red;
 }
+/* Pagination */
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+  gap: 5px;
+}
+
+.page-btn {
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border-radius: 50px; /* Rounded Buttons */
+  transition: 0.3s;
+}
+
+.page-btn:hover {
+  background-color: #0056b3;
+}
+
+.page-btn.active {
+  background-color: #0056b3;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #007bff;
+  cursor: pointer;
+  transition: 0.3s;
+  border-radius: 50px; /* Rounded Icons */
+  padding: 5px;
+}
+
+.icon-btn:hover {
+  color: #0056b3; /* Removed red color */
+  background: none; /* No background change */
+}
+
+.icon-btn:disabled {
+  color: #cccccc;
+  cursor: not-allowed;
+}

@@ -63,5 +63,11 @@
     margin-top: 2px;
     text-align: left;
   }
-  
-  
+  .status_inactive{
+    color: red;
+    font-weight: 500;
+  }
+  .status_active{
+    color: rgb(21, 138, 21);
+    font-weight: 500;
+  }
