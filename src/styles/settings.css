@@ -1,33 +1,98 @@
-.settings {
-    padding: 20px;
-  }
-  
-  .settings h2 {
-    margin-bottom: 20px;
-  }
-  
-  .settings-option {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-  }
-  
-  .settings-option input,
-  .settings-option button {
-    margin-top: 8px;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  
-  .settings-option button {
-    background-color: #4f46e5;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-  
-  .settings-option button:hover {
-    background-color: #4338ca;
-  }
-  
+/* Settings Page Layout */
+.mainSetting {
+  display: flex;
+  flex-direction: column;
+  width: 60%;  /* Adjusted width */
+  margin: 0 auto;
+  padding: 40px 20px;  /* Added padding to center the content */
+}
+
+.settings h2 {
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+/* Settings Options */
+.settings-option {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+}
+
+.settings-option span {
+  font-size: 16px;
+  font-weight: 500;
+  color: #4a4a4a;
+}
+
+/* Input Fields */
+.settings-option input{
+  width: 95%; /* Full width for inputs */
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+.settings-option select {
+  width: 95%; /* Full width for inputs */
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  width: 100%;
+}
+
+.settings-option input:focus,
+.settings-option select:focus {
+  border-color: #4f46e5;
+  outline: none;
+}
+
+/* Button Styling */
+.settings-option button {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background-color: #4f46e5;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 12px;
+}
+
+.settings-option button:hover {
+  background-color: #4338ca;
+}
+
+/* Dark Mode Button */
+.settings-option button:first-child {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.settings-option button:first-child:hover {
+  background-color: #4338ca;
+}
+
+/* Language Dropdown */
+.settings-option select {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+/* Error Messages */
+.error-message {
+  color: red;
+  font-size: 14px;
+  padding: 5px;
+  background: #ffdddd;
+  border-radius: 5px;
+  margin-top: 5px;
+}

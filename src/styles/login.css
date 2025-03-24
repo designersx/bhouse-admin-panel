@@ -1,119 +1,141 @@
 /* ✅ Container Styling */
 .login-container {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f9f9f9;
-  }
-  
-  /* ✅ Form Styling */
-  .login-form {
-    background-color: #ffffff;
-    padding: 40px;
-    width: 380px;
-    border-radius: 16px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    transition: transform 0.2s ease;
-  }
-  
-  .login-form:hover {
-    transform: translateY(-4px);
-  }
-  
-  h2 {
-    font-size: 28px;
-    font-weight: 600;
-    color: #000;
-    margin-bottom: 16px;
-  }
-  
-  /* ✅ Input Styling */
-  input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    outline: none;
-    background-color: #fafafa;
-    transition: border-color 0.2s ease;
-  }
-  
-  input:focus {
-    border-color: #000;
-  }
-  
-  /* ✅ Error Message */
-  .error-message {
-    color: #ff4d4d;
-    background-color: #ffe6e6;
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 14px;
-    animation: shake 0.2s ease;
-  }
-  
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
-  }
-  
-  /* ✅ Remember Me + Forgot Password */
-  .login-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #000;
-    cursor: pointer;
-  }
-  
-  .forgot-password {
-    color: #000;
-    cursor: pointer;
-    font-weight: 500;
-    transition: color 0.2s ease;
-  }
-  
-  .forgot-password:hover {
-    color: #555;
-  }
-  
-  /* ✅ Login Button */
-  .login-btn {
-    background-color: #000;
-    color: #fff;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .login-btn:hover {
-    background-color: #333;
-  }
-  
-  .login-btn:active {
-    background-color: #000;
-  }
-  
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+}
+
+/* ✅ Form Styling */
+.login-form {
+  background-color: #ffffff;
+  padding: 40px;
+  width: 380px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease;
+}
+
+.login-form:hover {
+  transform: translateY(-4px);
+}
+
+h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 16px;
+}
+
+/* ✅ Input Styling */
+input {
+  width: 92%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  background-color: #fafafa;
+  transition: border-color 0.2s ease;
+}
+
+input:focus {
+  border-color: #000;
+}
+
+/* ✅ Error Message */
+.error-message {
+  color: #ff4d4d;
+  background-color: #ffe6e6;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  animation: shake 0.2s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+/* ✅ Remember Me + Forgot Password */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #000;
+  cursor: pointer;
+}
+
+.forgot-password {
+  color: #000;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.forgot-password:hover {
+  color: #555;
+}
+
+/* ✅ Login Button */
+.login-btn {
+  background-color: #000;
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .login-btn:hover {
+  background-color: #333;
+}
+
+.login-btn:active {
+  background-color: #000;
+} */
+
+/* .login-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+} */
+
+/* ✅ Spinner Styles */
+.spinner {
+  border: 2px solid #f3f3f3; /* Light gray */
+  border-top: 2px solid #000; /* Darker color for the spinner */
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

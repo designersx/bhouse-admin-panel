@@ -12,11 +12,15 @@ import EditRole from './pages/EditRole';
 
 
 import useSessionTimeOut from './customHook/useSessionTimeOut';
+
+import ForgotPassword from './pages/ForgetPassword';
+
 import Projects from './pages/Projects/Projects';
 import AddProject from './pages/Projects/AddProject';
 import ArchivedProjects from './pages/Projects/ArchivedProjects';
 import ProjectDetails from './pages/Projects/ProjectDetails';
 import EditProject from './pages/Projects/EditProject';
+
 
 const App = () => {
   const userData = JSON.parse(localStorage.getItem("user"));
@@ -36,11 +40,15 @@ const token = userData?.token;
           <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
           <Route path="/create-role" element={<ProtectedRoute><CreateRole /></ProtectedRoute>} />
           <Route path="/edit-role/:id" element={<ProtectedRoute><EditRole /></ProtectedRoute>} />
+
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
           <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
           <Route path="/add-projects" element={<ProtectedRoute><AddProject /></ProtectedRoute>} />
           <Route path="/archived-projects" element={<ProtectedRoute><ArchivedProjects /></ProtectedRoute>} />
           <Route path="/project-details/:projectId" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
           <Route path="/edit-project/:projectId" element={<ProtectedRoute><EditProject/></ProtectedRoute>} />
+
 
         </Routes>
     </ThemeProvider>

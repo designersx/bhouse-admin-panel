@@ -13,7 +13,6 @@ const useRolePermissions = (id) => {
     const fetchPermissions = async () => {
       try {
         const roleData = await getRoleById(id);
-        console.log("Fetched Role Data:", roleData); // ✅ API response check karne ke liye log karo
         
         const parsedPermissions =
         roleData?.data?.permissions && typeof roleData?.data?.permissions === "string"
@@ -33,7 +32,6 @@ const useRolePermissions = (id) => {
   }, [id]);
 
   useEffect(() => {
-    console.log("Updated rolePermissions:", rolePermissions); // ✅ State update hone ke baad log hoga
   }, [rolePermissions]);
 
   return { rolePermissions, loading, error };
