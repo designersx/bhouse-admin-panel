@@ -1,11 +1,11 @@
-import { FiSettings } from 'react-icons/fi';
+import { FiGlobe, FiSettings } from 'react-icons/fi';
 import '../styles/components.css';
 import { CiLogout } from 'react-icons/ci';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoNotificationsOutline } from "react-icons/io5";
 import Swal from 'sweetalert2';
 
-const Navbar = () => {
+const Navbar = ({ isLogin }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -25,28 +25,42 @@ const Navbar = () => {
     });
   };
 
+  const handleLogo = () => {
+    navigate("/dashboard");
+  };
+
+  const navbarClass = `navbar ${isLogin ? "login-page" : "logged-in"}`;
+
   return (
-    <div className="navbar">
-      {/* Logo Center */}
-        <p>Language <strong>(English)</strong></p> 
+    <div className={navbarClass}>
+      {/* Logo */}
       <div className="logo-container">
         <img
           src={`${process.env.PUBLIC_URL}/assets/bhouselogo.jpg`}
           alt="Logo"
-          style={{width: "16.66666667%", height: "50px", objectFit: "contain" }}
+          style={{ width: "16.66666667%", height: "50px", objectFit: "contain", cursor: "pointer" }}
+          onClick={handleLogo}
         />
       </div>
 
-      {/* Settings & Logout Right Side */}
+      {/* Right Menu */}
       <div className="right-menu">
-        <li><IoNotificationsOutline /></li>
-        <Link to="/settings"><FiSettings className='setting'/></Link>
-        <li onClick={handleLogout}>
-          <Link><CiLogout  className='logout'/></Link>
-        </li>
+        <p>
+          <FiGlobe style={{ marginRight: "5px" }} /><strong>(English)</strong>
+        </p>
+        {!isLogin && (
+          <>
+            <li><IoNotificationsOutline /></li>
+            <Link to="/settings"><FiSettings className='setting' /></Link>
+            <li onClick={handleLogout}>
+              <Link><CiLogout className='logout' /></Link>
+            </li>
+          </>
+        )}
       </div>
     </div>
   );
 };
+
 
 export default Navbar;

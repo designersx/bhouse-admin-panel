@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import '../styles/login.css';
 import { login } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -51,7 +52,9 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <>
+<Navbar isLogin={true} />
+<div className="login-container">
       <form className="login-form" onSubmit={handleLogin}>
         <h2>Welcome Back 👋</h2>
 
@@ -94,6 +97,7 @@ const Login = () => {
         </button>
       </form>
     </div>
+    </>
   );
 };
 
