@@ -6,20 +6,52 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../styles/Roles.css";
 
+const rolePermissionLevels = {
+  "Super Admin": 1,
+  "Account Manager": 2,
+  "Sr. Designer": 3,
+  "Operations": 4,
+  "Lead Installer": 5,
+};
+
 const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
   const navigate = useNavigate();
+  
+  const user = JSON.parse(localStorage.getItem("user"));
+  const loggedInUserRole = (user?.user?.userRole || "").trim();
+  const loggedInUserId = user?.user?.id;
 
   useEffect(() => {
     fetchRoles();
   }, []);
 
   const fetchRoles = async () => {
-    const data = await getRoles();
-    setRoles(data.data);
+    try {
+      const data = await getRoles();
+      const allRoles = data?.data || [];
+    
+      // ✅ Apply filtering based on user role
+      const filteredRoles = allRoles.filter(role => {
+        const roleLevel = rolePermissionLevels[role.title?.trim()] || 6; // Normalize role title
+        const userLevel = rolePermissionLevels[loggedInUserRole] || 6;
+  
+        // ✅ Super Admin can see all roles
+        if (userLevel === 1) return true;
+  
+        // ✅ Other users can see only lower level roles and their created roles
+        return roleLevel > userLevel || role.createdBy === loggedInUserId;
+      });
+  
+      setRoles(filteredRoles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      setRoles([]);
+    }
   };
-
   const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -38,6 +70,17 @@ const Roles = () => {
     });
   };
 
+  // ✅ Apply search filter
+  const filteredRoles = (roles || []).filter((role) =>
+    role?.title?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ✅ Pagination Logic
+  const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredRoles.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <Layout>
       <div className="roles-container">
@@ -49,7 +92,10 @@ const Roles = () => {
             type="text"
             placeholder="Search roles..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             className="search-input"
           />
         </div>
@@ -64,21 +110,56 @@ const Roles = () => {
             </tr>
           </thead>
           <tbody>
-            {roles
-              .filter((role) => role.title.toLowerCase().includes(search.toLowerCase()))
-              .map((role, index) => (
+            {currentItems.length > 0 ? (
+              currentItems.map((role, index) => (
                 <tr key={index}>
-                  <td>{index + 1}</td>
+                  <td>{indexOfFirstItem + index + 1}</td>
                   <td>{role.title}</td>
-                  <td>{role.desc}</td>
+                  <td>{role.description || "N/A"}</td>
                   <td className="actions">
                     <FaEdit className="edit-icon" title="Edit" onClick={() => navigate(`/edit-role/${role.id}`)} />
                     <FaTrash className="delete-icon" title="Delete" onClick={() => handleDelete(role.id)} />
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="no-data">No Data Found</td>
+              </tr>
+            )}
           </tbody>
         </table>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              className="icon-btn"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              ◀
+            </button>
+
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index}
+                className={`page-btn ${currentPage === index + 1 ? "active" : ""}`}
+                onClick={() => setCurrentPage(index + 1)}
+              >
+                {index + 1}
+              </button>
+            ))}
+
+            <button
+              className="icon-btn"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              ▶
+            </button>
+          </div>
+        )}
       </div>
     </Layout>
   );

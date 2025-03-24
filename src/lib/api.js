@@ -91,3 +91,24 @@ export const getUserProfile = async () => {
   export const deleteRole = async (id) => {
     return await axios.delete(`${url}/roles/${id}`);
   };
+  export const editUser = async (id, updatedUser) => {
+    try {
+      const response = await fetch(`${url}/auth/editUser/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update user");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  };
+  
