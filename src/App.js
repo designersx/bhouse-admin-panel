@@ -18,7 +18,7 @@ const App = () => {
   const userData = JSON.parse(localStorage.getItem("user"));
 const token = userData?.token;
 
-console.log(token, "JWT Token");
+
 
   useSessionTimeOut(token);
   return (
