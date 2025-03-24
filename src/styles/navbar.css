@@ -1,0 +1,38 @@
+/* Navbar Container */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 30px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 60px;
+  }
+  
+  /* Logo Alignment */
+  .logo-container img {
+    width: 140px; /* Adjust size */
+    height: auto;
+    cursor: pointer;
+  }
+  
+  /* Right Menu */
+  .right-menu {
+    display: flex;
+    align-items: center;
+  }
+  
+  .right-menu .login-link {
+    padding: 8px 16px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s ease;
+  }
+  
+  .right-menu .login-link:hover {
+    background-color: #222;
+  }
+  
