@@ -1,5 +1,5 @@
 import axios from 'axios'
-export const url = 'http://localhost:5000/api'
+export const url = 'http://localhost:5000/api' || ""
 export const registerUser = async (userData) => {
   try {
     const res = await axios.post(`${url}/auth/signup`, userData);
@@ -92,6 +92,7 @@ export const getUserProfile = async () => {
     return await axios.delete(`${url}/roles/${id}`);
   };
 
+
   //forgetPassword
   export const forgetPassword = async (email) => {
     try {
@@ -122,3 +123,26 @@ export const getUserProfile = async () => {
       throw error.response?.data || error;
     }
   };
+
+  export const editUser = async (id, updatedUser) => {
+    try {
+      const response = await fetch(`${url}/auth/editUser/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedUser),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update user");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  };
+  
+
