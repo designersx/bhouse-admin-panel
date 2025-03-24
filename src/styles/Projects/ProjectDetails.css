@@ -1,0 +1,83 @@
+/* Basic page layout */
+.project-details-container {
+    margin-top: 40px;
+    padding: 30px;
+    background-color: #f4f7fb;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1s ease-in-out;
+  }
+  
+  .project-details-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .project-details-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+  
+  .project-info-card {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.6s ease-in-out;
+  }
+  
+  .project-info-card h2 {
+    font-size: 1.8rem;
+    color: #007bff;
+    margin-bottom: 15px;
+  }
+  
+  .info-group {
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+  }
+  
+  .info-group strong {
+    font-weight: bold;
+  }
+  
+  .info-group span {
+    color: #555;
+  }
+  
+  .info-group p {
+    color: #555;
+    font-style: italic;
+  }
+  
+  .loading {
+    font-size: 1.5rem;
+    text-align: center;
+    color: #007bff;
+    margin-top: 50px;
+    animation: fadeIn 1s ease-in-out;
+  }
+  
+  /* Animation for fading in the page */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  /* Animation for sliding in the card */
+  @keyframes slideUp {
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  

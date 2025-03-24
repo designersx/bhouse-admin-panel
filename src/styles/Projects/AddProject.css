@@ -1,0 +1,115 @@
+.add-project-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+  }
+  
+  .add-project-container h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2rem;
+  }
+  
+  .stepper-container {
+    width: 100%;
+  }
+  
+  .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+  
+  .step-indicator span {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #aaa;
+    transition: color 0.3s;
+  }
+  
+  .step-indicator span.active {
+    color: #007bff;
+  }
+  
+  .form-card {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+  }
+  
+  .form-card h3 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+ .form-group input{
+    padding: 12px;
+    width: 97%;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+  .form-group select
+  {
+    padding: 12px;
+    width: 100%;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .form-group textarea {
+    padding: 12px;
+    width: 97%;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .form-group input[type="checkbox"] {
+    margin-right: 10px;
+  }
+  
+  .form-navigation {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .form-navigation button {
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+  }
+  
+  .form-navigation button:hover {
+    background-color: #0056b3;
+  }
+  
+  .form-navigation button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+.date{
+    display: flex;
+    justify-content: space-between;
+}  
+.date input{
+    width: 92%;
+}

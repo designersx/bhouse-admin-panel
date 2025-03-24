@@ -1,0 +1,124 @@
+.projects-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .projects-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .action-btn.unarchive {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .action-btn.unarchive:hover {
+    background-color: #218838;
+  }
+  
+  .new-project-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+  .archived-project-btn{
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+  .new-project-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .search-bar {
+    padding: 8px 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+  }
+  
+  .projects-table-container {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .projects-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .projects-table th, .projects-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+  }
+  
+  .projects-table th {
+    background-color: #f4f4f4;
+    font-weight: 600;
+  }
+  
+  .projects-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .projects-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  button.action-btn {
+    padding: 8px 1px;
+    border: none;
+    background-color: transparent;
+    color: #007BFF;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  button.action-btn i {
+    margin-right: 5px;
+  }
+  
+  button.edit:hover {
+    color: #0056b3;
+  }
+  
+  button.view:hover {
+    color: #28a745;
+  }
+  
+  button.delete:hover {
+    color: #dc3545;
+  }
+  
