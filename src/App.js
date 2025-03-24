@@ -13,6 +13,7 @@ import EditRole from './pages/EditRole';
 
 
 import useSessionTimeOut from './customHook/useSessionTimeOut';
+import ForgotPassword from './pages/ForgetPassword';
 
 const App = () => {
   const userData = JSON.parse(localStorage.getItem("user"));
@@ -33,6 +34,7 @@ const token = userData?.token;
           <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
           <Route path="/create-role" element={<ProtectedRoute><CreateRole /></ProtectedRoute>} />
           <Route path="/edit-role/:id" element={<ProtectedRoute><EditRole /></ProtectedRoute>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
 
 

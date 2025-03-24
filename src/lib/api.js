@@ -91,3 +91,34 @@ export const getUserProfile = async () => {
   export const deleteRole = async (id) => {
     return await axios.delete(`${url}/roles/${id}`);
   };
+
+  //forgetPassword
+  export const forgetPassword = async (email) => {
+    try {
+      const response = await axios.post(`${url}/auth/forgot-password`, { email });
+      return response.data;
+    } catch (error) {
+      console.error('Error generating OTP:', error);
+      throw error.response?.data || error;
+    }
+  };
+  
+  export const verifyOtp = async (email, otp) => {
+    try {
+      const response = await axios.post(`${url}/auth/verify-otp`, { email, otp });
+      return response.data;
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      throw error.response?.data || error;
+    }
+  };
+  
+  export const resetPassword = async (email, newPassword) => {
+    try {
+      const response = await axios.post(`${url}/auth/reset-password`, { email, newPassword });
+      return response.data;
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error.response?.data || error;
+    }
+  };

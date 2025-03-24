@@ -9,6 +9,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [message , setMessage] = useState()
+  const [isLoading, setIsLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   // ✅ Remember Me - Load existing email
@@ -23,6 +25,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true); 
 
     if (!email || !password) {
       setError('⚠️ Email and password are required.');
@@ -32,6 +35,7 @@ const Login = () => {
     try {
       const res = await login(email, password);
       if (res) {
+        setMessage(res?.message)
         if (rememberMe) {
           localStorage.setItem('rememberedEmail', email);
         } else {
@@ -40,15 +44,16 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify(res));
         navigate('/dashboard');
       }
+      
     } catch (err) {
-      console.log(err,'090880909999999')
-      setError('❌ Invalid email or password.');
+      setError(err.message);
+      setIsLoading(false);
       console.error("Login Error:", err);
     }
   };
 
   const handleForgotPassword = () => {
-    alert('Redirecting to Forgot Password page...');
+    navigate('/forgot-password');
   };
 
   return (
@@ -72,7 +77,7 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          maxLength={10} 
+          maxLength={6} 
           required
         />
 
@@ -92,9 +97,14 @@ const Login = () => {
           </span>
         </div>
 
-        <button type="submit" className="login-btn">
-          Login
-        </button>
+        <button type="submit" className="login-btn" disabled={isLoading}>
+            {isLoading ? (
+              <div className="spinner"></div> // Show spinner when loading
+            ) : (
+              'Login'
+            )}
+          </button>
+        
       </form>
     </div>
     </>

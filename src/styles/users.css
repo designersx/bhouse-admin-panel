@@ -37,7 +37,7 @@
   }
   
   button {
-    background-color: #ef4444;
+    background-color: #000;
     color: white;
     padding: 6px 12px;
     border: none;
@@ -47,14 +47,14 @@
   }
   
   button:hover {
-    background-color: #dc2626;
+    background-color: #000;
   }
   .deleteBtn{
     background-color: #f9f9f9;
-    color:#dc2626;
+    color:#000;
   }
   .deleteBtn:hover{
-    background-color: #dc2626;
+    background-color: #000;
     color:#f9f9f9;
   }
   .error-text {

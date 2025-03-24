@@ -87,7 +87,6 @@ const CreateRole = () => {
 
     const roleData = { title, desc, permissions: finalPermissions, createdBy: 1 };
 
-    console.log("Final Role Data to Send:", roleData); // ✅ Backend me jo jayega usko check karne ke liye log
 
     try {
       await createRole(roleData);
