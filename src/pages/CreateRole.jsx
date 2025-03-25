@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { createRole } from "../lib/api";
 import "../styles/createRoles.css";
 import useRolePermissions from "../hooks/useRolePermissions";
+import { IoArrowBack } from "react-icons/io5";
+import Swal from "sweetalert2";
 
 const predefinedRoles = [
   "Super Admin",
@@ -31,7 +33,7 @@ const CreateRole = () => {
   const { rolePermissions } = useRolePermissions(24);
   const inputRef = useRef(null);
   const suggestionBoxRef = useRef(null);
-
+  const [loading, setLoading] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem("user"));
   const userRole = userData?.user?.userRole || "";
@@ -123,8 +125,14 @@ const CreateRole = () => {
   };
 
   const handleSubmit = async () => {
-   
-
+    if (!title.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Title',
+        text: 'Please enter a role title before saving.',
+      });
+      return;
+    }
     const finalPermissions = {};
     modules.forEach((module) => {
       const formattedModule = module.replace(/\s+/g, "");
@@ -144,50 +152,63 @@ const CreateRole = () => {
       defaultPermissionLevel,
     };
 
-
     try {
+      setLoading(true); // ✅ Show loader
       await createRole(roleData);
-      alert("Role Created Successfully!");
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Role Created Successfully!',
+      });
       navigate("/roles");
     } catch (error) {
-      alert("Error Creating Role!");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: 'Error Creating Role!',
+      });
+    } finally {
+      setLoading(false); // ✅ Hide loader
     }
   };
+
   const handleInputClick = () => {
     setDropdownOpen(true);
   };
   return (
     <Layout>
       <div className="create-role-container">
+        <button className="back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
         <h2>Create New Role</h2>
 
         <div className="input-group">
           <label>Role Title:</label>
           <div className="autocomplete-container">
-  <input
-    ref={inputRef}
-    type="text"
-    value={title}
-    onChange={(e) => {
-      setTitle(e.target.value);
-      setDropdownOpen(true); // Open suggestions while typing
-    }}
-    onClick={handleInputClick}
-    placeholder="Select role..."
-    className="custom-input"
-  />
-  {isDropdownOpen && availableRoles.length > 0 && (
-    <ul className="suggestions-list" ref={suggestionBoxRef}>
-      {availableRoles
-        .filter((role) => role.toLowerCase().includes(title.toLowerCase())) // Filter suggestions
-        .map((role, index) => (
-          <li key={index} onClick={() => selectSuggestion(role)}>
-            {role}
-          </li>
-        ))}
-    </ul>
-  )}
-</div>
+            <input
+              ref={inputRef}
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setDropdownOpen(true); // Open suggestions while typing
+              }}
+              required
+              onClick={handleInputClick}
+              placeholder="Select role..."
+              className="custom-input"
+            />
+            {isDropdownOpen && availableRoles.length > 0 && (
+              <ul className="suggestions-list" ref={suggestionBoxRef}>
+                {availableRoles
+                  .filter((role) => role.toLowerCase().includes(title.toLowerCase())) // Filter suggestions
+                  .map((role, index) => (
+                    <li key={index} onClick={() => selectSuggestion(role)}>
+                      {role}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         <div className="input-group">

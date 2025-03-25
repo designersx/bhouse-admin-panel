@@ -20,8 +20,12 @@ import AddProject from './pages/Projects/AddProject';
 import ArchivedProjects from './pages/Projects/ArchivedProjects';
 import ProjectDetails from './pages/Projects/ProjectDetails';
 import EditProject from './pages/Projects/EditProject';
+
 import Customer from './pages/Customer/Customer';
 import CustomerForm from './pages/Customer/CustomerForm';
+
+import UserForm from './pages/userForm';
+
 
 
 const App = () => {
@@ -53,7 +57,8 @@ const token = userData?.token;
           <Route path="/customers" element={<ProtectedRoute><Customer/></ProtectedRoute>} />
           <Route path="/add-customer" element={<ProtectedRoute><CustomerForm/></ProtectedRoute>} />
 
-
+          <Route path="/users/add" element={<UserForm />} />
+          <Route path="/users/edit/:id" element={<UserForm />} />
         </Routes>
     </ThemeProvider>
   );

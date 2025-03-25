@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import Layout from '../../components/Layout';
 import '../../styles/Projects/AddProject.css';
 import Swal from 'sweetalert2';
@@ -21,9 +21,54 @@ const AddProject = () => {
     allowComments: true,
     enableNotifications: true,
   });
+  
+const [selectedRoles, setSelectedRoles] = useState(['Account Manager']); 
+const [roleUsers, setRoleUsers] = useState({}); 
+const [allRoles, setAllRoles] = useState([]);
+const [files, setFiles] = useState([]); 
 
-  const [files, setFiles] = useState([]); // Store the files selected by the user
-
+  const handleRoleToggle = async (role) => {
+    if (selectedRoles.includes(role)) {
+      setSelectedRoles((prev) => prev.filter((r) => r !== role));
+      setRoleUsers((prev) => {
+        const newUsers = { ...prev };
+        delete newUsers[role];
+        return newUsers;
+      });
+    } else {
+      setSelectedRoles((prev) => [...prev, role]);
+  
+      // Fetch users for that role
+      try {
+        const encodedRole = encodeURIComponent(role);
+        const res = await fetch(`http://localhost:5000/api/auth/users-by-role/${encodedRole}`);
+        const data = await res.json();
+        setRoleUsers((prev) => ({
+          ...prev,
+          [role]: data.users || []
+        }));
+      } catch (err) {
+        console.error(`Error fetching users for role ${role}`, err);
+      }
+    }
+  };
+  
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const res = await fetch('http://localhost:5000/api/roles');
+      const data = await res.json();
+      if (data.success) {
+        const roleTitles = data.data.map(role => role.title);
+        setAllRoles(roleTitles);
+        setFormData(prev => ({
+          ...prev,
+          assignedTeamRoles: ['Account Manager']
+        }));
+      }
+    };
+    fetchRoles();
+  }, []);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -40,40 +85,66 @@ const AddProject = () => {
     });
   };
 
-  const handleRolesChange = (e) => {
-    const { value } = e.target;
-    setFormData({
-      ...formData,
-      assignedTeamRoles: [...formData.assignedTeamRoles, value],
-    });
-  };
+
+  
 
   const handleFileChange = (e) => {
-    setFiles(e.target.files); // Store selected files
+    setFiles([...files, ...Array.from(e.target.files)]);
   };
+  
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const formDataToSend = new FormData();
-    // Append form data to FormData object
-    Object.keys(formData).forEach((key) => {
-      formDataToSend.append(key, formData[key]);
-    });
+  
+    const transformedRolesMap = new Map();
 
-    // Append selected files to FormData
+// Remove any invalid roles or duplicates
+Object.entries(formData.assignedTeamRoles).forEach(([role, users]) => {
+  if (!transformedRolesMap.has(role)) {
+    transformedRolesMap.set(role, users);
+  }
+});
+
+// Convert Map back to array of objects
+const transformedRoles = Array.from(transformedRolesMap.entries()).map(
+  ([role, users]) => ({
+    role,
+    users: Array.isArray(users) ? users : []
+  })
+);
+  
+    // Append all other fields (except assignedTeamRoles)
+    Object.keys(formData).forEach((key) => {
+      if (key !== 'assignedTeamRoles') {
+        if (Array.isArray(formData[key])) {
+          formDataToSend.append(key, JSON.stringify(formData[key]));
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
+      }
+    });
+  
+    // Append the transformed assignedTeamRoles
+    formDataToSend.append('assignedTeamRoles', JSON.stringify(transformedRoles));
+
+  
+    // Append selected files
     for (let file of files) {
       formDataToSend.append('files', file);
     }
-
+  
     try {
       const response = await fetch('http://localhost:5000/api/projects', {
         method: 'POST',
-        body: formDataToSend, // Send FormData to backend
+        body: formDataToSend
       });
+  
       const data = await response.json();
+  
       if (response.status === 201) {
         Swal.fire('Project added successfully!');
         navigate('/projects');
@@ -81,18 +152,19 @@ const AddProject = () => {
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: `Error: ${data.error}`,
+          text: `Error: ${data.error}`
         });
       }
     } catch (error) {
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
-        text: 'Something went wrong!',
+        text: 'Something went wrong!'
       });
     }
   };
-
+  
+  
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
@@ -110,6 +182,7 @@ const AddProject = () => {
             {step === 1 && (
               <div className="form-card">
                 <h3>Add Project</h3>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Project Name</label>
                   <input
@@ -131,6 +204,8 @@ const AddProject = () => {
                     <option value="Custom">Custom</option>
                   </select>
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Client Name</label>
                   <input
@@ -153,6 +228,8 @@ const AddProject = () => {
                     maxLength={60}
                   ></textarea>
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Start Date</label>
                   <input
@@ -172,15 +249,27 @@ const AddProject = () => {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Upload Files (Images/PDFs)</label>
-                  <input
-                    type="file"
-                    name="files"
-                    multiple
-                    onChange={handleFileChange} // Handle file input change
-                  />
                 </div>
+                <div className='form-group-row'>
+                <div className="form-group">
+                 <label>Upload Files (Images/PDFs)</label>
+                  <input
+                   type="file"
+                   name="files"
+                   multiple
+                   accept=".jpg,.jpeg,.png,.pdf"
+                   onChange={handleFileChange}
+                  />
+                   {files.length > 0 && (
+                   <ul className="file-preview-list">
+                   {files.map((file, idx) => (
+                   <li key={idx}>{file.name}</li>
+                   ))}
+                   </ul>
+                  )}
+                  </div>
+                  </div>
+
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>
                     Next
@@ -192,16 +281,46 @@ const AddProject = () => {
             {step === 2 && (
               <div className="form-card">
                 <h3>Roles & Permissions</h3>
+                <div className='form-group-row'>
                 <div className="form-group">
-                  <label>Assigned Roles</label>
-                  <input
-                    type="text"
-                    name="assignedTeamRoles"
-                    value={formData.assignedTeamRoles.join(', ')}
-                    onChange={handleRolesChange}
-                    placeholder="Add roles"
-                  />
-                </div>
+  <label>Assign Roles</label>
+  {allRoles.map((role) => (
+  <div key={role} className="role-section">
+    <label>
+      <input
+        type="checkbox"
+        value={role}
+        checked={selectedRoles.includes(role)}
+        onChange={() => handleRoleToggle(role)}
+      />
+      {role}
+    </label>
+    {selectedRoles.includes(role) && roleUsers[role] && (
+      <select
+        multiple
+        onChange={(e) => {
+          const selectedOptions = Array.from(e.target.selectedOptions).map((opt) => opt.value);
+          setFormData((prev) => ({
+            ...prev,
+            assignedTeamRoles: {
+              ...prev.assignedTeamRoles,
+              [role]: selectedOptions
+            }
+          }));
+        }}
+      >
+        {roleUsers[role].map((user) => (
+          <option key={user.id} value={user.id}>
+            {user.firstName} {user.lastName} ({user.email})
+          </option>
+        ))}
+      </select>
+    )}
+  </div>
+))}
+
+</div>
+
                 <div className="form-group">
                   <label>Total Value</label>
                   <input
@@ -213,6 +332,8 @@ const AddProject = () => {
                     placeholder="Enter total value"
                   />
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Delivery Address</label>
                   <input
@@ -233,6 +354,7 @@ const AddProject = () => {
                     onChange={handleChange}
                     placeholder="Enter delivery hours"
                   />
+                </div>
                 </div>
                 <div className="form-navigation">
                   <button type="button" onClick={prevStep}>

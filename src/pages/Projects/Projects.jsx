@@ -10,7 +10,36 @@ const Projects = () => {
     const [filteredProjects, setFilteredProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-  
+    const [allUsers, setAllUsers] = useState([]);
+    
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/auth/getAllUsers');
+      setAllUsers(res.data);
+    } catch (err) {
+      console.error("Error fetching users", err);
+    }
+  };
+  fetchUsers();
+}, []);
+const getAssignedUserNames = (assignedTeamRoles) => {
+  if (!Array.isArray(assignedTeamRoles)) return "";
+
+  const userMap = {};
+  allUsers.forEach(user => {
+    userMap[user.id] = `${user.firstName} ${user.lastName}`;
+  });
+
+  return assignedTeamRoles
+    .flatMap(roleEntry =>
+      Array.isArray(roleEntry.users)
+        ? roleEntry.users.map(userId => userMap[userId] || `User ID: ${userId}`)
+        : []
+    )
+    .join(", ");
+};
+
     useEffect(() => {
       // Fetch data from API
       const fetchProjects = async () => {
@@ -131,7 +160,7 @@ const Projects = () => {
                     <td>{project.name}</td>
                     <td>{project.clientName}</td>
                     <td>{project.status}</td>
-                    <td>{project.assignedTeamRoles.join(", ")}</td>
+                    <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
                     <td>{new Date(project.startDate).toLocaleDateString()}</td>
                     <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
                     <td className="actions">

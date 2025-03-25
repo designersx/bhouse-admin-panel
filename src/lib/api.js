@@ -1,5 +1,7 @@
 import axios from 'axios'
 export const url = 'http://localhost:5000/api' || ""
+
+
 export const registerUser = async (userData) => {
   try {
     const res = await axios.post(`${url}/auth/signup`, userData);
@@ -144,6 +146,7 @@ export const getUserProfile = async () => {
       throw error;
     }
   };
+
   export const createCustomer = async (customerData) => {
     try {
         const response = await fetch(`${url}/customer/add`, {
@@ -165,4 +168,27 @@ export const getCustomers = async () => {
         console.error("Error fetching customers:", error);
     }
 };
+
+  
+  export const uploadProfileImage = async (file) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+  
+      const formData = new FormData();
+      formData.append('profileImage', file);
+  
+      const response = await axios.put(`${url}/auth/profile/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error.response?.data || error;
+    }
+  };
+
 
