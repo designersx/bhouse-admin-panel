@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRoleById, updateRole } from "../lib/api";
 import Layout from "../components/Layout";
+import Swal from "sweetalert2";
 
 const predefinedRoles = [
   "Super Admin",
@@ -37,7 +38,7 @@ const EditRole = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
+  const [description, setDesc] = useState("");
   const [permissions, setPermissions] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -155,14 +156,14 @@ const EditRole = () => {
       });
     });
 
-    const roleData = { title, desc, permissions: finalPermissions, updatedBy: userData?.user.id };
+    const roleData = { title, description, permissions: finalPermissions, updatedBy: userData?.user.id };
 
     try {
       await updateRole(id, roleData);
-      alert("Role Updated Successfully!");
-      navigate("/roles");
-    } catch (error) {
-      alert("Error Updating Role!");
+    Swal.fire('Success', 'Role Updated Successfully!', 'success');
+    navigate("/roles");
+  } catch (error) {
+    Swal.fire('Error', '⚠️ Error Updating Role!', 'error');
     }
   };
 
@@ -197,7 +198,7 @@ const EditRole = () => {
 
           <div className="input-group">
             <label>Description:</label>
-            <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <input type="text" value={description} onChange={(e) => setDesc(e.target.value)} />
           </div>
 
           <table className="permissions-table">

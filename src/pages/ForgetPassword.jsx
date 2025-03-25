@@ -1,9 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { forgetPassword, verifyOtp, resetPassword } from '../lib/api'; // Your API functions here
 import Swal from 'sweetalert2'; // Import SweetAlert
 import '../styles/forgetPassword.css';
 import Navbar from '../components/Navbar';
+
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +19,19 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
+  const query = useQuery();
+
+  useEffect(() => {
+    const urlEmail = query.get('email');
+    const urlOtp = query.get('otp');
+
+    if (urlEmail && urlOtp) {
+      setEmail(urlEmail);
+      setOtp(urlOtp);
+      setOtpSent(true); // Directly set OTP Sent to true
+    }
+  }, []);
+  
   const handleGenerateOtp = async () => {
     if (!email) {
       Swal.fire('Error', '⚠️ Please enter your email address.', 'error');
