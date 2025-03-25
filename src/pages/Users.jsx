@@ -16,7 +16,7 @@ const Users = () => {
   const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     
-      const itemsPerPage = 3; // Show 3 items per page
+      const itemsPerPage = 8; 
   let createdBYId = JSON.parse(localStorage.getItem("user"));
 
   const defaultUserState = {

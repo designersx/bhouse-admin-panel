@@ -11,12 +11,13 @@ const Profile = () => {
     lastName: '',
     mobileNumber: '',
     userRole: '',
+    profileImage: '',
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getUserProfile(); // ✅ API se data le rahe hain
+        const res = await getUserProfile();
         setFormData(res);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -37,7 +38,7 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateUserProfile(formData); // ✅ API se update kar rahe hain
+      await updateUserProfile(formData);
       alert('Profile Updated Successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -46,27 +47,27 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="profile-container">
-        {/* Left Side: Form */}
-        <div className="profile-form">
-          <h2>Edit Profile</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
+      <div className="profile-page-container">
+        {/* Left Side: Profile Form */}
+        <div className="profile-page-form">
+          <h2 className="profile-page-title">Edit Profile</h2>
+          <form onSubmit={handleSubmit} className="profile-form-container">
+            <div className="profile-form-row">
+              <div className="profile-form-group">
                 <label>Email Address</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled // ✅ Email ko disable rakhenge (non-editable)
+                  disabled
                 />
               </div>
-              <div className="form-group">
+              <div className="profile-form-group">
                 <label>Mobile Number</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="mobileNumber"
                   value={formData.mobileNumber}
@@ -75,21 +76,21 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="profile-form-row">
+              <div className="profile-form-group">
                 <label>First Name</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
                 />
               </div>
-              <div className="form-group">
+              <div className="profile-form-group">
                 <label>Last Name</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="lastName"
                   value={formData.lastName}
@@ -98,46 +99,45 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="profile-form-group">
               <label>User Role</label>
               <input
-                className='p-input'
+                className="profile-input"
                 type="text"
                 name="userRole"
                 value={formData.userRole}
                 onChange={handleChange}
-                disabled // ✅ Role ko disable rakhenge (non-editable)
+                disabled
               />
             </div>
 
-            <button type="submit" className="update-btn">
+            <button type="submit" className="profile-update-btn">
               Update Profile
             </button>
           </form>
         </div>
 
-      {/* Right Side: Profile Card */}
-<div className="profile-card">
-  <div className="profile-pic-container">
-    {formData.profileImage ? (
-      <img src={formData.profileImage} alt="profile" className="profile-pic" />
-    ) : (
-      <img
-        src={`${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
-        alt="profile"
-        className="profile-pic default-pic"
-      />
-    )}
-    <button className="edit-btn">
-      <FaPen size={14} />
-    </button>
-  </div>
-  <h3 className="profile-name">
-    {formData.firstName || "User"} {formData.lastName || ""}
-  </h3>
-  <p className="email-text">{formData.email || "No Email Provided"}</p>
-</div>
-
+        {/* Right Side: Profile Card */}
+        <div className="profile-page-card">
+          <div className="profile-pic-wrapper">
+            {formData.profileImage ? (
+              <img src={formData.profileImage} alt="profile" className="profile-pic" />
+            ) : (
+              <img
+                src={`${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+                alt="profile"
+                className="profile-pic default-pic"
+              />
+            )}
+            <button className="profile-edit-btn">
+              <FaPen size={14} />
+            </button>
+          </div>
+          <h3 className="profile-user-name">
+            {formData.firstName || "User"} {formData.lastName || ""}
+          </h3>
+          <p className="profile-email-text">{formData.email || "No Email Provided"}</p>
+        </div>
       </div>
     </Layout>
   );

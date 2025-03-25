@@ -20,6 +20,8 @@ import AddProject from './pages/Projects/AddProject';
 import ArchivedProjects from './pages/Projects/ArchivedProjects';
 import ProjectDetails from './pages/Projects/ProjectDetails';
 import EditProject from './pages/Projects/EditProject';
+import Customer from './pages/Customer/Customer';
+import CustomerForm from './pages/Customer/CustomerForm';
 
 
 const App = () => {
@@ -48,6 +50,8 @@ const token = userData?.token;
           <Route path="/archived-projects" element={<ProtectedRoute><ArchivedProjects /></ProtectedRoute>} />
           <Route path="/project-details/:projectId" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
           <Route path="/edit-project/:projectId" element={<ProtectedRoute><EditProject/></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><Customer/></ProtectedRoute>} />
+          <Route path="/add-customer" element={<ProtectedRoute><CustomerForm/></ProtectedRoute>} />
 
 
         </Routes>

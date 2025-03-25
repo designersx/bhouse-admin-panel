@@ -88,21 +88,7 @@ const CreateRole = () => {
     };
   }, []);
 
-  const handleTitleChange = (e) => {
-    const inputValue = e.target.value;
-    setTitle(inputValue);
 
-    if (inputValue.length > 0) {
-      const filteredSuggestions = availableRoles.filter((role) =>
-        role.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      setSuggestions(filteredSuggestions);
-      setDropdownOpen(true);
-    } else {
-      setSuggestions([]);
-      setDropdownOpen(false);
-    }
-  };
 
   const selectSuggestion = (role) => {
     setTitle(role);

@@ -1,6 +1,6 @@
 /* SIDEBAR */
 .sidebar {
-    width: 220px;
+    width: 15%;
     height: 98vh;
     background-color: #1f2937;
     color: white;
@@ -81,7 +81,8 @@
   left: 240px;
   right: 0;
   top: 0;
-  width: 76%;
+  width: 78%;
+  margin: 0 auto;
 }
 
 /* For Login page only */
