@@ -13,14 +13,17 @@ const Profile = () => {
     lastName: '',
     mobileNumber: '',
     userRole: '',
+    profileImage: '',
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+
         setLoading(true);
         const res = await getUserProfile(); // ✅ API se data le rahe hain
+
         setFormData(res);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -71,9 +74,11 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+
       setLoading(true);
       await updateUserProfile(formData);
       Swal.fire('Success', 'Profile updated successfully!', 'success');
+
     } catch (error) {
       console.error('Error updating profile:', error);
       Swal.fire('Error', 'Profile update failed', 'error');
@@ -84,6 +89,7 @@ const Profile = () => {
 
   return (
     <Layout>
+
       <div className="profile-container">
         {loading && <div className="loader-overlay">Loading...</div>}
         {/* Left Side: Form */}
@@ -92,20 +98,21 @@ const Profile = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
+
                 <label>Email Address</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled // ✅ Email ko disable rakhenge (non-editable)
+                  disabled
                 />
               </div>
-              <div className="form-group">
+              <div className="profile-form-group">
                 <label>Mobile Number</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="mobileNumber"
                   value={formData.mobileNumber}
@@ -114,21 +121,21 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="profile-form-row">
+              <div className="profile-form-group">
                 <label>First Name</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
                 />
               </div>
-              <div className="form-group">
+              <div className="profile-form-group">
                 <label>Last Name</label>
                 <input
-                  className='p-input'
+                  className="profile-input"
                   type="text"
                   name="lastName"
                   value={formData.lastName}
@@ -137,18 +144,21 @@ const Profile = () => {
               </div>
             </div>
 
+
           <div className="form-row">
             <div className="form-group">
+
               <label>User Role</label>
               <input
-                className='p-input'
+                className="profile-input"
                 type="text"
                 name="userRole"
                 value={formData.userRole}
                 onChange={handleChange}
-                disabled // ✅ Role ko disable rakhenge (non-editable)
+                disabled
               />
             </div>
+
             <div className="form-group">
               <label>Password:</label>
               <input
@@ -162,12 +172,14 @@ const Profile = () => {
             </div>
             </div>
             <button type="submit" className="update-btn">
+
               Update Profile
             </button>
           </form>
         </div>
 
         {/* Right Side: Profile Card */}
+
         <div className="profile-card">
           <div className="profile-pic-container">
             <img
@@ -196,6 +208,7 @@ const Profile = () => {
           </h3>
           <p className="email-text">{formData.email || "No Email Provided"}</p>
         </div>
+
 
       </div>
     </Layout>

@@ -5,6 +5,7 @@ import { CiLogout } from "react-icons/ci";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AiFillProject } from 'react-icons/ai';
+import { FaUserCircle } from "react-icons/fa";
 const Sidebar = () => {
       const navigate = useNavigate()
   const location = useLocation();
@@ -46,6 +47,9 @@ const Sidebar = () => {
         </li>
         <li className={location.pathname === '/projects' ? 'active' : ''}>
           <Link to="/projects"><AiFillProject /> Projects</Link>
+        </li>
+        <li className={location.pathname === '/customers' ? 'active' : ''}>
+          <Link to="/customers"><FaUserCircle /> Customers</Link>
         </li>
         <li className={location.pathname === '/settings' ? 'active' : ''}>
           <Link to="/settings"><FiSettings /> Settings</Link>

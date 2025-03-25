@@ -28,23 +28,39 @@ const Roles = () => {
   useEffect(() => {
     fetchRoles();
   }, []);
-
   const fetchRoles = async () => {
     try {
       const data = await getRoles();
       const allRoles = data?.data || [];
-    
-      // ✅ Apply filtering based on user role
-      const filteredRoles = allRoles.filter(role => {
-        const roleLevel = rolePermissionLevels[role.title?.trim()] || 6; // Normalize role title
-        const userLevel = rolePermissionLevels[loggedInUserRole] || 6;
   
-        // ✅ Super Admin can see all roles
-        if (userLevel === 1) return true;
+      const loggedUserId = parseInt(loggedInUserId, 10);
+      const userLevel = rolePermissionLevels[loggedInUserRole] || 6; // Fetch user level
   
-        // ✅ Other users can see only lower level roles and their created roles
-        return roleLevel > userLevel || role.createdBy === loggedInUserId;
+      console.log(`Logged-in User Role: ${loggedInUserRole}, Level: ${userLevel}`);
+      console.log(`Logged-in User ID (Type: ${typeof loggedUserId}):`, loggedUserId);
+      const filteredRoles = allRoles.filter((role) => {
+        const roleLevel = role.defaultPermissionLevel || 6;
+        const createdById = parseInt(role.createdBy, 10); // Ensure it's a number
+      
+        console.log(
+          `Checking Role: ${role.title}, Level: ${roleLevel}, Created By: ${createdById}, Logged-in User ID: ${loggedUserId}`
+        );
+      
+        if (userLevel === 1) return true; // Super Admin can see all
+      
+        if (userLevel === 6) {
+          const isOwnRole = roleLevel === 6 && createdById === loggedUserId;
+          console.log(`Role ${role.title} should be visible?`, isOwnRole);
+          return isOwnRole;
+        }
+      
+        // ✅ Correct condition to show only lower level roles or roles created by the user
+        const shouldShow = (roleLevel > userLevel && roleLevel < 6) || createdById === loggedUserId;
+        console.log(`Role ${role.title} should be visible?`, shouldShow);
+        return shouldShow;
       });
+      
+      
   
       setRoles(filteredRoles);
     } catch (error) {
@@ -52,6 +68,12 @@ const Roles = () => {
       setRoles([]);
     }
   };
+  
+  
+  
+  
+  
+  
   const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -84,6 +106,7 @@ const Roles = () => {
   return (
     <Layout>
       <div className="roles-container">
+      <h2>Roles</h2>
         <div className="roles-header">
           <button className="add-role-btn" onClick={() => navigate("/create-role")}>
             + Add Role

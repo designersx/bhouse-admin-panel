@@ -11,9 +11,15 @@ import { useNavigate } from "react-router-dom";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+
+    const [currentPage, setCurrentPage] = useState(1);
+    
+      const itemsPerPage = 8; 
+  let createdBYId = JSON.parse(localStorage.getItem("user"));
+
+
   const navigate = useNavigate();
+
 
   
   useEffect(() => {

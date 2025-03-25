@@ -146,6 +146,29 @@ export const getUserProfile = async () => {
       throw error;
     }
   };
+
+  export const createCustomer = async (customerData) => {
+    try {
+        const response = await fetch(`${url}/customer/add`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(customerData),
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Error creating customer:", error);
+    }
+};
+
+export const getCustomers = async () => {
+    try {
+        const response = await fetch(`${url}/customer`);
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching customers:", error);
+    }
+};
+
   
   export const uploadProfileImage = async (file) => {
     try {
@@ -167,5 +190,5 @@ export const getUserProfile = async () => {
       throw error.response?.data || error;
     }
   };
-  
+
 
