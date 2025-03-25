@@ -20,6 +20,7 @@ import AddProject from './pages/Projects/AddProject';
 import ArchivedProjects from './pages/Projects/ArchivedProjects';
 import ProjectDetails from './pages/Projects/ProjectDetails';
 import EditProject from './pages/Projects/EditProject';
+import UserForm from './pages/userForm';
 
 
 const App = () => {
@@ -49,7 +50,8 @@ const token = userData?.token;
           <Route path="/project-details/:projectId" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
           <Route path="/edit-project/:projectId" element={<ProtectedRoute><EditProject/></ProtectedRoute>} />
 
-
+          <Route path="/users/add" element={<UserForm />} />
+          <Route path="/users/edit/:id" element={<UserForm />} />
         </Routes>
     </ThemeProvider>
   );

@@ -145,4 +145,25 @@ export const getUserProfile = async () => {
     }
   };
   
+  export const uploadProfileImage = async (file) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+  
+      const formData = new FormData();
+      formData.append('profileImage', file);
+  
+      const response = await axios.put(`${url}/auth/profile/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+  
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error.response?.data || error;
+    }
+  };
+  
 
