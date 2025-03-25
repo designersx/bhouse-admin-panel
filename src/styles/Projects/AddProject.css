@@ -70,6 +70,7 @@
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
+    margin-top: 10px;
   }
   .form-group textarea {
     padding: 12px;
@@ -77,6 +78,9 @@
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
+    resize: vertical;
+    min-height: 50px;
+    margin-top: 10px;
   }
   .form-group input[type="checkbox"] {
     margin-right: 10px;
@@ -98,6 +102,17 @@
     transition: background-color 0.3s;
   }
   
+.form-group-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
   .form-navigation button:hover {
     background-color: #0056b3;
   }
@@ -112,4 +127,17 @@
 }  
 .date input{
     width: 92%;
+}
+.existing-files ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.existing-files img {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px;
 }

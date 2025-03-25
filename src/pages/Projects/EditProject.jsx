@@ -3,10 +3,14 @@ import Layout from '../../components/Layout';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../styles/Projects/AddProject.css';
-
+import { url } from '../../lib/api';
 const EditProject = () => {
-  const { projectId } = useParams(); // Get project ID from the URL
+  const { projectId } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [allRoles, setAllRoles] = useState([]);
+  const [usersByRole, setUsersByRole] = useState({});
+  const [selectedRoles, setSelectedRoles] = useState({ "Account Manager": [] });
   const [formData, setFormData] = useState({
     name: '',
     type: 'Residential',
@@ -17,90 +21,153 @@ const EditProject = () => {
     totalValue: '',
     deliveryAddress: '',
     deliveryHours: '',
-    assignedTeamRoles: ['Account Manager'], // Ensure it's always an array
     allowClientView: true,
     allowComments: true,
     enableNotifications: true,
+    fileUrls: [],
   });
 
-  const navigate = useNavigate();
+  const [files, setFiles] = useState([]);
+  const [removedFiles, setRemovedFiles] = useState([]);
 
   useEffect(() => {
-    const fetchProjectDetails = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
-        let fetchedProject = response.data;
-
-        // Ensure that assignedTeamRoles is always an array
-        if (typeof fetchedProject.assignedTeamRoles === 'string') {
-          fetchedProject.assignedTeamRoles = JSON.parse(fetchedProject.assignedTeamRoles || '[]'); // Parse if it's a JSON string
-        }
-
-        setFormData({
-          ...fetchedProject,
-          assignedTeamRoles: Array.isArray(fetchedProject.assignedTeamRoles)
-            ? fetchedProject.assignedTeamRoles
-            : ['Account Manager'], // Fallback to default array if not an array
-        });
-      } catch (error) {
-        console.error('Error fetching project details', error);
-      }
-    };
+    fetchRoles();
     fetchProjectDetails();
-  }, [projectId]);
+  }, []);
+
+  const fetchRoles = async () => {
+    const res = await axios.get(`${url}/roles`);
+    const roleTitles = res.data?.data.map(role => role.title) || [];
+    setAllRoles(roleTitles);
+  };
+
+  const fetchProjectDetails = async () => {
+    try {
+      const response = await axios.get(`${url}/projects/${projectId}`);
+      const project = response.data;
+
+      const parsedRoles = typeof project.assignedTeamRoles === 'string'
+        ? JSON.parse(project.assignedTeamRoles)
+        : project.assignedTeamRoles;
+
+      const roleMap = {};
+      parsedRoles.forEach(({ role, users }) => {
+        roleMap[role] = users;
+        fetchUsers(role); // fetch users for dropdown
+      });
+
+      setSelectedRoles(roleMap);
+      setFormData({
+        ...project,
+        fileUrls: Array.isArray(project.fileUrls) ? project.fileUrls : JSON.parse(project.fileUrls || '[]')
+      });
+    } catch (err) {
+      console.error('Error fetching project details:', err);
+    }
+  };
+
+  const fetchUsers = async (role) => {
+    try {
+      const res = await axios.get(`${url}/users-by-role/${encodeURIComponent(role)}`);
+      setUsersByRole(prev => ({ ...prev, [role]: res.data }));
+    } catch (err) {
+      console.error(`Failed to fetch users for role: ${role}`);
+    }
+  };
+
+  const toggleRole = (role) => {
+    setSelectedRoles(prev => {
+      const updated = { ...prev };
+      if (updated[role]) {
+        delete updated[role];
+      } else {
+        updated[role] = [];
+        fetchUsers(role);
+      }
+      return updated;
+    });
+  };
+
+  const handleFileChange = (e) => {
+    setFiles([...files, ...Array.from(e.target.files)]);
+  };
+
+  const handleRemoveExistingFile = (url) => {
+    setRemovedFiles(prev => [...prev, url]);
+    setFormData(prev => ({
+      ...prev,
+      fileUrls: prev.fileUrls.filter(f => f !== url),
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: checked,
-    });
-  };
-
-  const handleRolesChange = (e) => {
-    const { value } = e.target;
-    // Only add the value if it's not already present
-    if (!formData.assignedTeamRoles.includes(value)) {
-      setFormData({
-        ...formData,
-        assignedTeamRoles: [...formData.assignedTeamRoles, value],
-      });
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const formDataToSend = new FormData();
+
+    Object.entries(formData).forEach(([key, val]) => {
+      if (key !== 'assignedTeamRoles') {
+        if (Array.isArray(val)) {
+          formDataToSend.append(key, JSON.stringify(val));
+        } else {
+          formDataToSend.append(key, val);
+        }
+      }
+    });
+
+    // Filter duplicate roles (especially "Account Manager")
+    const uniqueRoles = [];
+    const seen = new Set();
+    for (const [role, users] of Object.entries(selectedRoles)) {
+      if (!seen.has(role)) {
+        seen.add(role);
+        uniqueRoles.push({ role, users });
+      }
+    }
+
+    formDataToSend.append("assignedTeamRoles", JSON.stringify(uniqueRoles));
+    formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
+    files.forEach(file => formDataToSend.append("files", file));
+
     try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend
       });
-      const data = await response.json();
-      if (response.status === 200) {
-        alert('Project updated successfully!');
-        navigate(`/project-details/${projectId}`); 
+      const data = await res.json();
+
+      if (res.status === 200) {
+        alert("Project updated successfully!");
+        navigate(`/project-details/${projectId}`);
       } else {
         alert(`Error: ${data.error}`);
       }
-    } catch (error) {
-      alert('An error occurred while updating the project.');
+    } catch (err) {
+      alert("Failed to update project");
     }
   };
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
+
+  
   return (
     <Layout>
       <div className="add-project-container">
@@ -115,6 +182,7 @@ const EditProject = () => {
             {step === 1 && (
               <div className="form-card">
                 <h3>Project Details</h3>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Project Name</label>
                   <input
@@ -136,6 +204,8 @@ const EditProject = () => {
                     <option value="Custom">Custom</option>
                   </select>
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Client Name</label>
                   <input
@@ -158,6 +228,8 @@ const EditProject = () => {
                     maxLength={60}
                   ></textarea>
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Start Date</label>
                   <input
@@ -177,6 +249,64 @@ const EditProject = () => {
                     onChange={handleChange}
                   />
                 </div>
+                </div>
+                <div className='form-group-row'>
+                <div className="form-group">
+  <label>Upload Files (Images/PDFs)</label>
+  <input
+    type="file"
+    name="files"
+    multiple
+    accept=".jpg,.jpeg,.png,.pdf"
+    onChange={handleFileChange}
+  />
+{formData.fileUrls && formData.fileUrls.length > 0 && (
+  <div className="existing-files">
+    <h4>Previously Uploaded Files:</h4>
+    <ul style={{ listStyle: 'none', padding: 0 }}>
+      {formData.fileUrls.map((url, idx) => {
+        const fileName = url.split('/').pop();
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+
+        return (
+          <li key={idx} style={{ marginBottom: '10px' }}>
+            {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+              <img
+                src={fileUrl}
+                alt={fileName}
+                style={{ width: '100px', height: 'auto', marginRight: '10px' }}
+              />
+            ) : (
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                {fileName}
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => handleRemoveExistingFile(url)}
+              style={{
+                marginLeft: '10px',
+                padding: '2px 6px',
+                backgroundColor: '#ff4d4d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Remove
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+)}
+
+</div>
+</div>
+
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>
                     Next
@@ -186,18 +316,36 @@ const EditProject = () => {
             )}
 
             {step === 2 && (
+              
               <div className="form-card">
                 <h3>Roles & Permissions</h3>
-                <div className="form-group">
-                  <label>Assigned Roles</label>
-                  <input
-                    type="text"
-                    name="assignedTeamRoles"
-                    value={formData.assignedTeamRoles.join(', ')}
-                    onChange={handleRolesChange}
-                    placeholder="Add roles"
-                  />
-                </div>
+                <div className='form-group-row'>
+                {allRoles.map(role => (
+                  <div key={role} className="form-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.hasOwnProperty(role)}
+                        onChange={() => toggleRole(role)}
+                      />
+                      {role}
+                    </label>
+
+                    {selectedRoles[role] && (
+                      <select multiple value={selectedRoles[role]} onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+                        setSelectedRoles(prev => ({
+                          ...prev,
+                          [role]: selected
+                        }));
+                      }}>
+                        {(usersByRole[role] || []).map(user => (
+                          <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ))}
                 <div className="form-group">
                   <label>Total Value</label>
                   <input
@@ -209,6 +357,8 @@ const EditProject = () => {
                     placeholder="Enter total value"
                   />
                 </div>
+                </div>
+                <div className='form-group-row'>
                 <div className="form-group">
                   <label>Delivery Address</label>
                   <input
@@ -229,6 +379,7 @@ const EditProject = () => {
                     onChange={handleChange}
                     placeholder="Enter delivery hours"
                   />
+                </div>
                 </div>
                 <div className="form-navigation">
                   <button type="button" onClick={prevStep}>
