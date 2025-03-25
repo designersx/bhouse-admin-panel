@@ -7,28 +7,49 @@ const ProjectDetails = () => {
   const { projectId } = useParams(); 
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
-    // Fetch project details using the project ID
     const fetchProjectDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
-        const fetchedProject = response.data;
-
-        // Ensure that assignedTeamRoles is an array
+        const [projectRes, usersRes] = await Promise.all([
+          axios.get(`http://localhost:5000/api/projects/${projectId}`),
+          axios.get(`http://localhost:5000/api/auth/getAllUsers`)
+        ]);
+  
+        const fetchedProject = projectRes.data;
+        const fetchedUsers = usersRes.data;
+  
         if (typeof fetchedProject.assignedTeamRoles === 'string') {
           fetchedProject.assignedTeamRoles = JSON.parse(fetchedProject.assignedTeamRoles || '[]');
         }
-
+  
+        if (typeof fetchedProject.fileUrls === 'string') {
+          fetchedProject.fileUrls = JSON.parse(fetchedProject.fileUrls || '[]');
+        }
+  
         setProject(fetchedProject);
+        setAllUsers(fetchedUsers);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching project details", error);
       }
     };
-
+  
     fetchProjectDetails();
   }, [projectId]);
+  const getUserNamesByIds = (ids) => {
+    if (!Array.isArray(ids)) return "";
+    return ids
+      .map(id => {
+        const user = allUsers.find(u => u.id.toString() === id.toString());
+        return user ? `${user.firstName} ${user.lastName}` : null;
+      })
+      .filter(Boolean)
+      .join(", ");
+  };
+  
+  
 
   return (
     <Layout>
@@ -67,14 +88,42 @@ const ProjectDetails = () => {
               <span>{new Date(project.estimatedCompletion).toLocaleDateString()}</span>
             </div>
           </div>
+          {project.fileUrls && project.fileUrls.length > 0 && (
+  <div className="project-info-card">
+    <h2>Uploaded Files</h2>
+    <div className="uploaded-files">
+      {project.fileUrls.map((url, idx) => {
+        const fileName = url.split('/').pop();
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
 
-          <div className="project-info-card">
-            <h2>Roles & Permissions</h2>
-            <div className="info-group">
-              <strong>Assigned Team Roles: </strong>
-              <span>{project.assignedTeamRoles.join(", ")}</span>
-            </div>
+        return (
+          <div key={idx} className="file-item">
+            {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+              <img src={fileUrl} alt={fileName} className="file-preview-image" />
+            ) : (
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                {fileName}
+              </a>
+            )}
           </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+<div className="project-info-card">
+  <h2>Assigned Team</h2>
+  {Array.isArray(project.assignedTeamRoles) && project.assignedTeamRoles.map((roleGroup, index) => (
+    <div key={index} className="info-group">
+      <strong>{roleGroup.role}:</strong>
+      <span> {getUserNamesByIds(roleGroup.users)}</span>
+    </div>
+  ))}
+</div>
+
+
 
           <div className="project-info-card">
             <h2>Additional Settings</h2>
