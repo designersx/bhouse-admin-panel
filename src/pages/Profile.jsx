@@ -173,7 +173,7 @@ const Profile = () => {
                 {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
               </div>
             </div>
-
+  
             <div className="profile-form-row">
               <div className="profile-form-group">
                 <label>First Name</label>

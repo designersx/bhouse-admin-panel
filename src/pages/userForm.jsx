@@ -61,21 +61,32 @@ const UserForm = () => {
   };
 
   const fetchRoles = async () => {
-    const response = await getRoles();
-    const allRoles = response.data;
-    const userRole = createdBYId.user.userRole;
-    const userLevel = roleLevels[userRole];
-
-    const filteredRoles = allRoles.filter(
-      (role) =>
-        role.createdBy === createdBYId.user.id ||
-        (role.defaultPermissionLevel > userLevel &&
-          role.defaultPermissionLevel == 6) ||
-        (userRole === "Super Admin" && role.title === "Super Admin")
-    );
-
-    setAvailableRoles(filteredRoles);
+    try {
+      const response = await getRoles();
+      const allRoles = response.data;
+  
+      const userRole = createdBYId.user.userRole;
+      const userId = createdBYId.user.id;
+      const userLevel = roleLevels[userRole];
+  
+      let filteredRoles = [];
+  
+      if (userRole === "Super Admin") {
+        filteredRoles = allRoles;
+      } else {
+        filteredRoles = allRoles.filter((role) => {
+          const isPredefinedAndAbove = role.defaultPermissionLevel < 6 && role.defaultPermissionLevel > userLevel;
+          const isCustomAndCreatedByUser = role.defaultPermissionLevel === 6 && String(role.createdBy) === String(userId);
+          return isPredefinedAndAbove || isCustomAndCreatedByUser;
+        });
+      }
+  
+      setAvailableRoles(filteredRoles);
+    } catch (error) {
+      console.error("❌ Error fetching roles:", error);
+    }
   };
+   
 
   const validateField = (name, value) => {
     const newErrors = { ...errors };
@@ -234,22 +245,21 @@ const UserForm = () => {
             </div>
           </div>
 
-          {!isEditMode && (
-            <div className="form-roww">
-              <div className="form-group full-width">
-                <label>Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  value={newUser.password}
-                  onChange={handleChange}
-                  maxLength={6}
-                />
-                {errors.password && <p className="error">{errors.password}</p>}
-              </div>
+          <div className="form-roww">
+            <div className="form-group full-width">
+              <label>Password {isEditMode && <span style={{ fontWeight: "normal", fontSize: "13px" }}>(optional)</span>}</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={newUser.password}
+                onChange={handleChange}
+                maxLength={6}
+              />
+              {errors.password && <p className="error">{errors.password}</p>}
             </div>
-          )}
+          </div>
+
 
           <div className="form-roww">
             <div className="form-group full-width">
