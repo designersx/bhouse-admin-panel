@@ -18,9 +18,9 @@ const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 3;
   const navigate = useNavigate();
-  
+
   const user = JSON.parse(localStorage.getItem("user"));
   const loggedInUserRole = (user?.user?.userRole || "").trim();
   const loggedInUserId = user?.user?.id;
@@ -32,48 +32,35 @@ const Roles = () => {
     try {
       const data = await getRoles();
       const allRoles = data?.data || [];
-  
+
       const loggedUserId = parseInt(loggedInUserId, 10);
       const userLevel = rolePermissionLevels[loggedInUserRole] || 6; // Fetch user level
-  
-      console.log(`Logged-in User Role: ${loggedInUserRole}, Level: ${userLevel}`);
-      console.log(`Logged-in User ID (Type: ${typeof loggedUserId}):`, loggedUserId);
+
       const filteredRoles = allRoles.filter((role) => {
         const roleLevel = role.defaultPermissionLevel || 6;
         const createdById = parseInt(role.createdBy, 10); // Ensure it's a number
-      
-        console.log(
-          `Checking Role: ${role.title}, Level: ${roleLevel}, Created By: ${createdById}, Logged-in User ID: ${loggedUserId}`
-        );
-      
+
         if (userLevel === 1) return true; // Super Admin can see all
-      
+
         if (userLevel === 6) {
           const isOwnRole = roleLevel === 6 && createdById === loggedUserId;
-          console.log(`Role ${role.title} should be visible?`, isOwnRole);
           return isOwnRole;
         }
-      
+
         // ✅ Correct condition to show only lower level roles or roles created by the user
         const shouldShow = (roleLevel > userLevel && roleLevel < 6) || createdById === loggedUserId;
-        console.log(`Role ${role.title} should be visible?`, shouldShow);
         return shouldShow;
       });
-      
-      
-  
+
+
+
       setRoles(filteredRoles);
     } catch (error) {
       console.error("Error fetching roles:", error);
       setRoles([]);
     }
   };
-  
-  
-  
-  
-  
-  
+
   const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -87,7 +74,13 @@ const Roles = () => {
       if (result.isConfirmed) {
         await deleteRole(id);
         setRoles(roles.filter((role) => role.id !== id));
-        Swal.fire("Deleted!", "The role has been deleted.", "success");
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "The role has been deleted.",
+          timer: 600,
+          showConfirmButton: false
+        });
       }
     });
   };
@@ -106,7 +99,7 @@ const Roles = () => {
   return (
     <Layout>
       <div className="roles-container">
-      <h2>Roles</h2>
+        <h2>Roles</h2>
         <div className="roles-header">
           <button className="add-role-btn" onClick={() => navigate("/create-role")}>
             + Add Role

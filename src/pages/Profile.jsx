@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import '../styles/profile.css';
 import { getUserProfile, updateUserProfile, uploadProfileImage } from '../lib/api';
 import imageCompression from 'browser-image-compression';
-import Swal from 'sweetalert2'; // NEW
+import Swal from 'sweetalert2';
 
 const Profile = () => {
   const [formData, setFormData] = useState({
@@ -13,17 +13,17 @@ const Profile = () => {
     lastName: '',
     mobileNumber: '',
     userRole: '',
+    password: '',
     profileImage: '',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-
         setLoading(true);
-        const res = await getUserProfile(); // ✅ API se data le rahe hain
-
+        const res = await getUserProfile();
         setFormData(res);
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -35,7 +35,79 @@ const Profile = () => {
     fetchData();
   }, []);
 
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const mobileRegex = /^\d{10}$/;
+    const passwordRegex = /^[A-Za-z0-9]{6}$/;
 
+    switch (name) {
+      case 'firstName':
+      case 'lastName':
+        newErrors[name] = !value
+          ? `${name === 'firstName' ? 'First' : 'Last'} Name is required`
+          : !nameRegex.test(value)
+          ? `${name === 'firstName' ? 'First' : 'Last'} Name must contain only letters`
+          : '';
+        break;
+
+      case 'mobileNumber':
+        newErrors.mobileNumber = !value
+          ? 'Mobile Number is required'
+          : !mobileRegex.test(value)
+          ? 'Enter a valid 10-digit number'
+          : '';
+        break;
+
+      case 'password':
+        newErrors.password = value && !passwordRegex.test(value)
+          ? 'Password must be 6 alphanumeric characters'
+          : '';
+        break;
+
+      default:
+        break;
+    }
+
+    setErrors(newErrors);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    validateField(name, value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    // Run full validation on all fields
+    ['firstName', 'lastName', 'mobileNumber', 'password'].forEach((field) =>
+      validateField(field, formData[field])
+    );
+  
+    // Check if any validation errors exist
+    const hasErrors = Object.values(errors).some((err) => err !== '');
+    if (hasErrors) {
+      Swal.fire('Error', 'Please fix all the errors before submitting.', 'error');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      await updateUserProfile(formData);
+      Swal.fire('Success', 'Profile updated successfully!', 'success');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Swal.fire('Error', 'Profile update failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -63,49 +135,28 @@ const Profile = () => {
       setLoading(false);
     }
   };
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-
-      setLoading(true);
-      await updateUserProfile(formData);
-      Swal.fire('Success', 'Profile updated successfully!', 'success');
-
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      Swal.fire('Error', 'Profile update failed', 'error');
-    }finally{
-      setLoading(false);
-    }
-  };
 
   return (
     <Layout>
-
       <div className="profile-container">
-        {loading && <div className="loader-overlay">Loading...</div>}
-        {/* Left Side: Form */}
+      {loading && (
+  <div className="loader-overlay">
+    <div className="loader"></div>
+  </div>
+)}
+
+
         <div className="profile-form">
           <h2>Edit Profile</h2>
           <form onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
-
                 <label>Email Address</label>
                 <input
                   className="profile-input"
                   type="email"
                   name="email"
                   value={formData.email}
-                  onChange={handleChange}
                   disabled
                 />
               </div>
@@ -117,7 +168,9 @@ const Profile = () => {
                   name="mobileNumber"
                   value={formData.mobileNumber}
                   onChange={handleChange}
+                  maxLength={10}
                 />
+                {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
               </div>
             </div>
 
@@ -131,6 +184,7 @@ const Profile = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                 />
+                {errors.firstName && <p className="error">{errors.firstName}</p>}
               </div>
               <div className="profile-form-group">
                 <label>Last Name</label>
@@ -141,45 +195,41 @@ const Profile = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                 />
+                {errors.lastName && <p className="error">{errors.lastName}</p>}
               </div>
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label>User Role</label>
+                <input
+                  className="profile-input"
+                  type="text"
+                  name="userRole"
+                  value={formData.userRole}
+                  disabled
+                />
+              </div>
 
-          <div className="form-row">
-            <div className="form-group">
-
-              <label>User Role</label>
-              <input
-                className="profile-input"
-                type="text"
-                name="userRole"
-                value={formData.userRole}
-                onChange={handleChange}
-                disabled
-              />
+              <div className="form-group">
+                <label>Password:</label>
+                <input
+                  className="p-input"
+                  type="text"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  maxLength={6}
+                />
+                {errors.password && <p className="error">{errors.password}</p>}
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Password:</label>
-              <input
-                className='p-input'
-                type="text"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                maxLength={6}
-              />
-            </div>
-            </div>
-            <button type="submit" className="update-btn">
-
-              Update Profile
-            </button>
+            <button type="submit" className="update-btn">Update Profile</button>
           </form>
         </div>
 
-        {/* Right Side: Profile Card */}
-
+        {/* Right side: Profile card */}
         <div className="profile-card">
           <div className="profile-pic-container">
             <img
@@ -208,8 +258,6 @@ const Profile = () => {
           </h3>
           <p className="email-text">{formData.email || "No Email Provided"}</p>
         </div>
-
-
       </div>
     </Layout>
   );

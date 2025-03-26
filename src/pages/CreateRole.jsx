@@ -165,7 +165,7 @@ const CreateRole = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error!',
-        text: 'Error Creating Role!',
+        text: error?.response?.data?.message || "Something went wrong!"
       });
     } finally {
       setLoading(false); // ✅ Hide loader
@@ -178,9 +178,10 @@ const CreateRole = () => {
   return (
     <Layout>
       <div className="create-role-container">
-        <button className="back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
+        <div className="createrole-header">
+        <button className="createrole-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
         <h2>Create New Role</h2>
-
+        </div>
         <div className="input-group">
           <label>Role Title:</label>
           <div className="autocomplete-container">

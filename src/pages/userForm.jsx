@@ -32,7 +32,7 @@ const UserForm = () => {
     userRole: "",
     status: "active",
     createdBy: createdBYId?.user.id,
-    roleId : null
+    roleId: null
   };
   const [newUser, setNewUser] = useState(defaultUserState);
   const [errors, setErrors] = useState({});
@@ -70,76 +70,98 @@ const UserForm = () => {
       (role) =>
         role.createdBy === createdBYId.user.id ||
         (role.defaultPermissionLevel > userLevel &&
-          role.defaultPermissionLevel !== 6) ||
+          role.defaultPermissionLevel == 6) ||
         (userRole === "Super Admin" && role.title === "Super Admin")
     );
 
     setAvailableRoles(filteredRoles);
   };
 
-  const validateForm = (user) => {
-    let errors = {};
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
 
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^\d{10}$/;
     const passwordRegex = /^[A-Za-z0-9]{6}$/;
 
-    if (!user.firstName) errors.firstName = "First Name is required";
-    else if (!nameRegex.test(user.firstName)) errors.firstName = "First Name must contain only letters";
+    switch (name) {
+      case "firstName":
+        newErrors.firstName = !value
+          ? "First Name is required"
+          : !nameRegex.test(value)
+            ? "First Name must contain only letters"
+            : "";
+        break;
+      case "lastName":
+        newErrors.lastName = !value
+          ? "Last Name is required"
+          : !nameRegex.test(value)
+            ? "Last Name must contain only letters"
+            : "";
+        break;
+      case "email":
+        newErrors.email = !value
+          ? "Email is required"
+          : !emailRegex.test(value)
+            ? "Enter a valid email address"
+            : "";
+        break;
+      case "mobileNumber":
+        newErrors.mobileNumber = !value
+          ? "Mobile Number is required"
+          : !mobileRegex.test(value)
+            ? "Enter a valid 10-digit number"
+            : "";
+        break;
+      case "password":
+        if (!isEditMode) {
+          newErrors.password = !value
+            ? "Password is required"
+            : !passwordRegex.test(value)
+              ? "Password must be 6 alphanumeric characters"
+              : "";
+        }
+        break;
+      case "userRole":
+        newErrors.userRole = !value ? "Role is required" : "";
+        break;
+      default:
+        break;
+    }
 
-    if (!user.lastName) errors.lastName = "Last Name is required";
-    else if (!nameRegex.test(user.lastName)) errors.lastName = "Last Name must contain only letters";
-
-    if (!user.email) errors.email = "Email is required";
-    else if (!emailRegex.test(user.email)) errors.email = "Enter a valid email address";
-
-    if (!user.mobileNumber) errors.mobileNumber = "Mobile Number is required";
-    else if (!mobileRegex.test(user.mobileNumber)) errors.mobileNumber = "Enter a valid 10-digit number";
-
-    if (!isEditMode && !user.password) errors.password = "Password is required";
-    else if (!isEditMode && !passwordRegex.test(user.password)) errors.password = "Password must be 6 alphanumeric characters";
-
-    if (!user.userRole) errors.userRole = "Role is required";
-
-    return errors;
+    setErrors(newErrors);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "userRole") {
-        // Find the selected role object
-        const selectedRole = availableRoles.find(role => role.title === value);
-
-        setNewUser((prev) => ({
-            ...prev,
-            userRole: value, // Save role title
-            roleId: selectedRole ? selectedRole.id : null, // Save role ID
-        }));
+      const selectedRole = availableRoles.find((role) => role.title === value);
+      setNewUser((prev) => ({
+        ...prev,
+        userRole: value,
+        roleId: selectedRole ? selectedRole.id : null,
+      }));
     } else {
-        setNewUser((prev) => ({ ...prev, [name]: value }));
+      setNewUser((prev) => ({ ...prev, [name]: value }));
     }
 
-    // Validation updates
-    const updatedErrors = { ...errors };
-    if (name === "userRole" && !value) {
-        updatedErrors.userRole = "Role is required";
-    } else {
-        delete updatedErrors.userRole;
-    }
+    validateField(name, value);
+  };
 
-    setErrors(updatedErrors);
-};
+  const validateForm = (user) => {
+    const fields = ["firstName", "lastName", "email", "mobileNumber", "userRole"];
+    if (!isEditMode) fields.push("password");
+    fields.forEach((field) => validateField(field, user[field]));
 
+    return Object.values(errors).some((error) => error !== "");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validateForm(newUser);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+    const hasErrors = validateForm(newUser);
+    if (hasErrors) return;
 
     try {
       setLoading(true);
@@ -152,7 +174,8 @@ const UserForm = () => {
       }
       navigate("/users");
     } catch (err) {
-      Swal.fire("Error", "Something went wrong!", "error");
+      console.log(err.message, '111111111111')
+      Swal.fire("Error", err.message || "Something went wrong!", "error");
     } finally {
       setLoading(false);
     }
@@ -161,7 +184,11 @@ const UserForm = () => {
   return (
     <Layout>
       <div className="user-form-wrapper">
-        {loading && <div className="loader-overlay">Loading...</div>}
+        {loading && (
+          <div className="loader-overlay">
+            <div className="loader"></div>
+          </div>
+        )}
         <div className="form-header">
           <button className="back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
           <h2 className="form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
@@ -207,7 +234,7 @@ const UserForm = () => {
             </div>
           </div>
 
-         
+          {!isEditMode && (
             <div className="form-roww">
               <div className="form-group full-width">
                 <label>Password</label>
@@ -222,7 +249,7 @@ const UserForm = () => {
                 {errors.password && <p className="error">{errors.password}</p>}
               </div>
             </div>
-
+          )}
 
           <div className="form-roww">
             <div className="form-group full-width">
