@@ -26,6 +26,7 @@ import CustomerForm from './pages/Customer/CustomerForm';
 
 import UserForm from './pages/userForm';
 import EditCustomer from './components/EditCustomer';
+import ViewCustomer from './pages/Customer/ViewCustomer';
 
 
 
@@ -61,6 +62,7 @@ const token = userData?.token;
           <Route path="/users/add" element={<UserForm />} />
           <Route path="/users/edit/:id" element={<UserForm />} />
           <Route path="/edit-customer/:id" element={<EditCustomer />} />
+          <Route path="/view-customer/:id" element={<ViewCustomer />} />
 
         </Routes>
     </ThemeProvider>

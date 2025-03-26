@@ -101,3 +101,105 @@
     text-align: center;
     margin-top: 0;
 }
+.actions{
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+/* 📂 Customer Details */
+.view-customer-container {
+    padding: 20px;
+  }
+  .customer-details-box {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .customer-name {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .customer-info,
+  .customer-company {
+    font-size: 14px;
+    color: gray;
+  }
+  
+  /* 📂 Documents Section */
+  .documents-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .document-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+  .document-title {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .document-date {
+    font-size: 12px;
+    color: gray;
+  }
+  .view-comments-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  /* 🟢 WhatsApp-Style Comments */
+  .comments-container {
+    max-width: 400px;
+    margin-top: 10px;
+  }
+  .comment-bubble {
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin-bottom: 5px;
+    max-width: 80%;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+  .comment-bubble.sent {
+    background: #dcf8c6;
+    align-self: flex-end;
+    text-align: right;
+  }
+  .comment-bubble.received {
+    background: #e5e5ea;
+    align-self: flex-start;
+    text-align: left;
+  }
+  
+  /* 📝 Comment Input */
+  .comment-input-container {
+    display: flex;
+    margin-top: 10px;
+  }
+  .comment-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  .comment-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+  }
+  

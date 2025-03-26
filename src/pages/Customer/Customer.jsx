@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { getCustomers, deleteCustomer } from "../../lib/api"; // delete API ko bhi import kar liya
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash } from "react-icons/fa";
-
+import { FaEdit, FaTrash , FaEye } from "react-icons/fa";
+// import { FaEye } from "react-icons/fa";
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -102,7 +102,7 @@ const Customer = () => {
                                     <td className="border p-2">NA</td>
                                     <td className="border p-2">{customer.company_name}</td>
                                     <td className="border p-2">{customer.status}</td>
-                                    <td className="border p-2">
+                                    <td className="actions">
                                         <FaEdit 
                                             className="edit-icon" 
                                             title="Edit" 
@@ -112,6 +112,9 @@ const Customer = () => {
                                             className="delete-icon" 
                                             title="Delete"  
                                             onClick={() => handleDelete(customer.id)}
+                                        />
+                                        <FaEye   className="view-icon"
+                                        onClick={() => navigate(`/view-customer/${customer.id}`)}
                                         />
                                     </td>
                                 </tr>
