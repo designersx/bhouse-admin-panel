@@ -12,18 +12,16 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
 
-    const [currentPage, setCurrentPage] = useState(1);
-    
-      const itemsPerPage = 8; 
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 3;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
-const roleId = JSON.parse(localStorage.getItem("user"))
-console.log(roleId?.user?.roleId)
+  const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
-  console.log({rolePermissions})
   const navigate = useNavigate();
 
 
-  
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -114,8 +112,8 @@ console.log(roleId?.user?.roleId)
     <Layout>
       <div className="roles-container">
         <h2>Users</h2>
-        <div className="roles-header">
-          {rolePermissions?.UserManagement?.create ?           <button onClick={() => navigate("/users/add")} className="add-user-btn">
+        <div className="user-roles-header">
+          {rolePermissions?.UserManagement?.create ? <button onClick={() => navigate("/users/add")} className="add-user-btn">
             <GrAdd /> Add User
           </button> : null}
 
@@ -124,7 +122,7 @@ console.log(roleId?.user?.roleId)
             placeholder="Search users..."
             value={search}
             onChange={handleSearchChange}
-            className="search-input"
+            className="user-search-input"
           />
         </div>
         <table className="roles-table">
@@ -159,7 +157,7 @@ console.log(roleId?.user?.roleId)
               ))
             ) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: "center" }}>No users found</td>
+                <td colSpan="7" style={{ textAlign: "center" }}>No users found</td>
               </tr>
             )}
           </tbody>

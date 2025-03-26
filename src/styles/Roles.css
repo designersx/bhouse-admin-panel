@@ -15,10 +15,16 @@
 
 .roles-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Align everything to the right by default */
   align-items: center;
   margin-bottom: 20px;
+  gap: 10px;
 }
+
+.roles-header .add-role-btn {
+  margin-right: auto; /* Pushes everything else to the right */
+}
+
 
 .add-role-btn {
   background-color: #4f46e5;
