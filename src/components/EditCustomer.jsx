@@ -1,9 +1,13 @@
-import { useState } from "react";
-import { createCustomer } from "../../lib/api";
-import Layout from "../../components/Layout";
-import "./style.css"; // Import External CSS
+import { useEffect, useState } from "react";
+import { getCustomerById, updateCustomer } from "../lib/api";
+import { useNavigate, useParams } from "react-router-dom";
+import Layout from "./Layout";
 
-const CustomerForm = () => {
+
+const EditCustomer = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         full_name: "",
         email: "",
@@ -22,6 +26,17 @@ const CustomerForm = () => {
     });
 
     const [sameAsAddress, setSameAsAddress] = useState(false);
+
+    useEffect(() => {
+        const fetchCustomer = async () => {
+            const data = await getCustomerById(id);
+            if (data) {
+                setFormData(data);
+                setSameAsAddress(data.address === data.delivery_address);
+            }
+        };
+        fetchCustomer();
+    }, [id]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -42,14 +57,15 @@ const CustomerForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const response = await createCustomer(formData);
-        alert(response.message || "Customer created successfully!");
+        await updateCustomer(id, formData);
+        alert("Customer updated successfully!");
+        navigate("/customers");
     };
 
     return (
         <Layout>
             <div className="customer-form-container">
-                <h2 className="add-customer">Add New Customer</h2>
+                <h2 className="add-customer">Edit Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
                         <label>Full Name</label>
@@ -94,10 +110,7 @@ const CustomerForm = () => {
                         />
                     </div>
 
-                    <div className="full-width">
-                        <label>Password</label>
-                        <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-                    </div>
+                    
 
                     <div className="checkbox-group">
                         <label className="checkbox-label">
@@ -121,11 +134,11 @@ const CustomerForm = () => {
                         </label>
                     </div>
 
-                    <button type="submit" className="submit-btn">Save Customer</button>
+                    <button type="submit" className="submit-btn">Update Customer</button>
                 </form>
             </div>
         </Layout>
     );
 };
 
-export default CustomerForm;
+export default EditCustomer;

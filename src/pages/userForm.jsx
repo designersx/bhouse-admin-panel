@@ -32,6 +32,7 @@ const UserForm = () => {
     userRole: "",
     status: "active",
     createdBy: createdBYId?.user.id,
+    roleId : null
   };
   const [newUser, setNewUser] = useState(defaultUserState);
   const [errors, setErrors] = useState({});
@@ -106,55 +107,31 @@ const UserForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewUser((prev) => ({ ...prev, [name]: value }));
 
+    if (name === "userRole") {
+        // Find the selected role object
+        const selectedRole = availableRoles.find(role => role.title === value);
+
+        setNewUser((prev) => ({
+            ...prev,
+            userRole: value, // Save role title
+            roleId: selectedRole ? selectedRole.id : null, // Save role ID
+        }));
+    } else {
+        setNewUser((prev) => ({ ...prev, [name]: value }));
+    }
+
+    // Validation updates
     const updatedErrors = { ...errors };
-
-    switch (name) {
-      case "firstName":
-      case "lastName":
-        if (!/^[A-Za-z\s]*$/.test(value)) {
-          updatedErrors[name] = `${name === "firstName" ? "First" : "Last"} Name must contain only letters`;
-        } else {
-          delete updatedErrors[name];
-        }
-        break;
-      case "email":
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          updatedErrors.email = "Enter a valid email address";
-        } else {
-          delete updatedErrors.email;
-        }
-        break;
-      case "mobileNumber":
-        if (!/^\d{0,10}$/.test(value)) {
-          updatedErrors.mobileNumber = "Enter a valid 10-digit number";
-        } else if (value.length !== 10) {
-          updatedErrors.mobileNumber = "Mobile Number must be 10 digits";
-        } else {
-          delete updatedErrors.mobileNumber;
-        }
-        break;
-      case "password":
-        if (!isEditMode && !/^[A-Za-z0-9]{6}$/.test(value)) {
-          updatedErrors.password = "Password must be 6 alphanumeric characters";
-        } else {
-          delete updatedErrors.password;
-        }
-        break;
-      case "userRole":
-        if (!value) {
-          updatedErrors.userRole = "Role is required";
-        } else {
-          delete updatedErrors.userRole;
-        }
-        break;
-      default:
-        break;
+    if (name === "userRole" && !value) {
+        updatedErrors.userRole = "Role is required";
+    } else {
+        delete updatedErrors.userRole;
     }
 
     setErrors(updatedErrors);
-  };
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -230,7 +207,7 @@ const UserForm = () => {
             </div>
           </div>
 
-          {!isEditMode && (
+         
             <div className="form-roww">
               <div className="form-group full-width">
                 <label>Password</label>
@@ -245,7 +222,7 @@ const UserForm = () => {
                 {errors.password && <p className="error">{errors.password}</p>}
               </div>
             </div>
-          )}
+
 
           <div className="form-roww">
             <div className="form-group full-width">

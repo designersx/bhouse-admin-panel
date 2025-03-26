@@ -190,5 +190,36 @@ export const getCustomers = async () => {
       throw error.response?.data || error;
     }
   };
+// 🔵 Get customer by ID
+export const getCustomerById = async (id) => {
+  try {
+      const response = await axios.get(`${url}/customer/${id}`);
+      return response.data;
+  } catch (error) {
+      console.error("Error fetching customer", error);
+      return null;
+  }
+};
+
+// 🟡 Update customer
+export const updateCustomer = async (id, customerData) => {
+  try {
+      const response = await axios.put(`${url}/customer/${id}`, customerData);
+      return response.data;
+  } catch (error) {
+      console.error("Error updating customer", error);
+      throw error;
+  }
+};
+
+// 🔴 Delete customer
+export const deleteCustomer = async (id) => {
+  try {
+      await axios.delete(`${url}/customer/${id}`);
+  } catch (error) {
+      console.error("Error deleting customer", error);
+      throw error;
+  }
+};
 
 

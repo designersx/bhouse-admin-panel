@@ -7,7 +7,7 @@ import "../styles/Roles.css";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-
+import useRolePermissions from "../hooks/useRolePermissions";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -16,8 +16,10 @@ const Users = () => {
     
       const itemsPerPage = 8; 
   let createdBYId = JSON.parse(localStorage.getItem("user"));
-
-
+const roleId = JSON.parse(localStorage.getItem("user"))
+console.log(roleId?.user?.roleId)
+  const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
+  console.log({rolePermissions})
   const navigate = useNavigate();
 
 
@@ -113,9 +115,10 @@ const Users = () => {
       <div className="roles-container">
         <h2>Users</h2>
         <div className="roles-header">
-          <button onClick={() => navigate("/users/add")} className="add-user-btn">
+          {rolePermissions?.UserManagement?.create ?           <button onClick={() => navigate("/users/add")} className="add-user-btn">
             <GrAdd /> Add User
-          </button>
+          </button> : null}
+
           <input
             type="text"
             placeholder="Search users..."
