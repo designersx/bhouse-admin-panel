@@ -1,109 +1,103 @@
-/* Basic page layout */
+/* Layout wrapper */
 .project-details-container {
-    margin-top: 40px;
-    padding: 30px;
-    background-color: #f4f7fb;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 1s ease-in-out;
-  }
-  
-  .project-details-header {
-    text-align: center;
-    margin-bottom: 40px;
-  }
-  
-  .project-details-header h1 {
-    font-size: 2.5rem;
-    color: #333;
-  }
-  
-  .project-info-card {
-    background-color: #fff;
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    animation: slideUp 0.6s ease-in-out;
-  }
-  
-  .project-info-card h2 {
-    font-size: 1.8rem;
-    color: #007bff;
-    margin-bottom: 15px;
-  }
-  
-  .info-group {
-    margin-bottom: 12px;
-    font-size: 1.2rem;
-  }
-  
-  .info-group strong {
-    font-weight: bold;
-  }
-  
-  .info-group span {
-    color: #555;
-  }
-  
-  .info-group p {
-    color: #555;
-    font-style: italic;
-  }
-  
-  .loading {
-    font-size: 1.5rem;
-    text-align: center;
-    color: #007bff;
-    margin-top: 50px;
-    animation: fadeIn 1s ease-in-out;
-  }
-  
-  /* Animation for fading in the page */
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-  
-  /* Animation for sliding in the card */
-  @keyframes slideUp {
-    0% {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  .uploaded-files {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    flex-direction: column;
-  }
-  
-  .file-item {
-    text-align: center;
-  }
-  
-  .file-preview-image {
-    width: 120px;
-    height: auto;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-  }
-  
-  .file-link {
-    display: inline-block;
-    padding: 8px 12px;
-    background-color: #eee;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #333;
-  }
-  
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.project-details-header h1 {
+  text-align: center;
+  color: #333;
+  font-size: 2.2rem;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Card for each section */
+.project-info-card {
+  margin-bottom: 30px;
+  padding: 25px 30px;
+  background-color: #f9fbfc;
+  border: 1px solid #e3e9f0;
+  border-radius: 12px;
+}
+
+/* Card heading */
+.project-info-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+  color: #004085;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+/* Info groups */
+.info-group {
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #333;
+}
+
+.info-group strong {
+  color: #000;
+  display: inline-block;
+  width: 180px;
+}
+
+/* File section */
+.uploaded-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.file-item {
+  text-align: center;
+  width: 140px;
+  border: 1px solid #e1e1e1;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.file-preview-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.file-link {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #007bff;
+  word-break: break-word;
+  margin-top: 5px;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 100px;
+  color: #888;
+}
+
+/* Assigned team styling */
+.assigned-role {
+  margin-bottom: 10px;
+}
+
+.assigned-role strong {
+  color: #444;
+}
+
+.assigned-role span {
+  color: #555;
+}

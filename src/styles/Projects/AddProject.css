@@ -58,7 +58,7 @@
   
  .form-group input{
     padding: 12px;
-    width: 97%;
+    width: 100%;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -74,7 +74,7 @@
   }
   .form-group textarea {
     padding: 12px;
-    width: 97%;
+    width: 100%;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -140,4 +140,180 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 4px;
+}
+/* Clean Card-Based Roles Layout */
+.roles-container-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.role-card {
+  border: 1px solid #e0e0e0;
+  border-left: 6px solid transparent;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: 0.3s ease;
+
+}
+
+
+.role-card.active {
+  border-left-color: #007bff;
+  background-color: #f9fcff;
+}
+
+.role-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.role-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-left: 8px;
+}
+
+.role-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-left: 5px;
+}
+
+.user-checkbox-pill {
+  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.2s;
+  width: 300px;
+}
+
+.user-checkbox-pill:hover {
+  background-color: #f1f7ff;
+}
+
+.user-checkbox-pill input[type="checkbox"] {
+  transform: scale(1.1);
+}
+
+/* ------------------------------
+   👥 Roles & Permissions Section
+---------------------------------*/
+
+.role-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  background-color: #fdfdfd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.role-section > label {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 👤 User checkbox layout */
+.user-checkbox-group {
+  margin-top: 12px;
+  margin-left: 10px;
+  padding-left: 16px;
+  border-left: 3px solid #007bff20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.user-checkbox-group label {
+  font-size: 14px;
+  background-color: #fff;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.03);
+}
+
+.user-checkbox-group label:hover {
+  background-color: #f3f8ff;
+}
+
+.user-checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.1);
+}
+
+/* 🧩 Group alignment */
+.roles-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Optional: Highlight selected role sections */
+.role-section.selected {
+  border-color: #007bff;
+  background-color: #f7faff;
+}
+.lead-time-matrix-container {
+  margin-top: 20px;
+}
+
+.item-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.item-row input,
+.item-row select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  min-width: 120px;
+}
+
+.item-row button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.item-row button:hover {
+  background-color: #c0392b;
+}
+.ledbutton{
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+  justify-content: center;
 }
