@@ -221,5 +221,74 @@ export const deleteCustomer = async (id) => {
       throw error;
   }
 };
+export const uploadDocument = async (customerId, file) => {
+  let userId = JSON.parse(localStorage.getItem("user"))
+  try {
+      const formData = new FormData();
+      formData.append("customer_id", customerId);
+      formData.append("document_name", file.name);
+      formData.append("uploaded_by",userId.user.id ); // Manually set user ID (Replace it dynamically if needed)
+      formData.append("document", file);
+
+      const response = await axios.post(`${url}/documents/upload`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      return response.data;
+  } catch (error) {
+      console.error("Error uploading document:", error);
+      throw error;
+  }
+};
+
+// ✅ Fetch Documents API (Uploaded Documents List)
+export const getDocumentsByCustomer = async (customerId) => {
+  try {
+      const response = await axios.get(`${url}/documents/customer/${customerId}`);
+      return response.data;
+  } catch (error) {
+      console.error("Error fetching documents:", error);
+      throw error;
+  }
+};
+// ✅ Fetch Comments API
+// ✅ Fetch Comments API (With Commenter's Name)
+// ✅ Add Comment API
+export const addComment = async (documentId, comment, commentedBy, role , commented_by_name) => {
+  try {
+      const response = await axios.post(`${url}/comments/add`, {
+          document_id: documentId,
+          comment_text: comment,
+          commented_by: commentedBy,
+          role  ,  
+          commented_by_name :commented_by_name
+      });
+      return response.data.comment;
+  } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+  }
+};
+
+// ✅ Fetch Comments API
+export const getCommentsByDocument = async (documentId) => {
+  try {
+      const response = await axios.get(`${url}/comments/document/${documentId}`);
+      return response.data;
+  } catch (error) {
+      console.error("Error fetching comments:", error);
+      throw error;
+  }
+};
 
 
+// ✅ Delete Comment API
+export const deleteComment = async (commentId) => {
+  try {
+      const response = await axios.delete(`${url}/comments/delete/${commentId}`);
+      return response.data;
+  } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error;
+  }
+};
