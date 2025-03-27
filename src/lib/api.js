@@ -1,6 +1,9 @@
 import axios from 'axios'
 export const url = 'http://localhost:5000/api' || ""
+// export const url = 'http://45.77.110.58:8765/api' || ""
 
+
+export const url2 = 'http://localhost:5000' || ""
 
 export const registerUser = async (userData) => {
   try {

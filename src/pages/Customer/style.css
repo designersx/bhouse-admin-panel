@@ -160,26 +160,35 @@
   
   /* 🟢 WhatsApp-Style Comments */
   .comments-container {
-    max-width: 400px;
+    max-width: 100%;
     margin-top: 10px;
   }
   .comment-bubble {
     padding: 8px 12px;
     border-radius: 12px;
     margin-bottom: 5px;
-    max-width: 80%;
+    max-width: 100%;
     font-size: 14px;
     word-wrap: break-word;
+    position: relative;
   }
   .comment-bubble.sent {
     background: #dcf8c6;
-    align-self: flex-end;
+    /* align-self: flex-end;
+    text-align: right; */
+    width: 50%;
+  }
+  .comment-bubble.sent p{
+    text-align: left;
+  }
+  .comment-bubble.received p{
     text-align: right;
   }
   .comment-bubble.received {
     background: #e5e5ea;
     align-self: flex-start;
     text-align: left;
+    width: 50%;
   }
   
   /* 📝 Comment Input */
@@ -202,4 +211,140 @@
     cursor: pointer;
     margin-left: 5px;
   }
-  
+  .accordion {
+    width: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.accordion-item {
+    border-bottom: 1px solid #ddd;
+}
+
+.accordion-header {
+    padding: 10px 15px;
+    /* background: #007bff; */
+    color: rgb(8, 0, 0);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px;
+    border: 2px solid;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.accordion-header:hover {
+    background: #eaf2fb;
+}
+
+.accordion-content {
+    padding: 15px;
+    background: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.arrow {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.upload-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.upload-btn {
+    padding: 8px 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.upload-btn:hover {
+    background: #218838;
+}
+
+.comment-input-container {
+    display: flex;
+    gap: 5px;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 8px;
+}
+
+.comment-btn {
+    padding: 8px;
+    background: #007bff;
+    color: white;
+}
+
+
+
+
+
+
+
+
+/*  */
+.customer-projects-container {
+  width: 80%;
+  margin: 20px auto;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.project-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 6px solid #007bff;
+  transition: transform 0.2s ease-in-out;
+}
+
+.project-card:hover {
+  transform: scale(1.02);
+}
+
+.project-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.project-info {
+  margin: 10px 0;
+  color: #555;
+}
+
+.project-status {
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.status-proposal { background: #f8d7da; color: #721c24; }
+.status-inprogress { background: #fff3cd; color: #856404; }
+.status-delivered { background: #d4edda; color: #155724; }
+
+.assigned-roles {
+  margin-top: 10px;
+}
+
+.role-tag {
+  display: inline-block;
+  background: #007bff;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin: 3px;
+  font-size: 14px;
+}

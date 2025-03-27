@@ -1,0 +1,66 @@
+.customer-projects-container {
+    width: 80%;
+    margin: 20px auto;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.project-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 6px solid #007bff;
+    transition: transform 0.2s ease-in-out;
+}
+
+.project-card:hover {
+    transform: scale(1.02);
+}
+
+.project-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
+.project-info {
+    margin: 5px 0;
+    color: #555;
+}
+
+.project-status {
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.status-proposal { background: #f8d7da; color: #721c24; }
+.status-inprogress { background: #fff3cd; color: #856404; }
+.status-delivered { background: #d4edda; color: #155724; }
+
+.assigned-roles {
+    margin-top: 10px;
+}
+
+.role-container {
+    margin-top: 8px;
+}
+
+.role-title {
+    font-weight: bold;
+    color: #444;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.user-name {
+    background: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-right: 5px;
+    font-size: 14px;
+    display: inline-block;
+}
