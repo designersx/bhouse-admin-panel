@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import '../../styles/Projects/AddProject.css';
 import Swal from 'sweetalert2';
@@ -25,14 +25,18 @@ const AddProject = () => {
    clientId : clientId
   });
 
-  const [selectedRoles, setSelectedRoles] = useState([]); 
-  const [roleUsers, setRoleUsers] = useState({}); 
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [roleUsers, setRoleUsers] = useState({});
   const [allRoles, setAllRoles] = useState([]);
-  const [files, setFiles] = useState([]); 
+  const [files, setFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([
-    { itemName: '', quantity: '', expectedDate: '', status: 'Pending' }
+    { itemName: '', quantity: '', expectedDeliveryDate: '', status: 'Pending' }
   ]);
+
+  const [loading, setLoading] = useState(false);
+
+
   const navigate = useNavigate();
 
   const handleItemChange = (index, field, value) => {
@@ -40,20 +44,20 @@ const AddProject = () => {
     updated[index][field] = value;
     setLeadTimeMatrix(updated);
   };
-  
+
   const handleAddItemRow = () => {
     setLeadTimeMatrix([
       ...leadTimeMatrix,
-      { itemName: '', quantity: '', expectedDate: '', status: 'Pending' }
+      { itemName: '', quantity: '', expectedDeliveryDate: '', status: 'Pending' }
     ]);
   };
-  
+
   const handleRemoveItemRow = (index) => {
     const updated = [...leadTimeMatrix];
     updated.splice(index, 1);
     setLeadTimeMatrix(updated);
   };
-  
+
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
@@ -81,15 +85,15 @@ const AddProject = () => {
       });
     } else {
       setSelectedRoles(prev => [...prev, role]);
-  
+
       try {
         const encodedRole = encodeURIComponent(role);
         const res = await fetch(`http://localhost:5000/api/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         const users = data.users || [];
-  
+
         setRoleUsers(prev => ({ ...prev, [role]: users }));
-  
+
         // Optional: auto-select user with permissionLevel === 2
         const defaultUsers = users.filter(user => user.permissionLevel === 2);
         const defaultUserIds = defaultUsers.map(user => user.id);
@@ -105,7 +109,7 @@ const AddProject = () => {
       }
     }
   };
-  
+
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -120,7 +124,7 @@ const AddProject = () => {
     };
     fetchRoles();
   }, []);
-  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -132,9 +136,7 @@ const AddProject = () => {
     setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,8 +167,18 @@ const AddProject = () => {
     for (let file of files) {
       formDataToSend.append('files', file);
     }
-
+    for (let file of formData.proposals || []) {
+      formDataToSend.append('proposals', file);
+    }
+    for (let file of formData.floorPlans || []) {
+      formDataToSend.append('floorPlans', file);
+    }
+    for (let file of formData.otherDocuments || []) {
+      formDataToSend.append('otherDocuments', file);
+    }
+    
     try {
+      setLoading(true)
       const response = await fetch('http://localhost:5000/api/projects', {
         method: 'POST',
         body: formDataToSend
@@ -190,6 +202,8 @@ const AddProject = () => {
         title: 'Oops...',
         text: 'Something went wrong!'
       });
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -199,6 +213,11 @@ const AddProject = () => {
   return (
     <Layout>
       <div className="add-project-container">
+        {loading && (
+          <div className="loader-overlay">
+            <div className="loader"></div>
+          </div>
+        )}
         <h2>Add New Project</h2>
         <div className="step-indicator">
           <span className={step === 1 ? 'active' : ''}>Step 1</span>
@@ -295,24 +314,76 @@ const AddProject = () => {
                   </div>
                 </div>
                 <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Upload Files (Images/PDFs)</label>
-                    <input
-                      type="file"
-                      name="files"
-                      multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={handleFileChange}
-                    />
-                    {files.length > 0 && (
-                      <ul className="file-preview-list">
-                        {files.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+  <div className="form-group">
+    <label>Upload Proposals & Presentations (PDF, Images)</label>
+    <input
+      type="file"
+      name="proposals"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          proposals: [...(prev.proposals || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.proposals?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Upload Floor Plans, CAD Files</label>
+    <input
+      type="file"
+      name="floorPlans"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          floorPlans: [...(prev.floorPlans || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.floorPlans?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Upload Other Documents (COI, Permits, etc.)</label>
+    <input
+      type="file"
+      name="otherDocuments"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          otherDocuments: [...(prev.otherDocuments || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.otherDocuments?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>Next</button>
                 </div>
@@ -326,57 +397,57 @@ const AddProject = () => {
                   <div className="form-group">
                     <label>Assign Roles</label>
                     <div className="roles-container-ui">
-  {allRoles.map((role) => (
-    <div key={role} className={`role-card ${selectedRoles.includes(role) ? 'active' : ''}`}>
-      <div className="role-header">
-        <label>
-          <input
-            type="checkbox"
-            checked={selectedRoles.includes(role)}
-            onChange={() => handleRoleToggle(role)}
-          />
-          <span className="role-title">{role}</span>
-        </label>
-      </div>
+                      {allRoles.map((role) => (
+                        <div key={role} className={`role-card ${selectedRoles.includes(role) ? 'active' : ''}`}>
+                          <div className="role-header">
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={selectedRoles.includes(role)}
+                                onChange={() => handleRoleToggle(role)}
+                              />
+                              <span className="role-title">{role}</span>
+                            </label>
+                          </div>
 
-      {selectedRoles.includes(role) && roleUsers[role] && (
-        <div className="role-users">
-          {roleUsers[role].map((user) => {
-            const isChecked = (formData.assignedTeamRoles[role] || []).includes(user.id);
-            return (
-              <label key={user.id} className="user-checkbox-pill">
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={(e) => {
-                    const prevSelected = formData.assignedTeamRoles[role] || [];
-                    const updatedUsers = e.target.checked
-                      ? [...prevSelected, user.id]
-                      : prevSelected.filter((id) => id !== user.id);
+                          {selectedRoles.includes(role) && roleUsers[role] && (
+                            <div className="role-users">
+                              {roleUsers[role].map((user) => {
+                                const isChecked = (formData.assignedTeamRoles[role] || []).includes(user.id);
+                                return (
+                                  <label key={user.id} className="user-checkbox-pill">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => {
+                                        const prevSelected = formData.assignedTeamRoles[role] || [];
+                                        const updatedUsers = e.target.checked
+                                          ? [...prevSelected, user.id]
+                                          : prevSelected.filter((id) => id !== user.id);
 
-                    setFormData((prev) => ({
-                      ...prev,
-                      assignedTeamRoles: {
-                        ...prev.assignedTeamRoles,
-                        [role]: updatedUsers,
-                      },
-                    }));
-                  }}
-                />
-                {user.firstName} {user.email}
-              </label>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  ))}
-</div>
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          assignedTeamRoles: {
+                                            ...prev.assignedTeamRoles,
+                                            [role]: updatedUsers,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                    {user.firstName} {user.email}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
                   </div>
-                
+
                 </div>
-              
+
                 <div className='form-group-row'>
                   <div className="form-group">
                     <label>Delivery Address</label>
@@ -401,7 +472,7 @@ const AddProject = () => {
                   </div>
                 </div>
                 <div className='form-group-row'>
-                <div className="form-group">
+                  <div className="form-group">
                     <label>Total Value</label>
                     <input
                       type="number"
@@ -422,43 +493,45 @@ const AddProject = () => {
                       <option value="Completed">Completed</option>
                     </select>
                   </div>
-                  </div>
-                  <h3>Project Lead Time Matrix</h3>
-<div className="lead-time-matrix-container">
-  {leadTimeMatrix.map((item, index) => (
-    <div key={index} className="item-row">
-      <input
-        type="text"
-        placeholder="Item Name"
-        value={item.itemName}
-        onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Quantity"
-        value={item.quantity}
-        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-      />
-      <input
-        type="date"
-        value={item.expectedDate}
-        onChange={(e) => handleItemChange(index, 'expectedDate', e.target.value)}
-      />
-      <select
-        value={item.status}
-        onChange={(e) => handleItemChange(index, 'status', e.target.value)}
-      >
-        <option value="Pending">Pending</option>
-        <option value="Delivered">Delivered</option>
-      </select>
-      {leadTimeMatrix.length > 1 && (
-        <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
-      )}
-    </div>
-  ))}
-  <button className='ledbutton' type="button" onClick={handleAddItemRow}>+ Add Item</button>
-</div>
-<br/>
+
+                </div>
+                <h3>Project Lead Time Matrix</h3>
+                <div className="lead-time-matrix-container">
+                  {leadTimeMatrix.map((item, index) => (
+                    <div key={index} className="item-row">
+                      <input
+                        type="text"
+                        placeholder="Item Name"
+                        value={item.itemName}
+                        onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Quantity"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                      />
+                      <input
+                        type="date"
+                        value={item.expectedDate}
+                        onChange={(e) => handleItemChange(index, 'expectedDate', e.target.value)}
+                      />
+                      <select
+                        value={item.status}
+                        onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Delivered">Delivered</option>
+                      </select>
+                      {leadTimeMatrix.length > 1 && (
+                        <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
+                      )}
+                    </div>
+                  ))}
+                  <button className='ledbutton' type="button" onClick={handleAddItemRow}>+ Add Item</button>
+                </div>
+                <br />
+
 
                 <div className="form-navigation">
                   <button type="button" onClick={prevStep}>Previous</button>

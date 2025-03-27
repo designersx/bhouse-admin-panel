@@ -21,7 +21,6 @@ const Users = () => {
   const navigate = useNavigate();
 
 
-
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -31,16 +30,38 @@ const Users = () => {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
+
       if (loggedInUser?.user.userRole === "Super Admin") {
+
+      // Define role levels
+      const roleLevels = {
+        "Super Admin": 1,
+        "Account Manager": 2,
+        "Sr. Designer": 3,
+        "Operations": 4,
+        "Lead Installer": 5,
+      };
+
+      if (loggedInUser?.user.userRole === "Super Admin") {
+
         setUsers(data);
       } else {
-        const filteredUsers = data.filter(user => user.createdBy === loggedInUser?.user.id);
+        // Filter users based on the logged-in user's role level
+        const loggedInUserRoleLevel = roleLevels[loggedInUser?.user.userRole];
+        
+        // Filter users who have a role level greater than or equal to the logged-in user's role
+        const filteredUsers = data.filter(user => {
+          const userRoleLevel = roleLevels[user.userRole];
+          return userRoleLevel >= loggedInUserRoleLevel;
+        });
+
         setUsers(filteredUsers);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+};
+
 
   const handleDeleteUser = async (id) => {
     const confirmResult = await Swal.fire({
@@ -134,7 +155,9 @@ const Users = () => {
               <th>Password</th>
               <th>Role</th>
               <th>Status</th>
-              <th>Actions</th>
+              {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
+                <th>Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -149,10 +172,25 @@ const Users = () => {
                   <td className={user.status === "active" ? "status_active" : "status_inactive"}>
                     {user.status === "active" ? " Active" : " Inactive"}
                   </td>
-                  <td className="actions">
-                    <FaEdit className="edit-icon" title="Edit" onClick={() => navigate(`/users/edit/${user.id}`)} />
-                    <FaTrash className="delete-icon" title="Delete" onClick={() => handleDeleteUser(user.id)} />
-                  </td>
+                  {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) ? (
+                    <td className="actions">
+                      {rolePermissions?.UserManagement?.edit && (
+                        <FaEdit
+                          className="edit-icon"
+                          title="Edit"
+                          onClick={() => navigate(`/users/edit/${user.id}`)}
+                        />
+                      )}
+                      {rolePermissions?.UserManagement?.delete && (
+                        <FaTrash
+                          className="delete-icon"
+                          title="Delete"
+                          onClick={() => handleDeleteUser(user.id)}
+                        />
+                      )}
+                    </td>
+                  ) : null}
+
                 </tr>
               ))
             ) : (
