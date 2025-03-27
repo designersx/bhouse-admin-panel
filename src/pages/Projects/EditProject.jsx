@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../styles/Projects/AddProject.css';
 import { url, getCustomers } from '../../lib/api';
+import Swal from 'sweetalert2';
 
 const EditProject = () => {
   const { projectId } = useParams();
@@ -32,7 +33,17 @@ const EditProject = () => {
   const [files, setFiles] = useState([]);
   const [removedFiles, setRemovedFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
-
+  const [leadTimeItems, setLeadTimeItems] = useState([]);
+  
+  const fetchLeadTimeItems = async (projectId) => {
+    try {
+      const res = await axios.get(`${url}/items/${projectId}`);
+      setLeadTimeItems(res.data || []);
+    } catch (error) {
+      console.error("Error fetching lead time items:", error);
+    }
+  };
+  
   useEffect(() => {
     fetchRoles();
     fetchProjectDetails();
@@ -65,23 +76,61 @@ const EditProject = () => {
         fetchUsers(role);
       }
       setSelectedRoles(selected);
+      const formatDate = (dateString) =>
+        dateString ? new Date(dateString).toISOString().slice(0, 10) : '';
+      
       setFormData({
         ...project,
         assignedTeamRoles: roleMap,
+        startDate: formatDate(project.startDate),
+        estimatedCompletion: formatDate(project.estimatedCompletion),
         fileUrls: Array.isArray(project.fileUrls) ? project.fileUrls : JSON.parse(project.fileUrls || '[]'),
       });
+      
       setLeadTimeMatrix(
         typeof project.leadTimeMatrix === 'string'
           ? JSON.parse(project.leadTimeMatrix || '[]')
           : project.leadTimeMatrix || []
       );
-      
+      await fetchLeadTimeItems(projectId);
+
       
     } catch (error) {
       console.error('Error fetching project details:', error);
     }
   };
-
+  const handleAddItemRow = () => {
+    setLeadTimeItems(prev => [
+      ...prev,
+      {
+        itemName: '',
+        quantity: '',
+        expectedDeliveryDate: '',
+        status: 'Pending',
+        projectId,
+      }
+    ]);
+  };
+  
+  const addNewItemToBackend = async (item, index) => {
+    try {
+      const res = await axios.post(`${url}/items/project-items`, {
+        ...item,
+        projectId
+      });
+  
+      const updated = [...leadTimeItems];
+      updated[index] = res.data;
+      setLeadTimeItems(updated);
+      alert("Item added!");
+    } catch (err) {
+      alert("Failed to add item.");
+      console.error(err);
+    }
+  };
+  
+  
+  
   const fetchUsers = async (role) => {
     try {
       const res = await axios.get(`${url}/auth/users-by-role/${encodeURIComponent(role)}`);
@@ -89,6 +138,34 @@ const EditProject = () => {
       setUsersByRole(prev => ({ ...prev, [role]: users }));
     } catch (err) {
       console.error(`Failed to fetch users for role: ${role}`, err);
+    }
+  };
+  const handleItemChange = (index, field, value) => {
+    const updatedItems = [...leadTimeItems];
+    updatedItems[index][field] = value;
+    setLeadTimeItems(updatedItems);
+  };
+  
+  const updateItem = async (item) => {
+    try {
+      await axios.put(`${url}/items/project-items/${item.id}`, item);
+      Swal.fire("Item updated!");
+    } catch (err) {
+      Swal.fire("Error updating item.");
+      console.error(err);
+    }
+  };
+  
+  
+  
+  const deleteItem = async (id) => {
+    try {
+      await axios.delete(`${url}/items/project-items/${id}`);
+      setLeadTimeItems((prev) => prev.filter((item) => item.id !== id));
+      alert("Item deleted!");
+    } catch (err) {
+      alert("Error deleting item.");
+      console.error(err);
     }
   };
   
@@ -166,40 +243,42 @@ const EditProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const formDataToSend = new FormData();
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(([role, users]) => ({
       role,
       users
     }));
-
+  
     Object.entries(formData).forEach(([key, val]) => {
       if (key !== 'assignedTeamRoles') {
         formDataToSend.append(key, Array.isArray(val) ? JSON.stringify(val) : val);
       }
     });
-    formDataToSend.append("leadTimeMatrix", JSON.stringify(leadTimeMatrix));
+    
+  
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
     files.forEach(file => formDataToSend.append("files", file));
-
+  
     try {
       const res = await fetch(`${url}/projects/${projectId}`, {
         method: 'PUT',
         body: formDataToSend
       });
-
+  
       if (res.status === 200) {
-        alert("Project updated successfully!");
+        Swal.fire("Project updated successfully!");
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
-        alert(`Error: ${data.error}`);
+        Swal.fire(`Error: ${data.error}`);
       }
     } catch (err) {
-      alert("Failed to update project");
+      Swal.fire("Failed to update project");
     }
   };
+  
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -358,7 +437,7 @@ const EditProject = () => {
                   <div className="form-group">
                     <label>Status</label>
                     <select name="status" value={formData.status} onChange={handleChange}>
-                      <option value="Proposal">Proposal</option>
+                    <option value="Proposal">Proposal</option>
                       <option value="In Progress">In Progress</option>
                       <option value="Delivered to Warehouse">Delivered to Warehouse</option>
                       <option value="nstalled">Installed</option>
@@ -368,78 +447,67 @@ const EditProject = () => {
                   </div>
                   <div className="form-card">
   <h3>Project Lead Time Matrix</h3>
-  {leadTimeMatrix.map((item, index) => (
-  <div className="form-group-row" key={index}>
-    <div className="form-group">
-      <label>Item Name</label>
-      <input
-        type="text"
-        value={item.itemName}
-        onChange={(e) => {
-          const updated = [...leadTimeMatrix];
-          updated[index].itemName = e.target.value;
-          setLeadTimeMatrix(updated);
-        }}
-      />
-    </div>
-    <div className="form-group">
-      <label>Quantity</label>
-      <input
-        type="number"
-        value={item.quantity}
-        onChange={(e) => {
-          const updated = [...leadTimeMatrix];
-          updated[index].quantity = e.target.value;
-          setLeadTimeMatrix(updated);
-        }}
-      />
-    </div>
-    <div className="form-group">
-      <label>Expected Delivery Date</label>
-      <input
-        type="date"
-        value={item.expectedDelivery}
-        onChange={(e) => {
-          const updated = [...leadTimeMatrix];
-          updated[index].expectedDelivery = e.target.value;
-          setLeadTimeMatrix(updated);
-        }}
-      />
-    </div>
-    <div className="form-group">
-      <label>Status</label>
-      <select
-        value={item.status}
-        onChange={(e) => {
-          const updated = [...leadTimeMatrix];
-          updated[index].status = e.target.value;
-          setLeadTimeMatrix(updated);
-        }}
-      >
-        <option value="Pending">Pending</option>
-        <option value="Delivered">Delivered</option>
-      </select>
-    </div>
-  </div>
-))}
-
-  <div className="form-group">
-    <button
-      type="button"
-      className="add-matrix-row-btn"
-      onClick={() =>
-        setLeadTimeMatrix([...leadTimeMatrix, {
-          itemName: '',
-          quantity: '',
-          expectedDelivery: '',
-          status: 'Pending'
-        }])
-      }
-    >
-      + Add Item
-    </button>
-  </div>
+  <table className="lead-time-table">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>Quantity</th>
+        <th>Expected Delivery</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {leadTimeItems.map((item, index) => (
+        <tr key={item.id || index}>
+          <td>
+            <input
+              value={item.itemName}
+              onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+            />
+          </td>
+          <td>
+            <input
+              type="number"
+              value={item.quantity}
+              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+            />
+          </td>
+          <td>
+            <input
+              type="date"
+              value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+              onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+            />
+          </td>
+          <td>
+            <select
+              value={item.status}
+              onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+            >
+              <option value="Pending">Pending</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Installed">Insttaled</option>
+            </select> 
+          </td>
+          <td>
+            {item.id ? (
+              <>
+                <button type="button" onClick={() => updateItem(item)}>Update</button>
+                <button type="button" onClick={() => deleteItem(item.id)}>Delete</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <button className="ledbutton" type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>
+
 <br/>
 
                 <div className="form-navigation">

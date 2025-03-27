@@ -3,14 +3,69 @@ import Layout from '../../components/Layout';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import '../../styles/Projects/ProjectDetails.css';
-
+import { url} from '../../lib/api';
+import { IoMdCheckmark } from "react-icons/io";
+import { MdDelete } from "react-icons/md";
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
-
+  const [activeTab, setActiveTab] = useState('overview');
+  const handleItemChange = (index, field, value) => {
+    const updated = [...items];
+    updated[index][field] = value;
+    setItems(updated);
+  };
+  
+  const updateItem = async (item) => {
+    try {
+      await axios.put(`${url}/items/project-items/${item.id}`, item);
+      alert("Item updated!");
+    } catch (err) {
+      alert("Error updating item.");
+      console.error(err);
+    }
+  };
+  
+  const deleteItem = async (id) => {
+    try {
+      await axios.delete(`${url}/items/project-items/${id}`);
+      setItems(prev => prev.filter(item => item.id !== id));
+      alert("Item deleted!");
+    } catch (err) {
+      alert("Error deleting item.");
+      console.error(err);
+    }
+  };
+  
+  const addNewItemToBackend = async (item, index) => {
+    try {
+      const res = await axios.post(`${url}/items/project-items`, item);
+      const updated = [...items];
+      updated[index] = res.data;
+      setItems(updated);
+      alert("Item added!");
+    } catch (err) {
+      alert("Failed to add item.");
+      console.error(err);
+    }
+  };
+  
+  const handleAddItemRow = () => {
+    setItems(prev => [
+      ...prev,
+      {
+        itemName: '',
+        quantity: '',
+        expectedDeliveryDate: '',
+        status: 'Pending',
+        projectId,
+      }
+    ]);
+  };
+  
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -20,10 +75,10 @@ const ProjectDetails = () => {
         console.error("Error fetching items:", error);
       }
     };
-  
+
     fetchItems();
   }, [projectId]);
-  
+
   useEffect(() => {
     const fetchProjectDetails = async () => {
       try {
@@ -39,9 +94,18 @@ const ProjectDetails = () => {
           ? fetchedProject.assignedTeamRoles
           : JSON.parse(fetchedProject.assignedTeamRoles || '[]');
 
-        fetchedProject.fileUrls = Array.isArray(fetchedProject.fileUrls)
-          ? fetchedProject.fileUrls
-          : JSON.parse(fetchedProject.fileUrls || '[]');
+          fetchedProject.proposals = Array.isArray(fetchedProject.proposals)
+          ? fetchedProject.proposals
+          : JSON.parse(fetchedProject.proposals || '[]');
+        
+        fetchedProject.floorPlans = Array.isArray(fetchedProject.floorPlans)
+          ? fetchedProject.floorPlans
+          : JSON.parse(fetchedProject.floorPlans || '[]');
+        
+        fetchedProject.otherDocuments = Array.isArray(fetchedProject.otherDocuments)
+          ? fetchedProject.otherDocuments
+          : JSON.parse(fetchedProject.otherDocuments || '[]');
+        
 
         setProject(fetchedProject);
         setAllUsers(fetchedUsers);
@@ -75,7 +139,10 @@ const ProjectDetails = () => {
       </Layout>
     );
   }
-
+  const removeRow = (index) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
+  };
+  
   return (
     <Layout>
       <div className="project-details-header">
@@ -83,44 +150,147 @@ const ProjectDetails = () => {
         <p className="project-subtitle">{project.type} Project</p>
       </div>
 
-      <div className="project-details-container">
+      <div className="tabs">
+        {['overview', 'documents', 'team', 'items', 'settings'].map(tab => (
+          <button
+            key={tab}
+            className={activeTab === tab ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
 
-        {/* Project Info */}
-        <div className="project-info-card">
-          <h2>Project Overview</h2>
-          <div className="info-group"><strong>Client:</strong> {project.clientName}</div>
-          <div className="info-group"><strong>Status:</strong> {project.status}</div>
-          <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
-          <div className="info-group"><strong>Start Date:</strong> {new Date(project.startDate).toLocaleDateString()}</div>
-          <div className="info-group"><strong>Estimated Completion:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
-          <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
-        </div>
+      <div className="tab-content">
+        {activeTab === 'overview' && (
+          <div className="project-details-container">
+            <div className="project-info-card">
+              <h2>Project Overview</h2>
+              <div className="info-group"><strong>Client:</strong> {project.clientName}</div>
+              <div className="info-group"><strong>Status:</strong> {project.status}</div>
+              <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
+              <div className="info-group"><strong>Start Date:</strong> {new Date(project.startDate).toLocaleDateString()}</div>
+              <div className="info-group"><strong>Estimated Completion:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+              <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
+            </div>
+            <div className="project-info-card">
+              <h2>Delivery Details</h2>
+              <div className="info-group"><strong>Address:</strong> {project.deliveryAddress || "N/A"}</div>
+              <div className="info-group"><strong>Hours:</strong> {project.deliveryHours || "N/A"}</div>
+            </div>
+          </div>
+        )}
+{activeTab === 'documents' && (
+  <div className="project-info-card">
+    <h2>Uploaded Documents</h2>
 
-        {/* Delivery Info */}
-        <div className="project-info-card">
-          <h2>Delivery Details</h2>
-          <div className="info-group"><strong>Address:</strong> {project.deliveryAddress || "N/A"}</div>
-          <div className="info-group"><strong>Hours:</strong> {project.deliveryHours || "N/A"}</div>
-        </div>
+    {/* Proposals */}
+    <div className="document-section">
+      <h3>Proposals & Presentations</h3>
+      {project.proposals?.length > 0 ? (
+        <div className="uploaded-files">
+          {project.proposals.map((url, idx) => {
+            const fileName = url.split('/').pop();
+            const fileExt = fileName.split('.').pop().toLowerCase();
+            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
 
-        {/* Team Info */}
-        <div className="project-info-card">
-          <h2>Assigned Team</h2>
-          {project.assignedTeamRoles.length > 0 ? (
-            project.assignedTeamRoles.map((roleGroup, index) => (
-              <div key={index} className="info-group">
-                <strong>{roleGroup.role}:</strong>
-                <span> {getUserNamesByIds(roleGroup.users)}</span>
+            return (
+              <div key={idx} className="file-item">
+                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
+                ) : (
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                    {fileName}
+                  </a>
+                )}
               </div>
-            ))
-          ) : (
-            <p>No team assigned.</p>
-          )}
+            );
+          })}
         </div>
-        {/*Item info*/ }
-        <div className="project-info-card">
-  <h2>Project Lead Time Matrix</h2>
-  {items.length > 0 ? (
+      ) : (
+        <p>No proposals uploaded.</p>
+      )}
+    </div>
+
+    {/* Floor Plans */}
+    <div className="document-section">
+      <h3>Floor Plans & CAD Files</h3>
+      {project.floorPlans?.length > 0 ? (
+        <div className="uploaded-files">
+          {project.floorPlans.map((url, idx) => {
+            const fileName = url.split('/').pop();
+            const fileExt = fileName.split('.').pop().toLowerCase();
+            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+
+            return (
+              <div key={idx} className="file-item">
+                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
+                ) : (
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                    {fileName}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p>No floor plans uploaded.</p>
+      )}
+    </div>
+
+    {/* Other Documents */}
+    <div className="document-section">
+      <h3>Other Documents</h3>
+      {project.otherDocuments?.length > 0 ? (
+        <div className="uploaded-files">
+          {project.otherDocuments.map((url, idx) => {
+            const fileName = url.split('/').pop();
+            const fileExt = fileName.split('.').pop().toLowerCase();
+            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+
+            return (
+              <div key={idx} className="file-item">
+                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
+                ) : (
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                    {fileName}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p>No other documents uploaded.</p>
+      )}
+    </div>
+  </div>
+)}
+
+
+        {activeTab === 'team' && (
+          <div className="project-info-card">
+            <h2>Assigned Team</h2>
+            {project.assignedTeamRoles.length > 0 ? (
+              project.assignedTeamRoles.map((roleGroup, index) => (
+                <div key={index} className="info-group">
+                  <strong>{roleGroup.role}:</strong>
+                  <span> {getUserNamesByIds(roleGroup.users)}</span>
+                </div>
+              ))
+            ) : (
+              <p>No team assigned.</p>
+            )}
+          </div>
+        )}
+
+{activeTab === 'items' && (
+  <div className="project-info-card">
+    <h2>Project Lead Time Matrix</h2>
     <table className="matrix-table">
       <thead>
         <tr>
@@ -128,58 +298,74 @@ const ProjectDetails = () => {
           <th>Quantity</th>
           <th>Expected Delivery</th>
           <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        {items.map((item, idx) => (
-          <tr key={idx}>
-            <td>{item.itemName}</td>
-            <td>{item.quantity}</td>
-            <td>{new Date(item.expectedDeliveryDate).toLocaleDateString()}</td>
-            <td>{item.status}</td>
+        {items.map((item, index) => (
+          <tr key={item.id || index}>
+            <td>
+              <input
+                value={item.itemName}
+                onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+              />
+            </td>
+            <td>
+              <input
+                type="number"
+                value={item.quantity}
+                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+              />
+            </td>
+            <td>
+              <input
+                type="date"
+                value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+                onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+              />
+            </td>
+            <td>
+              <select
+                value={item.status}
+                onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+              >
+                <option value="Pending">Pending</option>
+                <option value="In Transit">In Transit</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Installed">Installed</option>
+              </select>
+            </td>
+            <td>
+  {item.id ? (
+    <>
+      <button onClick={() => updateItem(item)}><IoMdCheckmark/></button>
+      <button onClick={() => deleteItem(item.id)}><MdDelete/></button>
+    </>
+  ) : (
+    <>
+      <button onClick={() => addNewItemToBackend(item, index)}><IoMdCheckmark/></button>
+      <button onClick={() => removeRow(index)}>Remove Row</button>
+    </>
+  )}
+</td>
+
           </tr>
         ))}
       </tbody>
     </table>
-  ) : (
-    <p>No items added to this project.</p>
-  )}
-</div>
+    <button className="ledbutton" onClick={handleAddItemRow}>+ Add Row</button>
+  </div>
+)}
 
-        {/* File Info */}
-        {project.fileUrls.length > 0 && (
+
+        {activeTab === 'settings' && (
           <div className="project-info-card">
-            <h2>Uploaded Files</h2>
-            <div className="uploaded-files">
-              {project.fileUrls.map((url, idx) => {
-                const fileName = url.split('/').pop();
-                const fileExt = fileName.split('.').pop().toLowerCase();
-                const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
-
-                return (
-                  <div key={idx} className="file-item">
-                    {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                      <img src={fileUrl} alt={fileName} className="file-preview-image" />
-                    ) : (
-                      <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
-                        {fileName}
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <h2>Settings</h2>
+            <div className="info-group"><strong>Client View:</strong> {project.allowClientView ? "Allowed" : "Disabled"}</div>
+            <div className="info-group"><strong>Comments:</strong> {project.allowComments ? "Allowed" : "Disabled"}</div>
+            <div className="info-group"><strong>Email Notifications:</strong> {project.enableNotifications ? "Allowed" : "Disabled"}</div>
           </div>
         )}
-
-        {/* Settings */}
-        <div className="project-info-card">
-          <h2>Settings</h2>
-          <div className="info-group"><strong>Client View:</strong> {project.allowClientView ? "Enabled" : "Disabled"}</div>
-          <div className="info-group"><strong>Comments:</strong> {project.allowComments ? "Allowed" : "Disabled"}</div>
-          <div className="info-group"><strong>Email Notifications:</strong> {project.enableNotifications ? "Enabled" : "Disabled"}</div>
-        </div>
-
       </div>
     </Layout>
   );
