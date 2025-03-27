@@ -29,8 +29,9 @@ const AddProject = () => {
   const [files, setFiles] = useState([]); 
   const [customers, setCustomers] = useState([]);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([
-    { itemName: '', quantity: '', expectedDate: '', status: 'Pending' }
+    { itemName: '', quantity: '', expectedDeliveryDate: '', status: 'Pending' }
   ]);
+  
   const navigate = useNavigate();
 
   const handleItemChange = (index, field, value) => {
@@ -42,7 +43,7 @@ const AddProject = () => {
   const handleAddItemRow = () => {
     setLeadTimeMatrix([
       ...leadTimeMatrix,
-      { itemName: '', quantity: '', expectedDate: '', status: 'Pending' }
+      { itemName: '', quantity: '', expectedDeliveryDate: '', status: 'Pending' }
     ]);
   };
   
@@ -130,9 +131,7 @@ const AddProject = () => {
     setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -163,7 +162,16 @@ const AddProject = () => {
     for (let file of files) {
       formDataToSend.append('files', file);
     }
-
+    for (let file of formData.proposals || []) {
+      formDataToSend.append('proposals', file);
+    }
+    for (let file of formData.floorPlans || []) {
+      formDataToSend.append('floorPlans', file);
+    }
+    for (let file of formData.otherDocuments || []) {
+      formDataToSend.append('otherDocuments', file);
+    }
+    
     try {
       const response = await fetch('http://localhost:5000/api/projects', {
         method: 'POST',
@@ -281,24 +289,76 @@ const AddProject = () => {
                   </div>
                 </div>
                 <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Upload Files (Images/PDFs)</label>
-                    <input
-                      type="file"
-                      name="files"
-                      multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={handleFileChange}
-                    />
-                    {files.length > 0 && (
-                      <ul className="file-preview-list">
-                        {files.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+  <div className="form-group">
+    <label>Upload Proposals & Presentations (PDF, Images)</label>
+    <input
+      type="file"
+      name="proposals"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          proposals: [...(prev.proposals || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.proposals?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Upload Floor Plans, CAD Files</label>
+    <input
+      type="file"
+      name="floorPlans"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          floorPlans: [...(prev.floorPlans || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.floorPlans?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Upload Other Documents (COI, Permits, etc.)</label>
+    <input
+      type="file"
+      name="otherDocuments"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          otherDocuments: [...(prev.otherDocuments || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.otherDocuments?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>Next</button>
                 </div>
@@ -426,16 +486,19 @@ const AddProject = () => {
         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
       />
       <input
-        type="date"
-        value={item.expectedDate}
-        onChange={(e) => handleItemChange(index, 'expectedDate', e.target.value)}
-      />
+  type="date"
+  value={item.expectedDeliveryDate}
+  onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+/>
+
       <select
         value={item.status}
         onChange={(e) => handleItemChange(index, 'status', e.target.value)}
       >
-        <option value="Pending">Pending</option>
-        <option value="Delivered">Delivered</option>
+              <option value="Pending">Pending</option>
+              <option value="Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Insttaled">Insttaled</option>
       </select>
       {leadTimeMatrix.length > 1 && (
         <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
