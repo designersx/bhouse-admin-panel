@@ -14,7 +14,7 @@ const Users = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 8;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
   const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -31,7 +31,7 @@ const Users = () => {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
-      if (loggedInUser?.user.userRole === "superadmin") {
+      if (loggedInUser?.user.userRole === "Super Admin") {
         setUsers(data);
       } else {
         const filteredUsers = data.filter(user => user.createdBy === loggedInUser?.user.id);

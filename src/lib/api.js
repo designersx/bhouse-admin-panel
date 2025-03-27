@@ -295,3 +295,13 @@ export const deleteComment = async (commentId) => {
       throw error;
   }
 };
+
+export const deleteDocument = async (documentId) => {
+  try {
+      const response = await axios.delete(`${url}/documents/${documentId}`);
+      return response.data;
+  } catch (error) {
+      console.error("Error deleting document:", error);
+      throw error;
+  }
+};

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { getCustomers, deleteCustomer } from "../../lib/api"; // delete API ko bhi import kar liya
+import axios from "axios";
+import { getCustomers, deleteCustomer } from "../../lib/api"; 
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash , FaEye } from "react-icons/fa";
-// import { FaEye } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -11,15 +12,35 @@ const Customer = () => {
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [customersPerPage] = useState(5);
+    const [projectCounts, setProjectCounts] = useState({}); 
+
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchCustomers = async () => {
-            const data = await getCustomers();
-            setCustomers(data);
-            setFilteredCustomers(data);
+        const fetchCustomersAndProjects = async () => {
+            try {
+                // Fetch Customers
+                const customersData = await getCustomers();
+                setCustomers(customersData);
+                setFilteredCustomers(customersData);
+
+                // Fetch Projects
+                const projectRes = await axios.get("http://localhost:5000/api/projects");
+                const projects = projectRes.data;
+
+                // Count projects for each customer
+                const counts = {};
+                customersData.forEach(customer => {
+                    counts[customer.id] = projects.filter(project => project.clientId === customer.id).length;
+                });
+
+                setProjectCounts(counts);
+            } catch (error) {
+                console.error("Error fetching customers or projects:", error);
+            }
         };
-        fetchCustomers();
+
+        fetchCustomersAndProjects();
     }, []);
 
     useEffect(() => {
@@ -47,7 +68,7 @@ const Customer = () => {
         if (window.confirm("Are you sure you want to delete this customer?")) {
             try {
                 await deleteCustomer(id);
-                setCustomers(customers.filter(customer => customer.id !== id)); // UI se remove kar diya
+                setCustomers(customers.filter(customer => customer.id !== id));
             } catch (error) {
                 console.error("Error deleting customer", error);
             }
@@ -99,7 +120,7 @@ const Customer = () => {
                             currentCustomers.map((customer) => (
                                 <tr key={customer.id} className="border-b">
                                     <td className="border p-2">{customer.full_name}</td>
-                                    <td className="border p-2">NA</td>
+                                    <td className="border p-2">{projectCounts[customer.id] || 0}</td> {/* Project count */}
                                     <td className="border p-2">{customer.company_name}</td>
                                     <td className="border p-2">{customer.status}</td>
                                     <td className="actions">
@@ -113,8 +134,10 @@ const Customer = () => {
                                             title="Delete"  
                                             onClick={() => handleDelete(customer.id)}
                                         />
-                                        <FaEye   className="view-icon"
-                                        onClick={() => navigate(`/view-customer/${customer.id}`)}
+                                        <FaEye 
+                                            className="view-icon"
+                                            title="View"
+                                            onClick={() => navigate(`/view-customer/${customer.id}`)}
                                         />
                                     </td>
                                 </tr>

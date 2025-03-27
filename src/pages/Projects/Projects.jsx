@@ -40,22 +40,69 @@ const getAssignedUserNames = (assignedTeamRoles) => {
     .join(", ");
 };
 
+    // useEffect(() => {
+    //   // Fetch data from API
+    //   const fetchProjects = async () => {
+    //     try {
+    //       const response = await axios.get('http://localhost:5000/api/projects');
+    //       setProjects(response.data);
+    //       setFilteredProjects(response.data);
+    //       setLoading(false);
+    //     } catch (error) {
+    //       console.error("Error fetching projects", error);
+    //     }
+    //   };
+  
+    //   fetchProjects();
+    // }, []);
+  
+
     useEffect(() => {
-      // Fetch data from API
       const fetchProjects = async () => {
         try {
           const response = await axios.get('http://localhost:5000/api/projects');
-          setProjects(response.data);
-          setFilteredProjects(response.data);
+          const allProjects = response.data;
+    
+          const localData = JSON.parse(localStorage.getItem('user'));
+          const userData = localData?.user;
+          
+          if (!userData) {
+          
+            setProjects([]);
+            setFilteredProjects([]);
+            setLoading(false);
+            return;
+          }
+          
+          const userId = userData.id;
+          const userRole = userData.userRole;
+    
+          let visibleProjects = [];
+    
+          if (userRole === "Super Admin") {
+            visibleProjects = allProjects;
+          } else {
+            visibleProjects = allProjects.filter(project => {
+              const assigned = project.assignedTeamRoles?.some(role => {
+                return Array.isArray(role.users) && role.users.includes(userId);
+              });
+              if (assigned) {
+              }
+              return assigned;
+            });
+          }
+    
+          setProjects(visibleProjects);
+          setFilteredProjects(visibleProjects);
           setLoading(false);
         } catch (error) {
-          console.error("Error fetching projects", error);
+          console.error("❌ Error fetching projects", error);
+          setLoading(false);
         }
       };
-  
+    
       fetchProjects();
     }, []);
-  
     const handleSearch = (event) => {
       setSearchQuery(event.target.value);
       if (event.target.value === "") {

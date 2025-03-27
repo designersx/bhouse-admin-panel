@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../components/Layout";
-import { getRoles, deleteRole } from "../lib/api";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { getRoles, deleteRole } from "../lib/api";import { FaEdit, FaTrash } from "react-icons/fa";
+
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../styles/Roles.css";
@@ -18,7 +18,7 @@ const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 8;
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
