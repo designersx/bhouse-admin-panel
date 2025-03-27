@@ -29,7 +29,8 @@ const modules = [
   "Document Management",
   "Reports & Analytics",
   "Reviews/Feedback & Comments",
-  "Customer Dashboard",
+  "Customer",
+  "Roles"
 ];
 
 const actions = ["create", "delete", "view", "edit", "fullAccess"];

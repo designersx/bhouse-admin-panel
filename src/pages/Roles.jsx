@@ -5,6 +5,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../styles/Roles.css";
+import useRolePermissions from "../hooks/useRolePermissions";
 
 const rolePermissionLevels = {
   "Super Admin": 1,
@@ -24,6 +25,9 @@ const Roles = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const loggedInUserRole = (user?.user?.userRole || "").trim();
   const loggedInUserId = user?.user?.id;
+  const roleId = user?.user?.roleId;
+  const { rolePermissions } = useRolePermissions(roleId);
+
 
   useEffect(() => {
     fetchRoles();
@@ -101,9 +105,12 @@ const Roles = () => {
       <div className="roles-container">
         <h2>Roles</h2>
         <div className="roles-header">
-          <button className="add-role-btn" onClick={() => navigate("/create-role")}>
-            + Add Role
-          </button>
+          {rolePermissions?.Roles?.create && (
+            <button className="add-role-btn" onClick={() => navigate("/create-role")}>
+              + Add Role
+            </button>
+          )}
+
           <input
             type="text"
             placeholder="Search roles..."
@@ -122,7 +129,8 @@ const Roles = () => {
               <th>ID</th>
               <th>Title</th>
               <th>Description</th>
-              <th>Actions</th>
+              {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && <th>Actions</th>}
+
             </tr>
           </thead>
           <tbody>
@@ -132,10 +140,25 @@ const Roles = () => {
                   <td>{indexOfFirstItem + index + 1}</td>
                   <td>{role.title}</td>
                   <td>{role.description || "N/A"}</td>
-                  <td className="actions">
-                    <FaEdit className="edit-icon" title="Edit" onClick={() => navigate(`/edit-role/${role.id}`)} />
-                    <FaTrash className="delete-icon" title="Delete" onClick={() => handleDelete(role.id)} />
-                  </td>
+                  {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && (
+                    <td className="actions">
+                      {rolePermissions?.Roles?.edit && (
+                        <FaEdit
+                          className="edit-icon"
+                          title="Edit"
+                          onClick={() => navigate(`/edit-role/${role.id}`)}
+                        />
+                      )}
+                      {rolePermissions?.Roles?.delete && (
+                        <FaTrash
+                          className="delete-icon"
+                          title="Delete"
+                          onClick={() => handleDelete(role.id)}
+                        />
+                      )}
+                    </td>
+                  )}
+
                 </tr>
               ))
             ) : (
