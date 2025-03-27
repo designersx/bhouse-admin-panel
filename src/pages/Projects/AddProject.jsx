@@ -7,6 +7,7 @@ import { getCustomers } from '../../lib/api';
 
 const AddProject = () => {
   const [step, setStep] = useState(1);
+  let [clientId , setClientId] = useState()
   const [formData, setFormData] = useState({
     name: '',
     type: 'Residential',
@@ -21,6 +22,7 @@ const AddProject = () => {
     allowClientView: true,
     allowComments: true,
     enableNotifications: true,
+   clientId : clientId
   });
 
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -254,18 +256,30 @@ const AddProject = () => {
                   <div className="form-group">
                     <label>Select Customer</label>
                     <select
-                      name="clientName"
-                      value={formData.clientName}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select a customer</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.full_name}>
-                          {customer.full_name} ({customer.email})
-                        </option>
-                      ))}
-                    </select>
+  name="clientName"
+  value={formData.clientName}
+  onChange={(e) => {
+    const selectedCustomer = customers.find(
+      (customer) => customer.full_name === e.target.value
+    );
+    
+    setFormData({
+      ...formData,
+      clientName: e.target.value, 
+      clientId: selectedCustomer?.id || "", 
+    });
+    setClientId(selectedCustomer?.id)
+   
+  }}
+  required
+>
+  <option value="">Select a customer</option>
+  {customers.map((customer) => (
+    <option key={customer.id} value={customer.full_name}>
+      {customer.full_name} ({customer.email})
+    </option>
+  ))}
+</select>
                   </div>
                   <div className="form-group">
                     <label>Description</label>

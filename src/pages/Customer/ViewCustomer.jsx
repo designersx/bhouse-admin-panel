@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import Layout from "../../components/Layout";
-import { getCustomerById, uploadDocument, getDocumentsByCustomer, getCommentsByDocument, addComment, url } from "../../lib/api"; 
+import { getCustomerById, uploadDocument, getDocumentsByCustomer, getCommentsByDocument, addComment, url  , deleteDocument} from "../../lib/api"; 
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { url2 } from "../../lib/api";
 import "./style.css"; // Importing custom styles
 import CustomerProjects from "../../components/CustomerProjects";
-
+import {  FaTrash } from "react-icons/fa";
 function ViewCustomer() {
     const { id } = useParams();
     const [customer, setCustomer] = useState(null);
@@ -15,6 +15,8 @@ function ViewCustomer() {
     const [showComments, setShowComments] = useState({});
     const [newComments, setNewComments] = useState({});
     const [selectedFile, setSelectedFile] = useState(null);
+    const [activeTab, setActiveTab] = useState("details");
+    const [docDel , setDocDel]  = useState(false)
     const fileInputRef = useRef(null);
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
@@ -39,7 +41,7 @@ function ViewCustomer() {
 
         fetchCustomer();
         fetchDocs();
-    }, [id]);
+    }, [id ,docDel ]);
 
     // ✅ Toggle comments on click (Fetch & Toggle)
     const toggleComments = async (documentId) => {
@@ -94,49 +96,106 @@ function ViewCustomer() {
             Swal.fire("Error", "Failed to add comment", "error");
         }
     };
+    
+
+    const handleDelete = async (documentId) => {
+        const confirmDelete = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (confirmDelete.isConfirmed) {
+            try {
+                await deleteDocument(documentId);
+                setDocDel(true)
+                Swal.fire("Deleted!", "Your document has been deleted.", "success");
+            } catch (error) {
+                Swal.fire("Error!", "Failed to delete document.", "error");
+            }
+        }
+    };
+
+
 
     return (
         <Layout>
-            <div className="view-customer-container">
-                <h2 className="customer-heading">Customer Details</h2>
+              <div className="tabs-container">
+            {/* Tab Headers */}
+            <div className="tabs-header">
+                <button 
+                    className={`tab-button ${activeTab === "details" ? "active" : ""}`} 
+                    onClick={() => setActiveTab("details")}
+                >
+                    Customer Details
+                </button>
+                <button 
+                    className={`tab-button ${activeTab === "documents" ? "active" : ""}`} 
+                    onClick={() => setActiveTab("documents")}
+                >
+                    Project Details
+                </button>
+                <button 
+                    className={`tab-button ${activeTab === "projects" ? "active" : ""}`} 
+                    onClick={() => setActiveTab("projects")}
+                >
+                   Documents
+                </button>
+            </div>
 
-                {customer && (
-                    <div className="customer-details-box">
-                        <h3 className="customer-name">{customer.full_name}</h3>
-                        <p className="customer-info">{customer.email}</p>
-                        <p className="customer-info">{customer.phone}</p>
-                    </div>
-                )}
+            {/* Tab Content */}
+            <div className="tab-content">
+                {activeTab === "details" && <div className="tab-panel"> <h2 className="customer-heading">Customer Details</h2>
 
-                {/* 📂 Document Upload */}
-                <div className="upload-section">
+{customer && (
+    <div className="customer-details-box">
+        <h3 className="customer-name">{customer.full_name}</h3>
+        <p className="customer-info">{customer.email}</p>
+        <p className="customer-info">{customer.phone}</p>
+        <p className="customer-info">{customer.company_name}</p>
+    </div>
+)}</div>}
+                {activeTab === "documents" && <div className="tab-panel"> <CustomerProjects customerId = {customer?.id} customerName = {customer?.full_name}/></div>}
+                {activeTab === "projects" && <div className="tab-panel"> <div className="upload-section">
                     <input type="file" ref={fileInputRef} className="hidden-file-input" onChange={(e) => setSelectedFile(e.target.files[0])} />
-                    <button className="upload-btn" onClick={() => fileInputRef.current.click()}>Choose File</button>
+                    <button className="upload-btn" onClick={() => fileInputRef.current.click()}>
+                        Choose File</button>
                     {selectedFile && <button className="upload-btn" onClick={handleUpload}>Upload</button>}
                 </div>
 
                 {/* 📜 Documents Accordion */}
                 <div className="documents-section">
-                    <h2 className="documents-heading">Documents</h2>
+                    <h2 className="documents-heading">Project</h2>
                     <div className="accordion">
                         {documents.length > 0 ? (
                             documents.map((doc) => (
                                 <div key={doc.id} className="accordion-item">
+                                    
                                     <div className="accordion-header" onClick={() => toggleComments(doc.id)}>
+                                   
                                         Document {doc.id}
-                                        <span className="arrow">{showComments[doc.id] ? "▲" : "▼"}</span>
+                                        
+                                        <span className="arrow"><FaTrash onClick={()=>handleDelete(doc.id)}/> &nbsp;&nbsp;  {showComments[doc.id] ? "▲" : "▼"}</span>
+                                      
                                     </div>
                                     {showComments[doc.id] && (
                                         <div className="accordion-content">
-                                            <a href={`${url2}${doc.document_url}`} target="_blank" rel="noopener noreferrer" className="view-document-btn">
+                                            <div className="view-document-btn">
+                                            <a href={`${url2}${doc.document_url}`} target="_blank" rel="noopener noreferrer" >
                                                 View Document
                                             </a>
+                                            </div>
 
                                             {/* 🟢 Comments Section */}
                                             <div className="comments-container">
                                                 {comments[doc.id]?.map((comment, index) => (
                                                     <div key={index} className={`comment-bubble ${comment?.commented_by === loggedInUser.user.id ? "sent" : "received"}`}>
                                                         <strong>{comment?.commented_by_name}</strong>
+                                                        <span>&nbsp;&nbsp;&nbsp;{new Date(comment?.createdAt).toLocaleString()}</span>
                                                         <p>{comment?.comment_text}</p>
                                                     </div>
                                                 ))}
@@ -166,9 +225,17 @@ function ViewCustomer() {
                             <p className="no-documents">No documents uploaded yet.</p>
                         )}
                     </div>
-                </div>
+                </div></div>}
             </div>
-            <CustomerProjects customerName = {customer?.full_name}/>
+        </div>
+    
+            <div className="view-customer-container">
+               
+ 
+                {/* 📂 Document Upload */}
+               
+            </div>
+          
         </Layout>
     );
 }

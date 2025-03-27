@@ -50,6 +50,7 @@ const Projects = () => {
       .join(", ");
   };
 
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -91,6 +92,7 @@ const Projects = () => {
       } catch (error) {
         console.error("❌ Error fetching projects", error);
         setLoading(false);
+
       }
     };
 

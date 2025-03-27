@@ -14,7 +14,7 @@ const Users = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 8;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
   const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -30,6 +30,9 @@ const Users = () => {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
+
+      if (loggedInUser?.user.userRole === "Super Admin") {
+
       // Define role levels
       const roleLevels = {
         "Super Admin": 1,
@@ -40,7 +43,7 @@ const Users = () => {
       };
 
       if (loggedInUser?.user.userRole === "Super Admin") {
-        // Super Admin can see all users
+
         setUsers(data);
       } else {
         // Filter users based on the logged-in user's role level

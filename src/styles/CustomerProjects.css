@@ -1,66 +1,102 @@
-.customer-projects-container {
-    width: 80%;
-    margin: 20px auto;
-    font-family: 'Montserrat', sans-serif;
+.projects-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
 }
 
-.project-card {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
     margin-bottom: 20px;
-    border-left: 6px solid #007bff;
-    transition: transform 0.2s ease-in-out;
+    color: #0f0e0e;
+}
+
+/* Grid Layout */
+.project-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Project Card */
+.project-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 20px;
+    width:42%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    color: #fff;
 }
 
 .project-card:hover {
-    transform: scale(1.02);
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
+/* Project Info */
 .project-title {
     font-size: 22px;
     font-weight: bold;
-    color: #333;
+    margin-bottom: 10px;
+    color: #10100e;
 }
 
 .project-info {
-    margin: 5px 0;
-    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 
+/* Status Badge */
 .project-status {
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 5px;
     display: inline-block;
-}
-
-.status-proposal { background: #f8d7da; color: #721c24; }
-.status-inprogress { background: #fff3cd; color: #856404; }
-.status-delivered { background: #d4edda; color: #155724; }
-
-.assigned-roles {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
     margin-top: 10px;
 }
 
+/* Status Colors */
+.project-status.active { background-color: #28a745; color: #fff; }
+.project-status.inactive { background-color: #dc3545; color: #fff; }
+.project-status.pending { background-color: #ffc107; color: #000; }
+.project-status.completed { background-color: #17a2b8; color: #fff; }
+
+/* Assigned Roles */
+.assigned-roles {
+    margin-top: 12px;
+    font-size: 14px;
+}
+
 .role-container {
-    margin-top: 8px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-top: 5px;
 }
 
 .role-title {
     font-weight: bold;
-    color: #444;
-    display: block;
-    margin-bottom: 5px;
+    color: #0c0c0a;
 }
 
 .user-name {
-    background: #007bff;
-    color: white;
-    padding: 5px 10px;
+   
+    padding: 4px 8px;
     border-radius: 5px;
-    margin-right: 5px;
-    font-size: 14px;
-    display: inline-block;
+    font-size: 15px;
+    color: #000;
+}
+
+/* No Projects */
+.no-projects {
+    text-align: center;
+    font-size: 16px;
+    color: #ccc;
+    margin-top: 20px;
 }

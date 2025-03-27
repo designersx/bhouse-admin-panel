@@ -27,6 +27,7 @@ import CustomerForm from './pages/Customer/CustomerForm';
 import UserForm from './pages/userForm';
 import EditCustomer from './components/EditCustomer';
 import ViewCustomer from './pages/Customer/ViewCustomer';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 
