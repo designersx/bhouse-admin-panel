@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { getCustomers, deleteCustomer } from "../../lib/api"; // delete API ko bhi import kar liya
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash , FaEye } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import useRolePermissions from "../../hooks/useRolePermissions";
 // import { FaEye } from "react-icons/fa";
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
@@ -12,6 +13,15 @@ const Customer = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [customersPerPage] = useState(5);
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user"));
+    const roleId = user?.user?.roleId;
+    const { rolePermissions } = useRolePermissions(roleId);
+
+    const canCreate = rolePermissions?.Customer?.create;
+    const canEdit = rolePermissions?.Customer?.edit;
+    const canDelete = rolePermissions?.Customer?.delete;
+    const canView = rolePermissions?.Customer?.view;
+
 
     useEffect(() => {
         const fetchCustomers = async () => {
@@ -58,14 +68,17 @@ const Customer = () => {
         <Layout>
             <div className="roles-container">
                 <h2>Customers</h2>
-                
+
                 <div className="roles-header">
-                    <button className="add-role-btn" onClick={() => navigate("/add-customer")}>
-                        + Add 
-                    </button>
+                    {canCreate && (
+                        <button className="add-role-btn" onClick={() => navigate("/add-customer")}>
+                            + Add
+                        </button>
+                    )}
+
                     <div>
-                        <select 
-                            value={statusFilter} 
+                        <select
+                            value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="filter-select"
                         >
@@ -91,7 +104,7 @@ const Customer = () => {
                             <th className="border p-2">Projects</th>
                             <th className="border p-2">Company</th>
                             <th className="border p-2">Status</th>
-                            <th className="border p-2">Actions</th>
+                            {(canEdit || canDelete || canView) && <th className="border p-2">Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -102,21 +115,32 @@ const Customer = () => {
                                     <td className="border p-2">NA</td>
                                     <td className="border p-2">{customer.company_name}</td>
                                     <td className="border p-2">{customer.status}</td>
-                                    <td className="actions">
-                                        <FaEdit 
-                                            className="edit-icon" 
-                                            title="Edit" 
-                                            onClick={() => navigate(`/edit-customer/${customer.id}`)} 
-                                        />
-                                        <FaTrash 
-                                            className="delete-icon" 
-                                            title="Delete"  
-                                            onClick={() => handleDelete(customer.id)}
-                                        />
-                                        <FaEye   className="view-icon"
-                                        onClick={() => navigate(`/view-customer/${customer.id}`)}
-                                        />
-                                    </td>
+                                    {(canEdit || canDelete || canView) && (
+                                        <td className="actions">
+                                            {canEdit && (
+                                                <FaEdit
+                                                    className="edit-icon"
+                                                    title="Edit"
+                                                    onClick={() => navigate(`/edit-customer/${customer.id}`)}
+                                                />
+                                            )}
+                                            {canDelete && (
+                                                <FaTrash
+                                                    className="delete-icon"
+                                                    title="Delete"
+                                                    onClick={() => handleDelete(customer.id)}
+                                                />
+                                            )}
+                                            {canView && (
+                                                <FaEye
+                                                    className="view-icon"
+                                                    title="View"
+                                                    onClick={() => navigate(`/view-customer/${customer.id}`)}
+                                                />
+                                            )}
+                                        </td>
+                                    )}
+
                                 </tr>
                             ))
                         ) : (
