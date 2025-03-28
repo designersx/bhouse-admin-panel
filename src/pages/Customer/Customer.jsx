@@ -3,8 +3,8 @@ import axios from "axios";
 import { getCustomers, deleteCustomer } from "../../lib/api"; 
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
-
+import { FaEdit, FaTrash, FaEye   } from "react-icons/fa";
+import { MdDelete } from "react-icons/md"
 import useRolePermissions from "../../hooks/useRolePermissions";
 // import { FaEye } from "react-icons/fa";
 
@@ -90,7 +90,7 @@ const Customer = () => {
     return (
         <Layout>
             <div className="roles-container">
-                <h2>Customers</h2>
+                <h2 className="table-header">Customers</h2>
 
                 <div className="roles-header">
                     {canCreate && (
@@ -99,7 +99,7 @@ const Customer = () => {
                         </button>
                     )}
 
-                    <div>
+                    <div className="customer-filter">
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -143,13 +143,21 @@ const Customer = () => {
                                         <td className="actions">
                                             {canEdit && (
                                                 <FaEdit
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "23px"
+                                                }}
                                                     className="edit-icon"
                                                     title="Edit"
                                                     onClick={() => navigate(`/edit-customer/${customer.id}`)}
                                                 />
                                             )}
                                             {canDelete && (
-                                                <FaTrash
+                                                <MdDelete
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "25px"
+                                                }}
                                                     className="delete-icon"
                                                     title="Delete"
                                                     onClick={() => handleDelete(customer.id)}
@@ -157,7 +165,11 @@ const Customer = () => {
                                             )}
                                             {canView && (
                                                 <FaEye
-                                                    className="view-icon"
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "23px"
+                                                }}
+                                                    
                                                     title="View"
                                                     onClick={() => navigate(`/view-customer/${customer.id}`)}
                                                 />
@@ -170,7 +182,7 @@ const Customer = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="text-center p-4">No customers found.</td>
+                                <td colSpan="5" className="no-data">No customers found.</td>
                             </tr>
                         )}
                     </tbody>

@@ -103,7 +103,7 @@ const Roles = () => {
   return (
     <Layout>
       <div className="roles-container">
-        <h2>Roles</h2>
+        <h2 className="table-header">Roles</h2>
         <div className="roles-header">
           {rolePermissions?.Roles?.create && (
             <button className="add-role-btn" onClick={() => navigate("/create-role")}>
@@ -144,6 +144,10 @@ const Roles = () => {
                     <td className="actions">
                       {rolePermissions?.Roles?.edit && (
                         <FaEdit
+                        style={{
+                          color : "black",
+                          fontSize : "24px"
+                      }}
                           className="edit-icon"
                           title="Edit"
                           onClick={() => navigate(`/edit-role/${role.id}`)}
@@ -151,7 +155,10 @@ const Roles = () => {
                       )}
                       {rolePermissions?.Roles?.delete && (
                         <FaTrash
-                          className="delete-icon"
+                        style={{
+                          color : "black",
+                          fontSize : "20px"
+                      }}
                           title="Delete"
                           onClick={() => handleDelete(role.id)}
                         />

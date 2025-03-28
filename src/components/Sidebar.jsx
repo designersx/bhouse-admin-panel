@@ -7,9 +7,12 @@ import Swal from 'sweetalert2';
 import { AiFillProject } from 'react-icons/ai';
 import { FaUserCircle } from "react-icons/fa";
 import { useSidebarPermissions } from '../context/RolePermissionsContext';
+
 const Sidebar = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const location = useLocation();
+  const { rolePermissions, loading } = useSidebarPermissions();
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const handleLogout = () => {
     Swal.fire({
@@ -27,63 +30,52 @@ const Sidebar = () => {
       }
     });
   };
-  const user = JSON.parse(localStorage.getItem('user'));
-  const roleId = user?.user?.roleId;
-  const { rolePermissions, loading } = useSidebarPermissions();
 
-  if (loading) return null; 
-
-  const hasUserPermissions = rolePermissions?.UserManagement?.create ||
-    rolePermissions?.UserManagement?.edit ||
-    rolePermissions?.UserManagement?.delete ||
-    rolePermissions?.UserManagement?.view;
-
-  const roles = rolePermissions?.Roles?.create ||
-  rolePermissions?.Roles?.edit||
-  rolePermissions?.Roles?.delete ||
-  rolePermissions?.Roles?.view;
-
-  //27/03/2025
-  // const role = user?.user?.userRolef
-
-  // const customer = rolePermissions?.Customer?.create ||
-  //   rolePermissions?.UserManagement?.edit ||
-  //   rolePermissions?.UserManagement?.delete ||
-  //   rolePermissions?.UserManagement?.view;
-
+  // Check only 'view' permissions for visibility
+  const canViewUsers = rolePermissions?.UserManagement?.view;
+  const canViewRoles = rolePermissions?.Roles?.view;
+  const canViewCustomers = rolePermissions?.Customer?.view;
 
   return (
     <div className="sidebar">
-      <div className="logo">Hi, {user?.user?.firstName}</div>
+      <div className="logo">Hi, {user?.user?.firstName || 'User'}</div>
       <ul>
         <li className={location.pathname === '/dashboard' ? 'active' : ''}>
           <Link to="/dashboard"><FiHome /> Dashboard</Link>
         </li>
-        {hasUserPermissions && (
+
+        {loading || canViewUsers ? (
           <li className={location.pathname === '/users' ? 'active' : ''}>
             <Link to="/users"><FiUsers /> Users</Link>
           </li>
-        )}
+        ) : null}
+
         <li className={location.pathname === '/profile' ? 'active' : ''}>
           <Link to="/profile"><FiUser /> Profile</Link>
         </li>
-        {roles && (
+
+        {loading || canViewRoles ? (
           <li className={location.pathname === '/roles' ? 'active' : ''}>
             <Link to="/roles"><FiUser /> Roles</Link>
           </li>
-        )}
+        ) : null}
+
         <li className={location.pathname === '/projects' ? 'active' : ''}>
           <Link to="/projects"><AiFillProject /> Projects</Link>
         </li>
+
+        {loading || canViewCustomers ? (
           <li className={location.pathname === '/customers' ? 'active' : ''}>
             <Link to="/customers"><FaUserCircle /> Customers</Link>
           </li>
+        ) : null}
+
         <li className={location.pathname === '/settings' ? 'active' : ''}>
           <Link to="/settings"><FiSettings /> Settings</Link>
         </li>
-        <li onClick={handleLogout} >
-          <Link > <CiLogout /> Logout</Link>
 
+        <li onClick={handleLogout}>
+          <Link><CiLogout /> Logout</Link>
         </li>
       </ul>
     </div>
