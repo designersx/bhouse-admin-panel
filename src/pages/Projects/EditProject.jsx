@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import '../../styles/Projects/AddProject.css';
 import { url, getCustomers } from '../../lib/api';
 import Swal from 'sweetalert2';
+import { toast, ToastContainer } from 'react-toastify';
 
 const EditProject = () => {
   const { projectId } = useParams();
@@ -27,7 +28,10 @@ const EditProject = () => {
     allowClientView: true,
     allowComments: true,
     enableNotifications: true,
-    fileUrls: [],
+    proposals: [],
+floorPlans: [],
+otherDocuments: [],
+
   });
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
@@ -84,7 +88,9 @@ const EditProject = () => {
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
         estimatedCompletion: formatDate(project.estimatedCompletion),
-        fileUrls: Array.isArray(project.fileUrls) ? project.fileUrls : JSON.parse(project.fileUrls || '[]'),
+        proposals: JSON.parse(project.proposals || '[]'),
+  floorPlans: JSON.parse(project.floorPlans || '[]'),
+  otherDocuments: JSON.parse(project.otherDocuments || '[]'),
       });
       
       setLeadTimeMatrix(
@@ -219,15 +225,17 @@ const EditProject = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
+  const handleFileChange = (category, e) => {
+    setFiles(prev => ({
+      ...prev,
+      [category]: [...(prev[category] || []), ...Array.from(e.target.files)],
+    }));
   };
-
-  const handleRemoveExistingFile = (url) => {
+  const handleRemoveExistingFile = (category, url) => {
     setRemovedFiles(prev => [...prev, url]);
     setFormData(prev => ({
       ...prev,
-      fileUrls: prev.fileUrls.filter(f => f !== url),
+      [category]: prev[category].filter(f => f !== url),
     }));
   };
 
@@ -244,27 +252,40 @@ const EditProject = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    const error = validateStep();
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: error,
+      });
+      return;
+    }
+  
     const formDataToSend = new FormData();
+  
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(([role, users]) => ({
       role,
-      users
+      users,
     }));
   
     Object.entries(formData).forEach(([key, val]) => {
-      if (key !== 'assignedTeamRoles') {
+      if (!['assignedTeamRoles', 'proposals', 'floorPlans', 'otherDocuments'].includes(key)) {
         formDataToSend.append(key, Array.isArray(val) ? JSON.stringify(val) : val);
       }
     });
-    
   
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-    files.forEach(file => formDataToSend.append("files", file));
+  
+    Object.entries(files).forEach(([category, fileArray]) => {
+      fileArray.forEach((file) => formDataToSend.append(category, file));
+    });
   
     try {
       const res = await fetch(`${url}/projects/${projectId}`, {
         method: 'PUT',
-        body: formDataToSend
+        body: formDataToSend,
       });
   
       if (res.status === 200) {
@@ -278,13 +299,59 @@ const EditProject = () => {
       Swal.fire("Failed to update project");
     }
   };
-  
 
-  const nextStep = () => setStep(step + 1);
+  const validateStep = () => {
+    const {
+      name,
+      type,
+      clientName,
+      startDate,
+      estimatedCompletion,
+      totalValue,
+      deliveryAddress,
+      deliveryHours,
+    } = formData;
+  
+    if (step === 1) {
+      if (!name.trim()) return "Project Name is required.";
+      if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
+      if (!type) return "Project Type is required.";
+      if (!clientName) return "Customer selection is required.";
+      if (!startDate) return "Start Date is required.";
+  
+      if (estimatedCompletion) {
+        const start = new Date(startDate);
+        const end = new Date(estimatedCompletion);
+        if (end <= start) {
+          return "Estimated Completion date must be after Start Date.";
+        }
+      }
+    }
+  
+    if (step === 2) {
+      if (!selectedRoles.length) return "At least one role must be assigned.";
+      if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
+      if (!deliveryAddress.trim()) return "Delivery Address is required.";
+      if (!deliveryHours.trim()) return "Delivery Hours are required.";
+    }
+  
+    return null;
+  };
+  
+  const nextStep = () => {
+    const error = validateStep();
+    if (error) {
+      toast.error(`Error ${error}`)
+      return;
+    }
+    setStep(step + 1);
+  };
+  
   const prevStep = () => setStep(step - 1);
 
   return (
     <Layout>
+      <ToastContainer/>
       <div className="add-project-container">
         <h2>Edit Project</h2>
         <div className="step-indicator">
@@ -332,42 +399,124 @@ const EditProject = () => {
                 </div>
 
                 <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Start Date</label>
-                    <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>Estimated Completion</label>
-                    <input type="date" name="estimatedCompletion" value={formData.estimatedCompletion} onChange={handleChange} />
-                  </div>
-                </div>
+  <div className="form-group">
+    <label>Start Date</label>
+    <input
+      type="date"
+      name="startDate"
+      value={formData.startDate}
+      onChange={handleChange}
+      required
+    />
+  </div>
+  <div className="form-group">
+    <label>Estimated Completion</label>
+    <input
+      type="date"
+      name="estimatedCompletion"
+      value={formData.estimatedCompletion}
+      min={formData.startDate || ""}
+      onChange={handleChange}
+    />
+  </div>
+</div>
+
 
                 <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Upload Files (Images/PDFs)</label>
-                    <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileChange} />
-                    {formData.fileUrls.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.fileUrls.map((url, idx) => {
-                          const fileName = url.split('/').pop();
-                          const fileExt = fileName.split('.').pop();
-                          const fileUrl = url.startsWith('uploads') ? `${url}` : url;
+  {/* Proposals & Presentations */}
+  <div className="form-group">
+    <label>Upload Proposals & Presentations (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('proposals', e)}
+    />
+    {formData.proposals && formData.proposals.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
 
-                          return (
-                            <li key={idx}>
-                              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                                <img src={`http://localhost:5000/${fileUrl}`} alt={fileName} width="100" />
-                              ) : (
-                                <a href={`http://localhost:5000/${fileUrl}`} target="_blank" rel="noreferrer">{fileName}</a>
-                              )}
-                              <button type="button" onClick={() => handleRemoveExistingFile(url)}>Remove</button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('proposals', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Floor Plans & CAD Files */}
+  <div className="form-group">
+    <label>Upload Floor Plans & CAD Files (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('floorPlans', e)}
+    />
+    {formData.floorPlans && formData.floorPlans.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('floorPlans', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Other Documents */}
+  <div className="form-group">
+    <label>Upload Other Documents (COI, Permits, etc.) (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('otherDocuments', e)}
+    />
+    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('otherDocuments', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+</div>
+
 
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>Next</button>

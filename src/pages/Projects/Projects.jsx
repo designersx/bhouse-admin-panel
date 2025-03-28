@@ -165,7 +165,7 @@ const Projects = () => {
 
   return (
     <Layout>
-      <div className="roles-container">
+      <div className="projects-page">
         <div className='project-first-header'>
         <h2 className='table-header'>Projects</h2>
         {canCreate && (
@@ -233,8 +233,9 @@ const Projects = () => {
                     )}
 
                     {canDelete && (
-                      <MdDelete  onClick={() => handleArchiveProject(project.id)} />
-                     
+                      <button onClick={() => handleArchiveProject(project.id)}>
+                      <i className='fa fa-trash'></i>
+                     </button>
                     )}
                   </td>
 
