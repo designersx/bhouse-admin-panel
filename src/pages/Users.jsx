@@ -14,7 +14,7 @@ const Users = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 8;
+  const itemsPerPage = 3;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
   const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -30,9 +30,6 @@ const Users = () => {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
-
-      if (loggedInUser?.user.userRole === "Super Admin") {
-
       // Define role levels
       const roleLevels = {
         "Super Admin": 1,
@@ -43,7 +40,7 @@ const Users = () => {
       };
 
       if (loggedInUser?.user.userRole === "Super Admin") {
-
+        // Super Admin can see all users
         setUsers(data);
       } else {
         // Filter users based on the logged-in user's role level
@@ -52,17 +49,15 @@ const Users = () => {
         // Filter users who have a role level greater than or equal to the logged-in user's role
         const filteredUsers = data.filter(user => {
           const userRoleLevel = roleLevels[user.userRole];
-          return userRoleLevel >= loggedInUserRoleLevel;
+          return userRoleLevel > loggedInUserRoleLevel;
         });
 
         setUsers(filteredUsers);
       }
-    } 
-}
-catch (error) {
+    } catch (error) {
       console.error("Error fetching users:", error);
     }
-  }
+};
 
 
   const handleDeleteUser = async (id) => {
@@ -134,10 +129,10 @@ catch (error) {
   return (
     <Layout>
       <div className="roles-container">
-        <h2 className="table-header">Users</h2>
+        <h2>Users</h2>
         <div className="user-roles-header">
           {rolePermissions?.UserManagement?.create ? <button onClick={() => navigate("/users/add")} className="add-user-btn">
-            <GrAdd /> Add User
+             Add User
           </button> : null}
 
           <input
@@ -179,10 +174,9 @@ catch (error) {
                       {rolePermissions?.UserManagement?.edit && (
                         <FaEdit
                         style={{
-                          color : "black",
-                          fontSize : "20px"
-                      }}
-                          className="edit-icon"
+                          color: "black" , 
+                          fontSize : "22px"
+                        }}
                           title="Edit"
                           onClick={() => navigate(`/users/edit/${user.id}`)}
                         />
@@ -190,9 +184,9 @@ catch (error) {
                       {rolePermissions?.UserManagement?.delete && (
                         <FaTrash
                         style={{
-                          color : "black",
+                          color: "black" , 
                           fontSize : "20px"
-                      }}
+                        }}
                           className="delete-icon"
                           title="Delete"
                           onClick={() => handleDeleteUser(user.id)}

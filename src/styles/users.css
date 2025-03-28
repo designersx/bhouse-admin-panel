@@ -99,11 +99,11 @@
   .form-roww .name{
     width: 94%;
   }
-  .form-group select{
+  .user-form-group select{
     width: 94% !important;
   }
   
-  .form-group {
+  .user-form-group {
     flex: 1;
     min-width: 200px;
     display: flex;
@@ -126,14 +126,14 @@
     border: 1px solid #ccc;
   }
   
-  .error {
+  .user-error {
     color: red;
     font-size: 13px;
     margin-top: 2px;
     text-align: left;
   }
   
-  .submit-btn {
+  .user-submit-btn {
     margin-top: 20px;
     padding: 12px 24px;
     background-color: #1d72b8;
@@ -149,13 +149,13 @@
     background-color: #135f96;
   }
   
-  .form-header {
+  .user-form-header {
     position: relative;
     height: 50px;
     margin-bottom: 10px;
   }
   
-  .back-btn {
+  .user-back-btn {
     position: absolute;
     left: 0;
     top: 50%;
@@ -190,7 +190,123 @@
     gap: 10px;
     margin-bottom: 20px;
   } */
+
+  .user-form-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* line-height: 35px; */
+  }
   
+  .user-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .user-form *,
+  .user-form *::before,
+  .user-form *::after {
+    box-sizing: border-box;
+  }
+  
+  .user-form-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .user-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+  .form-roww .name{
+    width: 94%;
+  }
+  
+  .user-back-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background-color:transparent !important;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px 12px;
+  }
+
+  .user-submit-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: #1d72b8;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  
+  .submit-btn:hover {
+    background-color: #135f96;
+  }
+  
+  .user-form-group select{
+    width: 93%;
+    height: 38px;
+  }
+  .user-form-group input{
+    width: 94%;
+    padding: 14px;
+    margin: 1px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  .user-form-group {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .user-form-header {
+    position: relative;
+    height: 50px;
+    margin-bottom: 10px;
+  }
+
+  .user-error {
+    color: red;
+    font-size: 13px;
+    /* margin-top: 2px; */
+    text-align: left;
+  }
+  .user-form-title{
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .mobnumber {
+    width: 103% !important;
+  }
+
+  .user-form-group label {
+    color:#000;
+  }
+
+
   .user-roles-header .add-user-btn {
     margin-right: auto; /* Push search input to the right when button exists */
     background-color: #4f46e5;
@@ -204,7 +320,7 @@
     align-items: center;
     gap: 6px;
   }
-  
+
   .user-search-input {
     padding: 8px;
     border: 1px solid #ccc;

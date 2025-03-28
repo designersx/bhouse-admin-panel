@@ -107,7 +107,7 @@ const Roles = () => {
         <div className="roles-header">
           {rolePermissions?.Roles?.create && (
             <button className="add-role-btn" onClick={() => navigate("/create-role")}>
-              + Add Role
+              Add Role
             </button>
           )}
 

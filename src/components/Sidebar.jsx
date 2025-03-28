@@ -13,7 +13,6 @@ const Sidebar = () => {
   const location = useLocation();
   const { rolePermissions, loading } = useSidebarPermissions();
   const user = JSON.parse(localStorage.getItem('user'));
-
   const handleLogout = () => {
     Swal.fire({
       title: "Are you sure?",
@@ -35,6 +34,7 @@ const Sidebar = () => {
   const canViewUsers = rolePermissions?.UserManagement?.view;
   const canViewRoles = rolePermissions?.Roles?.view;
   const canViewCustomers = rolePermissions?.Customer?.view;
+  const canViewProjects =  rolePermissions?.ProjectManagement.view
 
   return (
     <div className="sidebar">
@@ -60,9 +60,11 @@ const Sidebar = () => {
           </li>
         ) : null}
 
+        {loading || canViewProjects ? ( 
         <li className={location.pathname === '/projects' ? 'active' : ''}>
           <Link to="/projects"><AiFillProject /> Projects</Link>
         </li>
+        ): null}
 
         {loading || canViewCustomers ? (
           <li className={location.pathname === '/customers' ? 'active' : ''}>
