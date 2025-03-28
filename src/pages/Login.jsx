@@ -104,6 +104,8 @@ const Login = () => {
                 setPassword(e.target.value);
                 validatePassword(e.target.value);
               }} 
+              minLength={6}
+              maxLength={15}
               placeholder="Password" 
             />
             {passwordError && <p className="error-text">{passwordError}</p>}
@@ -114,7 +116,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? <div className="spinner"></div> : 'Login'}
+            {isLoading ? <div className="login-spinner"></div> : 'Login'}
           </button>
         </form>
       </div>

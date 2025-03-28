@@ -144,12 +144,12 @@ const ForgotPassword = () => {
   };
 
   return (
-    <>
+  <>
       <Navbar isLogin={true} />
-      <div className='main-container'>
-        <div className="forgot-password-container">
-          <h2>{!otpSent ? "Reset Password" : otpVerified ? "Password Reset" : "Verify OTP"}</h2>
-          <p>
+      <div className='forget-main-container'>
+        <div className="forget-password-container">
+          <h2 className="forget-heading">{!otpSent ? "Reset Password" : otpVerified ? "Password Reset" : "Verify OTP"}</h2>
+          <p className="forget-description">
             {!otpSent
               ? "Enter your email and we'll send you a link to reset your password."
               : otpVerified
@@ -157,11 +157,13 @@ const ForgotPassword = () => {
                 : "Enter the OTP sent to your email to verify and continue."
             }
           </p>
-
+         
+          
           {/* Email input */}
           {!otpSent && (
-            <div>
+            <div className='forget-mainDiv'>
               <input
+                className="forget-input"
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -171,18 +173,19 @@ const ForgotPassword = () => {
                 placeholder="Enter your email"
                 required
               />
-              {errors.email && <p className="error-text">{errors.email}</p>}
+              <p className={`forget-error-text ${errors.email ? 'show' : ''}`}>{errors.email}</p>
 
               <button className='forget-btn' onClick={handleGenerateOtp} disabled={isLoading}>
-                {isLoading ? <div className="spinner"></div> : 'Generate OTP'}
+                {isLoading ? <div className="forget-spinner"></div> : 'Generate OTP'}
               </button>
             </div>
           )}
 
           {/* OTP input */}
           {otpSent && !otpVerified && (
-            <div>
+            <div className='forget-mainDiv'>
               <input
+                className="forget-input"
                 type="text"
                 value={otp}
                 onChange={(e) => {
@@ -192,18 +195,19 @@ const ForgotPassword = () => {
                 placeholder="Enter OTP"
                 required
               />
-              {errors.otp && <p className="error-text">{errors.otp}</p>}
+              <p className={`forget-error-text ${errors.otp ? 'show' : ''}`}>{errors.otp}</p>
 
               <button className='forget-btn' onClick={handleVerifyOtp} disabled={isLoading}>
-                {isLoading ? <div className="spinner"></div> : 'Verify OTP'}
+                {isLoading ? <div className="forget-spinner"></div> : 'Verify OTP'}
               </button>
             </div>
           )}
 
           {/* Password inputs */}
           {otpVerified && (
-            <div>
+            <div className='forget-mainDiv'>
               <input
+                className="forget-input"
                 type="password"
                 value={newPassword}
                 onChange={(e) => {
@@ -211,12 +215,14 @@ const ForgotPassword = () => {
                   validateField('newPassword', e.target.value);
                 }}
                 placeholder="New Password"
-                maxLength={6}
+                minLength={6}
+                maxLength={15}
                 required
               />
-              {errors.newPassword && <p className="error-text">{errors.newPassword}</p>}
+              <p className={`forget-error-text ${errors.newPassword ? 'show' : ''}`}>{errors.newPassword}</p>
 
               <input
+                className="forget-input"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => {
@@ -224,22 +230,24 @@ const ForgotPassword = () => {
                   validateField('confirmPassword', e.target.value);
                 }}
                 placeholder="Confirm Password"
-                maxLength={6}
+                minLength={6}
+                maxLength={15}
                 required
               />
-              {errors.confirmPassword && <p className="error-text">{errors.confirmPassword}</p>}
+              <p className={`forget-error-text ${errors.confirmPassword ? 'show' : ''}`}>{errors.confirmPassword}</p>
 
               <button className='forget-btn' onClick={handleResetPassword} disabled={isLoading}>
-                {isLoading ? <div className="spinner"></div> : 'Reset Password'}
+                {isLoading ? <div className="forget-spinner"></div> : 'Reset Password'}
               </button>
             </div>
           )}
 
-          <div className="additional-links">
+          <div className="forget-additional-links">
             <p>Remember your password? <span onClick={() => navigate("/")}>Sign In</span></p>
           </div>
         </div>
-      </div>
+        </div>
+    
     </>
   );
 };
