@@ -1,124 +1,146 @@
-.projects-header {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    margin-bottom: 20px;
+/* Main container to avoid style collision */
+.projects-page {
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Project header styling */
+.projects-page .project-first-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.projects-page .table-header {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.projects-page .add-user-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.projects-page .add-user-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Search bar styling */
+.projects-page .header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.projects-page .search-bar {
+  width: 280px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.projects-page .search-bar:focus {
+  border-color: #007bff;
+}
+
+/* Projects table container styling */
+.projects-page .projects-table-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow-x: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+}
+
+/* Table styling */
+.projects-page .projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Ensures stable layout */
+}
+
+.projects-page .projects-table th,
+.projects-page .projects-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  word-wrap: break-word; /* Prevents overflow */
+}
+
+.projects-page .projects-table th {
+  background-color: #f5f8fa;
+  font-weight: 600;
+  color: #444;
+}
+
+.projects-page .projects-table tbody tr:nth-child(even) {
+  background-color: #fafbfd;
+}
+
+.projects-page .projects-table tbody tr:hover {
+  background-color: #f1f7ff;
+}
+
+/* Action buttons alignment and styling */
+.projects-page .projects-table td.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  min-width: 140px;
+}
+
+/* Action button styling */
+.projects-page .action-btn,
+.projects-page .actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  color: #555;
+  transition: color 0.3s, transform 0.3s;
+}
+
+/* Icon styling for consistency */
+.projects-page .action-btn i,
+.projects-page .actions i {
+  font-size: 18px;
+}
+
+
+/* Ensure table responsiveness */
+@media (max-width: 768px) {
+  .projects-page .header-actions {
+    flex-direction: column;
+    gap: 10px;
   }
-  
-  .projects-header h1 {
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .action-btn {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  
-  .action-btn.unarchive {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .action-btn.unarchive:hover {
-    background-color: #218838;
-  }
-  
-  .new-project-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    margin-right: 20px;
-    cursor: pointer;
-  }
-  .archived-project-btn{
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    margin-right: 20px;
-    cursor: pointer;
-  }
-  .new-project-btn:hover {
-    background-color: #0056b3;
-  }
-  
-  .search-bar {
-    padding: 8px 15px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 300px;
-  }
-  
-  .projects-table-container {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .projects-table {
+
+  .projects-page .search-bar {
     width: 100%;
-    border-collapse: collapse;
   }
-  
-  .projects-table th, .projects-table td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-  }
-  
-  .projects-table th {
-    background-color: #f4f4f4;
-    font-weight: 600;
-  }
-  
-  .projects-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-  
-  .projects-table tr:hover {
-    background-color: #f1f1f1;
-  }
-  
-  button.action-btn {
-    padding: 8px 1px;
-    border: none;
-    background-color: transparent;
-    color: #007BFF;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
+
+  .projects-page .projects-table th,
+  .projects-page .projects-table td {
+    padding: 10px;
     font-size: 14px;
   }
-  
-  button.action-btn i {
-    margin-right: 5px;
+
+  .projects-page .projects-table td.actions {
+    gap: 6px;
   }
-  
-  button.edit:hover {
-    color: #0056b3;
-  }
-  
-  button.view:hover {
-    color: #28a745;
-  }
-  
-  button.delete:hover {
-    color: #dc3545;
-  }
-  
+}

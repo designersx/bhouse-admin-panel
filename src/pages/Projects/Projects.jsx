@@ -5,7 +5,7 @@ import '../../styles/Projects/project.css';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
-
+import { MdDelete } from "react-icons/md"
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -165,19 +165,23 @@ const Projects = () => {
 
   return (
     <Layout>
-      <div className="projects-header">
-        <h1>Projects</h1>
+      <div className="projects-page">
+        <div className='project-first-header'>
+        <h2 className='table-header'>Projects</h2>
         {canCreate && (
-          <button className="archived-project-btn" onClick={handleArchivedProjectClick}>
+          <button className="add-user-btn" onClick={handleArchivedProjectClick}>
             Archived Projects
           </button>
         )}
+        </div>
+      
+      
 
-      </div>
+      
       <div className="header-actions">
         {canCreate && (
-          <button className="new-project-btn" onClick={handleNewProjectClick}>
-            New Project
+          <button className="add-user-btn" onClick={handleNewProjectClick}>
+           Add Project
           </button>
         )}
 
@@ -229,12 +233,9 @@ const Projects = () => {
                     )}
 
                     {canDelete && (
-                      <button
-                        className="action-btn delete"
-                        onClick={() => handleArchiveProject(project.id)}
-                      >
-                        <i className="fas fa-archive"></i>
-                      </button>
+                      <button onClick={() => handleArchiveProject(project.id)}>
+                      <i className='fa fa-trash'></i>
+                     </button>
                     )}
                   </td>
 
@@ -243,6 +244,7 @@ const Projects = () => {
             </tbody>
           </table>
         )}
+      </div>
       </div>
     </Layout>
   );

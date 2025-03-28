@@ -4,8 +4,9 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import '../../styles/Projects/ProjectDetails.css';
 import { url} from '../../lib/api';
-import { IoMdCheckmark } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
+import { FaEye, FaDownload } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -22,9 +23,9 @@ const ProjectDetails = () => {
   const updateItem = async (item) => {
     try {
       await axios.put(`${url}/items/project-items/${item.id}`, item);
-      alert("Item updated!");
+      toast.success("Item updated!");
     } catch (err) {
-      alert("Error updating item.");
+      toast.error("Error updating item.");
       console.error(err);
     }
   };
@@ -33,9 +34,9 @@ const ProjectDetails = () => {
     try {
       await axios.delete(`${url}/items/project-items/${id}`);
       setItems(prev => prev.filter(item => item.id !== id));
-      alert("Item deleted!");
+      toast.success("Item deleted!");
     } catch (err) {
-      alert("Error deleting item.");
+      toast.error("Error deleting item.");
       console.error(err);
     }
   };
@@ -132,6 +133,7 @@ const ProjectDetails = () => {
   if (loading) {
     return (
       <Layout>
+        
         <div className="project-details-header">
           <h1>Project Details</h1>
         </div>
@@ -145,6 +147,7 @@ const ProjectDetails = () => {
   
   return (
     <Layout>
+      <div className='project-details-page'>
       <div className="project-details-header">
         <h1>{project.name}</h1>
         <p className="project-subtitle">{project.type} Project</p>
@@ -185,108 +188,105 @@ const ProjectDetails = () => {
   <div className="project-info-card">
     <h2>Uploaded Documents</h2>
 
-    {/* Proposals */}
-    <div className="document-section">
-      <h3>Proposals & Presentations</h3>
-      {project.proposals?.length > 0 ? (
-        <div className="uploaded-files">
-          {project.proposals.map((url, idx) => {
-            const fileName = url.split('/').pop();
-            const fileExt = fileName.split('.').pop().toLowerCase();
-            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+    {[
+      { title: "Proposals & Presentations", files: project.proposals },
+      { title: "Floor Plans & CAD Files", files: project.floorPlans },
+      { title: "Other Documents", files: project.otherDocuments },
+    ].map((docCategory, idx) => (
+      <div key={idx} className="document-section">
+        <h3>{docCategory.title}</h3>
+        {docCategory.files?.length > 0 ? (
+          <div className="uploaded-files">
+            {docCategory.files.map((url, idx) => {
+              const fileName = url.split('/').pop();
+              const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
 
-            return (
-              <div key={idx} className="file-item">
-                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
-                ) : (
-                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
-                    {fileName}
-                  </a>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p>No proposals uploaded.</p>
-      )}
-    </div>
+              const handleDownload = async () => {
+                try {
+                  const response = await fetch(fileUrl);
+                  const blob = await response.blob();
+                  const downloadUrl = window.URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = downloadUrl;
+                  link.download = fileName;
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(downloadUrl);
+                } catch (error) {
+                  console.error("Download failed", error);
+                  alert("Download failed, please try again.");
+                }
+              };
 
-    {/* Floor Plans */}
-    <div className="document-section">
-      <h3>Floor Plans & CAD Files</h3>
-      {project.floorPlans?.length > 0 ? (
-        <div className="uploaded-files">
-          {project.floorPlans.map((url, idx) => {
-            const fileName = url.split('/').pop();
-            const fileExt = fileName.split('.').pop().toLowerCase();
-            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
-
-            return (
-              <div key={idx} className="file-item">
-                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
-                ) : (
-                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
-                    {fileName}
-                  </a>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p>No floor plans uploaded.</p>
-      )}
-    </div>
-
-    {/* Other Documents */}
-    <div className="document-section">
-      <h3>Other Documents</h3>
-      {project.otherDocuments?.length > 0 ? (
-        <div className="uploaded-files">
-          {project.otherDocuments.map((url, idx) => {
-            const fileName = url.split('/').pop();
-            const fileExt = fileName.split('.').pop().toLowerCase();
-            const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
-
-            return (
-              <div key={idx} className="file-item">
-                {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                  <img src={fileUrl} alt={fileName} className="file-preview-image" />
-                ) : (
-                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
-                    {fileName}
-                  </a>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p>No other documents uploaded.</p>
-      )}
-    </div>
+              return (
+                <div key={idx} className="file-item-enhanced">
+                  <span className="file-name-enhanced">{fileName}</span>
+                  <div className="file-actions">
+                    <button
+                      className="file-action-btn"
+                      onClick={() => window.open(fileUrl, '_blank')}
+                      title="View"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      className="file-action-btn"
+                      onClick={handleDownload}
+                      title="Download"
+                    >
+                      <FaDownload />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p>No documents uploaded.</p>
+        )}
+      </div>
+    ))}
   </div>
 )}
 
 
-        {activeTab === 'team' && (
-          <div className="project-info-card">
-            <h2>Assigned Team</h2>
-            {project.assignedTeamRoles.length > 0 ? (
-              project.assignedTeamRoles.map((roleGroup, index) => (
-                <div key={index} className="info-group">
-                  <strong>{roleGroup.role}:</strong>
-                  <span> {getUserNamesByIds(roleGroup.users)}</span>
+
+{activeTab === 'team' && (
+  <div className="project-info-card">
+    <h2>Assigned Team</h2>
+    {project.assignedTeamRoles.length > 0 ? (
+      <div className="team-grid">
+        {project.assignedTeamRoles.map((roleGroup, index) => (
+          <div key={index} className="role-card">
+            <h3 className="role-title">{roleGroup.role}</h3>
+            {roleGroup.users.map((userId) => {
+              const user = allUsers.find(u => u.id.toString() === userId.toString());
+              return user ? (
+                <div key={user.id} className="user-card-horizontal">
+                  <img 
+                    src={user.profileImage ? `http://localhost:5000/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+                    alt={`${user.firstName} ${user.lastName}`} 
+                    className="user-profile-img-horizontal" 
+                  />
+                  <div className="user-info-horizontal">
+                    <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
+                    <span className="user-email-horizontal">{user.email}</span>
+                  </div>
                 </div>
-              ))
-            ) : (
-              <p>No team assigned.</p>
-            )}
+              ) : null;
+            })}
           </div>
-        )}
+        ))}
+      </div>
+    ) : (
+      <p>No team assigned.</p>
+    )}
+  </div>
+)}
+
+
+
 
 {activeTab === 'items' && (
   <div className="project-info-card">
@@ -336,24 +336,33 @@ const ProjectDetails = () => {
               </select>
             </td>
             <td>
-  {item.id ? (
-    <>
-      <button onClick={() => updateItem(item)}><IoMdCheckmark/></button>
-      <button onClick={() => deleteItem(item.id)}><MdDelete/></button>
-    </>
-  ) : (
-    <>
-      <button onClick={() => addNewItemToBackend(item, index)}><IoMdCheckmark/></button>
-      <button onClick={() => removeRow(index)}>Remove Row</button>
-    </>
-  )}
+            {item.id ? (
+  <>
+    <button onClick={() => deleteItem(item.id)}><MdDelete/></button>
+  </>
+) : (
+  <>
+    <button onClick={() => addNewItemToBackend(item, index)}>Save</button>
+    <button onClick={() => removeRow(index)}>Remove Row</button>
+  </>
+)}
+
 </td>
 
           </tr>
         ))}
       </tbody>
     </table>
-    <button className="ledbutton" onClick={handleAddItemRow}>+ Add Row</button>
+    <div className='button1' style={{ display: 'flex', justifyContent: 'space-between' }}>
+  <button className="ledbutton" onClick={handleAddItemRow}>+ Add Row</button>
+  <button className="ledbutton" onClick={() => {
+    items.forEach(item => {
+      if (item.id) updateItem(item);
+    });
+  }}>Save</button>
+</div>
+
+   
   </div>
 )}
 
@@ -366,6 +375,7 @@ const ProjectDetails = () => {
             <div className="info-group"><strong>Email Notifications:</strong> {project.enableNotifications ? "Allowed" : "Disabled"}</div>
           </div>
         )}
+      </div>
       </div>
     </Layout>
   );

@@ -185,11 +185,11 @@
  
   .user-roles-header {
     display: flex;
-    justify-content: flex-end; /* Align all children to the right */
-    align-items: center;
+    justify-content: flex-end; Align all children to the right */
+    /* align-items: center;
     gap: 10px;
     margin-bottom: 20px;
-  }
+  } */
   
   .user-roles-header .add-user-btn {
     margin-right: auto; /* Push search input to the right when button exists */
@@ -211,4 +211,13 @@
     border-radius: 5px;
     width: 250px;
   }
-  
+  .user-roles-header{
+    display: flex;
+    position: relative;
+    justify-content: flex-end;
+  }
+ .table-header{
+margin: 0;
+padding: 0;
+margin-bottom: 10px;
+ }

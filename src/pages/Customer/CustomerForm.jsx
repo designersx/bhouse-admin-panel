@@ -2,6 +2,8 @@ import { useState } from "react";
 import { createCustomer } from "../../lib/api";
 import Layout from "../../components/Layout";
 import "./style.css"; // Import External CSS
+import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const CustomerForm = () => {
     const [formData, setFormData] = useState({
@@ -98,18 +100,21 @@ const CustomerForm = () => {
         }
 
         const response = await createCustomer(formData);
-        alert(response.message || "Customer created successfully!");
+        toast.success(response.message || "Customer created successfully!");
+        nevigate('/customers')
     };
-
+const nevigate = useNavigate()
     return (
         <Layout>
+            <ToastContainer/>
             <div className="customer-form-container">
                 <h2 className="add-customer">Add New Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} onBlur={handleBlur} required />
+                        <input type="text" name="full_name" value={formData.full_name} maxLength={25} onChange={handleChange} onBlur={handleBlur} required />
                         {touched.full_name && errors.full_name && <p className="error">{errors.full_name}</p>}
+                        
                     </div>
 
                     <div className="form-group">
@@ -131,7 +136,7 @@ const CustomerForm = () => {
 
                     <div className="full-width">
                         <label>Address</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleChange} required />
+                        <input type="text" name="address" value={formData.address} maxLength={55} onChange={handleChange} required />
                     </div>
 
                     <div className="checkbox-group">
@@ -148,7 +153,7 @@ const CustomerForm = () => {
 
                     <div className="full-width">
                         <label>Password</label>
-                        <input type="password" name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} required />
+                        <input type="password" name="password" value={formData.password} maxLength={15} onChange={handleChange} onBlur={handleBlur} required />
                         {touched.password && errors.password && <p className="error">{errors.password}</p>}
                     </div>
 

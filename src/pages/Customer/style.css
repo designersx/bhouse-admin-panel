@@ -16,12 +16,24 @@
     color: #333;
     margin-bottom: 20px;
 }
+.customer-filter{
+  display: flex;
+  gap: 50px;
+}
+.customer-filter select{
+  min-width: 100px;
+  border-radius: 5px;
+  height: 36px;
+}
 
 /* Form Layout */
 .customer-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
+}
+.no-data{
+  text-align: center;
 }
 
 /* Form Group */

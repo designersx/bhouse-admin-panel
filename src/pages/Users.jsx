@@ -57,10 +57,12 @@ const Users = () => {
 
         setUsers(filteredUsers);
       }
-    } catch (error) {
+    } 
+}
+catch (error) {
       console.error("Error fetching users:", error);
     }
-};
+  }
 
 
   const handleDeleteUser = async (id) => {
@@ -132,7 +134,7 @@ const Users = () => {
   return (
     <Layout>
       <div className="roles-container">
-        <h2>Users</h2>
+        <h2 className="table-header">Users</h2>
         <div className="user-roles-header">
           {rolePermissions?.UserManagement?.create ? <button onClick={() => navigate("/users/add")} className="add-user-btn">
             <GrAdd /> Add User
@@ -176,6 +178,10 @@ const Users = () => {
                     <td className="actions">
                       {rolePermissions?.UserManagement?.edit && (
                         <FaEdit
+                        style={{
+                          color : "black",
+                          fontSize : "20px"
+                      }}
                           className="edit-icon"
                           title="Edit"
                           onClick={() => navigate(`/users/edit/${user.id}`)}
@@ -183,6 +189,10 @@ const Users = () => {
                       )}
                       {rolePermissions?.UserManagement?.delete && (
                         <FaTrash
+                        style={{
+                          color : "black",
+                          fontSize : "20px"
+                      }}
                           className="delete-icon"
                           title="Delete"
                           onClick={() => handleDeleteUser(user.id)}

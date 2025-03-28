@@ -36,3 +36,6 @@
     transform: rotate(360deg);
   }
 }
+.delete-icon{
+  background-color: #1f2937;
+}
