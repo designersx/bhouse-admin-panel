@@ -4,6 +4,8 @@ import '../../styles/Projects/AddProject.css';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { getCustomers } from '../../lib/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AddProject = () => {
   const [step, setStep] = useState(1);
@@ -35,9 +37,59 @@ const AddProject = () => {
   ]);
 
   const [loading, setLoading] = useState(false);
-
-
   const navigate = useNavigate();
+
+  const validateStep1 = () => {
+    const { name, type, clientName, startDate, estimatedCompletion } = formData;
+  
+    if (!name.trim()) return "Project Name is required.";
+    if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
+    if (!type) return "Project Type is required.";
+    if (!clientName) return "Customer selection is required.";
+    if (!startDate) return "Start Date is required.";
+  
+    if (estimatedCompletion) {
+      const start = new Date(startDate);
+      const end = new Date(estimatedCompletion);
+      if (end <= start) {
+        return "Estimated Completion date must be after Start Date.";
+      }
+    }
+  
+    return null;
+  };
+  
+  const validateStep2 = () => {
+    const { totalValue, deliveryAddress, deliveryHours } = formData;
+    if (!totalValue || totalValue <= 0) return "Total Value must be a positive number.";
+    if (!deliveryAddress.trim()) return "Delivery Address is required.";
+    if (!deliveryHours.trim()) return "Delivery Hours is required.";
+    if (selectedRoles.length === 0) return "At least one role must be selected.";
+    
+    if (leadTimeMatrix.length === 0) return "At least one item in the Lead Time Matrix is required.";
+    for (const item of leadTimeMatrix) {
+      if (!item.itemName.trim() || !item.quantity || !item.expectedDeliveryDate) {
+        return "All Lead Time Matrix items must be fully filled.";
+      }
+    }
+  
+    return null;
+  };
+  
+  const nextStep = () => {
+    let errorMsg = null;
+  
+    if (step === 1) errorMsg = validateStep1();
+    else if (step === 2) errorMsg = validateStep2();
+  
+    if (errorMsg) {
+     toast.error(`Error: ${errorMsg}`)
+      return;
+    }
+  
+    setStep(step + 1);
+  };
+  const prevStep = () => setStep(step - 1);
 
   const handleItemChange = (index, field, value) => {
     const updated = [...leadTimeMatrix];
@@ -93,8 +145,6 @@ const AddProject = () => {
         const users = data.users || [];
 
         setRoleUsers(prev => ({ ...prev, [role]: users }));
-
-        // Optional: auto-select user with permissionLevel === 2
         const defaultUsers = users.filter(user => user.permissionLevel === 2);
         const defaultUserIds = defaultUsers.map(user => user.id);
         setFormData(prev => ({
@@ -140,17 +190,29 @@ const AddProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    const step3validation = () => {
+      return null; // No required fields in Step 3
+    };
+  
+    const errorMsg = step3validation();
+    if (errorMsg) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: errorMsg,
+      });
+      return;
+    }
+  
     const formDataToSend = new FormData();
-
-    // Convert assignedTeamRoles object to array of { role, users }
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
       ([role, users]) => ({
         role,
         users: Array.isArray(users) ? users : []
       })
     );
-
+  
     Object.keys(formData).forEach((key) => {
       if (key !== 'assignedTeamRoles') {
         if (Array.isArray(formData[key])) {
@@ -160,10 +222,10 @@ const AddProject = () => {
         }
       }
     });
-
+  
     formDataToSend.append('assignedTeamRoles', JSON.stringify(transformedRoles));
     formDataToSend.append('leadTimeMatrix', JSON.stringify(leadTimeMatrix));
-
+  
     for (let file of files) {
       formDataToSend.append('files', file);
     }
@@ -176,16 +238,16 @@ const AddProject = () => {
     for (let file of formData.otherDocuments || []) {
       formDataToSend.append('otherDocuments', file);
     }
-    
+  
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch('http://localhost:5000/api/projects', {
         method: 'POST',
         body: formDataToSend
       });
-
+  
       const data = await response.json();
-
+  
       if (response.status === 201) {
         Swal.fire('Project added successfully!');
         navigate('/projects');
@@ -203,15 +265,15 @@ const AddProject = () => {
         text: 'Something went wrong!'
       });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
+  
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
-
+ 
   return (
     <Layout>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="add-project-container">
         {loading && (
           <div className="loader-overlay">
@@ -239,7 +301,7 @@ const AddProject = () => {
                       onChange={handleChange}
                       required
                       placeholder="Enter project name"
-                      maxLength={20}
+                      maxLength={40}
                     />
                   </div>
                   <div className="form-group">
@@ -293,26 +355,30 @@ const AddProject = () => {
                   </div>
                 </div>
                 <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Start Date</label>
-                    <input
-                      type="date"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Estimated Completion</label>
-                    <input
-                      type="date"
-                      name="estimatedCompletion"
-                      value={formData.estimatedCompletion}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
+               <div className="form-group">
+  <label>Start Date</label>
+  <input
+    type="date"
+    name="startDate"
+    value={formData.startDate ? formData.startDate.split('T')[0] : ''}
+    onChange={handleChange}
+    required
+  />
+</div>
+
+<div className="form-group">
+  <label>Estimated Completion</label>
+  <input
+    type="date"
+    name="estimatedCompletion"
+    value={formData.estimatedCompletion ? formData.estimatedCompletion.split('T')[0] : ''}
+    min={formData.startDate || ""}
+    onChange={handleChange}
+  />
+</div>
+</div>
+
+
                 <div className='form-group-row'>
   <div className="form-group">
     <label>Upload Proposals & Presentations (PDF, Images)</label>
@@ -497,39 +563,40 @@ const AddProject = () => {
                 </div>
                 <h3>Project Lead Time Matrix</h3>
                 <div className="lead-time-matrix-container">
-                  {leadTimeMatrix.map((item, index) => (
-                    <div key={index} className="item-row">
-                      <input
-                        type="text"
-                        placeholder="Item Name"
-                        value={item.itemName}
-                        onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Quantity"
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                      />
-                      <input
-                        type="date"
-                        value={item.expectedDate}
-                        onChange={(e) => handleItemChange(index, 'expectedDate', e.target.value)}
-                      />
-                      <select
-                        value={item.status}
-                        onChange={(e) => handleItemChange(index, 'status', e.target.value)}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Delivered">Delivered</option>
-                      </select>
-                      {leadTimeMatrix.length > 1 && (
-                        <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
-                      )}
-                    </div>
-                  ))}
-                  <button className='ledbutton' type="button" onClick={handleAddItemRow}>+ Add Item</button>
-                </div>
+  {leadTimeMatrix.map((item, index) => (
+    <div key={index} className="item-row">
+      <input
+        type="text"
+        placeholder="Item Name"
+        value={item.itemName}
+        onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+      />
+      <input
+        type="number"
+        placeholder="Quantity"
+        value={item.quantity}
+        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+      />
+      <input
+        type="date"
+        value={item.expectedDeliveryDate}
+        onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+      />
+      <select
+        value={item.status}
+        onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+      >
+        <option value="Pending">Pending</option>
+        <option value="Delivered">Delivered</option>
+      </select>
+      {leadTimeMatrix.length > 1 && (
+        <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
+      )}
+    </div>
+  ))}
+  <button className='ledbutton' type="button" onClick={handleAddItemRow}>+ Add Item</button>
+</div>
+
                 <br />
 
 
