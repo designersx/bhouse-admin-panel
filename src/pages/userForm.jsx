@@ -51,7 +51,7 @@ const UserForm = () => {
       const data = await getAllUsers();
       const user = data.find((u) => u.id === parseInt(id));
       if (user) {
-        setNewUser({ ...user, password: "" });
+        setNewUser({ ...user });
       }
     } catch (error) {
       console.error(error);
@@ -185,7 +185,7 @@ const UserForm = () => {
       }
       navigate("/users");
     } catch (err) {
-      console.log(err.message, '111111111111')
+      console.log(err.message)
       Swal.fire("Error", err.message || "Something went wrong!", "error");
     } finally {
       setLoading(false);
@@ -200,14 +200,14 @@ const UserForm = () => {
             <div className="loader"></div>
           </div>
         )}
-        <div className="form-header">
-          <button className="back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
-          <h2 className="form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
+        <div className="user-form-header">
+          <button className="user-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
+          <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
         </div>
 
-        <form className="form-container user-form" onSubmit={handleSubmit}>
-          <div className="form-roww">
-            <div className="form-group">
+        <form className="user-form-container user-form" onSubmit={handleSubmit}>
+          <div className="user-form-row">
+            <div className="user-form-group">
               <label>First Name</label>
               <input
                 type="text"
@@ -216,9 +216,9 @@ const UserForm = () => {
                 value={newUser.firstName}
                 onChange={handleChange}
               />
-              {errors.firstName && <p className="error">{errors.firstName}</p>}
+              {errors.firstName && <p className="user-error">{errors.firstName}</p>}
             </div>
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Last Name</label>
               <input
                 type="text"
@@ -227,12 +227,12 @@ const UserForm = () => {
                 value={newUser.lastName}
                 onChange={handleChange}
               />
-              {errors.lastName && <p className="error">{errors.lastName}</p>}
+              {errors.lastName && <p className="user-error">{errors.lastName}</p>}
             </div>
           </div>
 
-          <div className="form-roww">
-            <div className="form-group full-width">
+          <div className="user-form-row">
+            <div className="user-form-group">
               <label>Email</label>
               <input
                 type="email"
@@ -241,12 +241,12 @@ const UserForm = () => {
                 value={newUser.email}
                 onChange={handleChange}
               />
-              {errors.email && <p className="error">{errors.email}</p>}
+              {errors.email && <p className="user-error">{errors.email}</p>}
             </div>
-          </div>
+          {/* </div> */}
 
-          <div className="form-roww">
-            <div className="form-group full-width">
+          {/* <div className="user-form-row"> */}
+            <div className="user-form-group">
               <label>Password {isEditMode && <span style={{ fontWeight: "normal", fontSize: "13px" }}>(optional)</span>}</label>
               <input
                 type="password"
@@ -254,15 +254,15 @@ const UserForm = () => {
                 placeholder="Password"
                 value={newUser.password}
                 onChange={handleChange}
-                maxLength={6}
+                minLength={6}
+                maxLength={15}
               />
-              {errors.password && <p className="error">{errors.password}</p>}
+              {errors.password && <p className="user-error">{errors.password}</p>}
             </div>
           </div>
 
 
-          <div className="form-roww">
-            <div className="form-group full-width">
+            <div className="user-form-group mobnumber">
               <label>Mobile Number</label>
               <input
                 type="text"
@@ -272,12 +272,11 @@ const UserForm = () => {
                 onChange={handleChange}
                 maxLength={10}
               />
-              {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
+              {errors.mobileNumber && <p className="user-error">{errors.mobileNumber}</p>}
             </div>
-          </div>
 
-          <div className="form-roww">
-            <div className="form-group">
+          <div className="user-form-row">
+            <div className="user-form-group">
               <label>Select a Role</label>
               <select
                 name="userRole"
@@ -291,10 +290,10 @@ const UserForm = () => {
                   </option>
                 ))}
               </select>
-              {errors.userRole && <p className="error">{errors.userRole}</p>}
+              {errors.userRole && <p className="user-error">{errors.userRole}</p>}
             </div>
 
-            <div className="form-group">
+            <div className="user-form-group">
               <label>Status</label>
               <select
                 name="status"
@@ -307,7 +306,7 @@ const UserForm = () => {
             </div>
           </div>
 
-          <button type="submit" className="submit-btn">
+          <button type="submit" className="user-submit-btn">
             {isEditMode ? "Update User" : "Add User"}
           </button>
         </form>

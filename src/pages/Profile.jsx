@@ -47,16 +47,16 @@ const Profile = () => {
         newErrors[name] = !value
           ? `${name === 'firstName' ? 'First' : 'Last'} Name is required`
           : !nameRegex.test(value)
-          ? `${name === 'firstName' ? 'First' : 'Last'} Name must contain only letters`
-          : '';
+            ? `${name === 'firstName' ? 'First' : 'Last'} Name must contain only letters`
+            : '';
         break;
 
       case 'mobileNumber':
         newErrors.mobileNumber = !value
           ? 'Mobile Number is required'
           : !mobileRegex.test(value)
-          ? 'Enter a valid 10-digit number'
-          : '';
+            ? 'Enter a valid 10-digit number'
+            : '';
         break;
 
       case 'password':
@@ -83,19 +83,19 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Run full validation on all fields
     ['firstName', 'lastName', 'mobileNumber', 'password'].forEach((field) =>
       validateField(field, formData[field])
     );
-  
+
     // Check if any validation errors exist
     const hasErrors = Object.values(errors).some((err) => err !== '');
     if (hasErrors) {
       Swal.fire('Error', 'Please fix all the errors before submitting.', 'error');
       return;
     }
-  
+
     try {
       setLoading(true);
       await updateUserProfile(formData);
@@ -107,7 +107,7 @@ const Profile = () => {
       setLoading(false);
     }
   };
-  
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -139,41 +139,16 @@ const Profile = () => {
   return (
     <Layout>
       <div className="profile-container">
-      {loading && (
-  <div className="loader-overlay">
-    <div className="loader"></div>
-  </div>
-)}
+        {loading && (
+          <div className="loader-overlay">
+            <div className="loader"></div>
+          </div>
+        )}
 
 
         <div className="profile-form">
           <h2>Edit Profile</h2>
           <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Email Address</label>
-                <input
-                  className="profile-input"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  disabled
-                />
-              </div>
-              <div className="profile-form-group">
-                <label>Mobile Number</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="mobileNumber"
-                  value={formData.mobileNumber}
-                  onChange={handleChange}
-                  maxLength={10}
-                />
-                {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
-              </div>
-            </div>
-  
             <div className="profile-form-row">
               <div className="profile-form-group">
                 <label>First Name</label>
@@ -186,6 +161,7 @@ const Profile = () => {
                 />
                 {errors.firstName && <p className="error">{errors.firstName}</p>}
               </div>
+
               <div className="profile-form-group">
                 <label>Last Name</label>
                 <input
@@ -199,8 +175,34 @@ const Profile = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="profile-form-row">
+              <div className="profile-form-group">
+                <label>Email Address</label>
+                <input
+                  className="profile-input"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  disabled
+                />
+              </div>
+
+              <div className="profile-form-group">
+                <label>Mobile Number</label>
+                <input
+                  className="profile-input"
+                  type="text"
+                  name="mobileNumber"
+                  value={formData.mobileNumber}
+                  onChange={handleChange}
+                  maxLength={10}
+                />
+                {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
+              </div>
+            </div>
+
+            <div className="profile-form-row">
+              <div className="profile-form-group">
                 <label>User Role</label>
                 <input
                   className="profile-input"
@@ -211,15 +213,16 @@ const Profile = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="profile-form-group">
                 <label>Password:</label>
                 <input
-                  className="p-input"
+                  className="profile-input"
                   type="text"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  maxLength={6}
+                  minLength={6}
+                  maxLength={15}
                 />
                 {errors.password && <p className="error">{errors.password}</p>}
               </div>
@@ -228,6 +231,7 @@ const Profile = () => {
             <button type="submit" className="update-btn">Update Profile</button>
           </form>
         </div>
+
 
         {/* Right side: Profile card */}
         <div className="profile-card">
