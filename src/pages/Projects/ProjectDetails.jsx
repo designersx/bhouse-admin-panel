@@ -371,4 +371,4 @@ const ProjectDetails = () => {
   );
 };
 
-export default ProjectDetails;
+export default ProjectDetails;    
