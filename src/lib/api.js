@@ -3,7 +3,7 @@ import axios from 'axios'
 export const url = 'https://bhouse.truet.net/api' || ""
 
 
-export const url2 = 'http://45.77.110.58:8765' || ""
+export const url2 = 'https://bhouse.truet.net' || ""
 
 export const registerUser = async (userData) => {
   try {
