@@ -126,15 +126,13 @@ const UserForm = () => {
             ? "Enter a valid 10-digit number"
             : "";
         break;
-      // case "password":
-      //   if (!isEditMode) {
-      //     newErrors.password = !value
-      //       ? "Password is required"
-      //       : !passwordRegex.test(value)
-      //         ? "Password must be 6 alphanumeric characters"
-      //         : "";
-      //   }
-      //   break;
+        case "password":
+          newErrors.password = !value
+            ? "Password is required"
+            : !/^.{6,}$/.test(value)
+              ? "Password must be at least 6 characters long"
+              : "";
+          break;
       case "userRole":
         newErrors.userRole = !value ? "Role is required" : "";
         break;
@@ -281,6 +279,7 @@ const UserForm = () => {
                 name="userRole"
                 value={newUser.userRole}
                 onChange={handleChange}
+                required
               >
                 <option value="">Select a Role</option>
                 {availableRoles.map((role) => (
