@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getCustomerById, updateCustomer } from "../lib/api";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "./Layout";
-
+import Swal from "sweetalert2";
 
 const EditCustomer = () => {
     const { id } = useParams();
@@ -25,6 +25,7 @@ const EditCustomer = () => {
         createdBy: "admin",
     });
 
+    const [errors, setErrors] = useState({});
     const [sameAsAddress, setSameAsAddress] = useState(false);
 
     useEffect(() => {
@@ -37,6 +38,33 @@ const EditCustomer = () => {
         };
         fetchCustomer();
     }, [id]);
+
+    const validateForm = () => {
+        let newErrors = {};
+
+        // Full Name: Only letters and spaces
+        if (!/^[A-Za-z\s]+$/.test(formData.full_name)) {
+            newErrors.full_name = "Full Name should contain only letters and spaces.";
+        }
+
+        // Email Validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Enter a valid email address.";
+        }
+
+        // Phone: Only numbers, minimum 10 digits
+        if (!/^\d{10,}$/.test(formData.phone)) {
+            newErrors.phone = "Phone number should be at least 10 digits.";
+        }
+
+        // Address Required
+        if (!formData.address.trim()) {
+            newErrors.address = "Address is required.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -57,8 +85,21 @@ const EditCustomer = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
         await updateCustomer(id, formData);
-        alert("Customer updated successfully!");
+
+        // SweetAlert Success Notification
+        Swal.fire({
+            icon: "success",
+            title: "Customer Updated!",
+            text: "Customer details have been updated successfully.",
+            confirmButtonColor: "#3085d6",
+        });
+
         navigate("/customers");
     };
 
@@ -69,32 +110,36 @@ const EditCustomer = () => {
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required />
+                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required  maxLength={15}/>
+                        {errors.full_name && <p className="error">{errors.full_name}</p>}
                     </div>
 
                     <div className="form-group">
                         <label>Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} required maxLength={15} />
+                        {errors.email && <p className="error">{errors.email}</p>}
                     </div>
 
                     <div className="form-group">
                         <label>Phone</label>
-                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} maxLength={15}/>
+                        {errors.phone && <p className="error">{errors.phone}</p>}
                     </div>
 
                     <div className="form-group">
                         <label>Company Name</label>
-                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} />
+                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange}maxLength={25}/>
                     </div>
 
                     <div className="full-width">
                         <label>Address</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleChange} required />
+                        <input type="text" name="address" value={formData.address} onChange={handleChange} maxLength={35} required />
+                        {errors.address && <p className="error">{errors.address}</p>}
                     </div>
 
                     <div className="checkbox-group">
                         <label className="checkbox-label">
-                            <input type="checkbox" name="sameAsAddress" checked={sameAsAddress} onChange={handleChange} />
+                            <input type="checkbox" name="sameAsAddress" checked={sameAsAddress} maxLength={35}  onChange={handleChange} />
                             Same as Company Address
                         </label>
                     </div>
@@ -107,10 +152,9 @@ const EditCustomer = () => {
                             value={formData.delivery_address}
                             onChange={handleChange}
                             disabled={sameAsAddress}
+                            maxLength={35} 
                         />
                     </div>
-
-                    
 
                     <div className="checkbox-group">
                         <label className="checkbox-label">

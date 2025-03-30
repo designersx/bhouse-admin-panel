@@ -1,21 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import axios from 'axios';
-import '../../styles/Projects/project.css'; 
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
+import '../../styles/Projects/project.css';
+import { url } from '../../lib/api';
 const ArchivedProjects = () => {
-    const [archivedProjects, setArchivedProjects] = useState([]);
-    const [filteredProjects, setFilteredProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-
+  const [archivedProjects, setArchivedProjects] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch archived projects
     const fetchArchivedProjects = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/projects/archived');
-        setArchivedProjects(response.data);
+        const res = await axios.get(`${url}/projects/archived`);
+        const formatted = res.data.map(project => ({
+          ...project,
+          assignedTeam: Array.isArray(project.assignedTeamRoles)
+            ? project.assignedTeamRoles.map(role => `${role.role}`).join(', ')
+            : 'N/A',
+          startDateFormatted: new Date(project.startDate).toLocaleDateString(),
+          completionDateFormatted: project.estimatedCompletion
+            ? new Date(project.estimatedCompletion).toLocaleDateString()
+            : 'N/A'
+        }));
+        setArchivedProjects(formatted);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching archived projects", error);
@@ -25,61 +33,57 @@ const ArchivedProjects = () => {
     fetchArchivedProjects();
   }, []);
 
-  const handleUnarchiveProject = async (projectId) => {
-    // Show SweetAlert2 confirmation dialog before unarchiving
-    const result = await Swal.fire({
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value.toLowerCase());
+  };
+
+  const handleUnarchive = async (projectId) => {
+    const confirm = await Swal.fire({
       title: 'Are you sure?',
-      text: "You want to unarchive this project.",
+      text: 'Do you want to unarchive this project?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, unarchive it!'
+      confirmButtonText: 'Yes, unarchive it!',
+      cancelButtonText: 'Cancel'
     });
 
-    if (result.isConfirmed) {
+    if (confirm.isConfirmed) {
       try {
-        const response = await axios.patch(`http://localhost:5000/api/projects/${projectId}/unarchive`);
-        if (response.status === 200) {
-          Swal.fire('Unarchived!', 'The project has been unarchived.', 'success');
-          setArchivedProjects(prevProjects => prevProjects.filter(project => project.id !== projectId));
+        const res = await axios.patch(`${url}/projects/${projectId}/unarchive`);
+        if (res.status === 200) {
+          Swal.fire('Unarchived!', 'The project has been restored.', 'success');
+          setArchivedProjects(prev => prev.filter(p => p.id !== projectId));
         }
-      } catch (error) {
-        Swal.fire('Error!', 'There was an issue unarchiving the project.', 'error');
+      } catch (err) {
+        Swal.fire('Error!', 'Unarchiving failed.', 'error');
       }
     }
   };
-  const handleSearch = (event) => {
-    const query = event.target.value.toLowerCase();
-    setSearchQuery(query);
-    // Filter projects based on project name or client name
-    if (query === '') {
-      setFilteredProjects(archivedProjects); // If search is empty, show all projects
-    } else {
-      const filtered = archivedProjects.filter(
-        (project) =>
-          project.name.toLowerCase().includes(query) ||
-          project.clientName.toLowerCase().includes(query)
-      );
-      setFilteredProjects(filtered);
-    }
-  };
+
+  const filteredProjects = archivedProjects.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchQuery) ||
+      p.clientName.toLowerCase().includes(searchQuery)
+  );
+
   return (
     <Layout>
       <div className="projects-header">
         <h1>Archived Projects</h1>
         <input
           type="text"
-          placeholder="Search archived projects..."
+          className="search-bar"
+          placeholder="Search by project or client..."
           value={searchQuery}
           onChange={handleSearch}
-          className="search-bar"
         />
       </div>
-      
+
       <div className="projects-table-container">
         {loading ? (
           <p>Loading...</p>
+        ) : filteredProjects.length === 0 ? (
+          <p>No archived projects found.</p>
         ) : (
           <table className="projects-table">
             <thead>
@@ -87,25 +91,25 @@ const ArchivedProjects = () => {
                 <th>Project Name</th>
                 <th>Client Name</th>
                 <th>Status</th>
-                <th>Assigned Team</th>
+                <th>Assigned Roles</th>
                 <th>Start Date</th>
-                <th>Estimated Completion</th>
-                <th>Actions</th>
+                <th>Est. Completion</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {archivedProjects.map((project) => (
+              {filteredProjects.map(project => (
                 <tr key={project.id}>
                   <td>{project.name}</td>
                   <td>{project.clientName}</td>
                   <td>{project.status}</td>
-                  <td>{project.assignedTeamRoles.join(", ")}</td>
-                  <td>{new Date(project.startDate).toLocaleDateString()}</td>
-                  <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
-                  <td className="actions">
-                    <button 
+                  <td>{project.assignedTeam}</td>
+                  <td>{project.startDateFormatted}</td>
+                  <td>{project.completionDateFormatted}</td>
+                  <td>
+                    <button
                       className="action-btn unarchive"
-                      onClick={() => handleUnarchiveProject(project.id)}
+                      onClick={() => handleUnarchive(project.id)}
                     >
                       Unarchive
                     </button>

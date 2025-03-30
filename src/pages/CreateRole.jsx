@@ -52,10 +52,11 @@ const CreateRole = () => {
     "Document Management",
     "Reports & Analytics",
     "Reviews/Feedback & Comments",
-    "Customer Dashboard",
+    "Customer",
+    "Roles"
   ];
 
-  const actions = ["create", "delete", "view", "edit", "fullAccess"];
+  const actions = ["full Access","create", "delete", "view", "edit" ];
 
   useEffect(() => {
     if (rolePermissions) {
@@ -97,9 +98,37 @@ const CreateRole = () => {
     setDropdownOpen(false);
   };
 
+  //27/03/2025
+  // const handleCheckboxChange = (module, action) => {
+  //   const formattedModule = module.replace(/\s+/g, "");
+
+  //   setPermissions((prev) => {
+  //     let newPermissions = {
+  //       ...prev,
+  //       [formattedModule]: {
+  //         ...prev[formattedModule],
+  //         [action]: !prev[formattedModule]?.[action],
+  //       },
+  //     };
+
+  //     if (action === "edit" && newPermissions[formattedModule][action]) {
+  //       newPermissions[formattedModule]["view"] = true;
+  //     }
+
+  //     if (action === "full Access") {
+  //       const isFullAccess = newPermissions[formattedModule][action];
+  //       actions.forEach((act) => {
+  //         newPermissions[formattedModule][act] = isFullAccess;
+  //       });
+  //     }
+
+  //     return newPermissions;
+  //   });
+  // };
+
   const handleCheckboxChange = (module, action) => {
     const formattedModule = module.replace(/\s+/g, "");
-
+  
     setPermissions((prev) => {
       let newPermissions = {
         ...prev,
@@ -108,22 +137,51 @@ const CreateRole = () => {
           [action]: !prev[formattedModule]?.[action],
         },
       };
-
-      if (action === "edit" && newPermissions[formattedModule][action]) {
+  
+      const updatedValue = !prev[formattedModule]?.[action];
+  
+      // If "create" is checked, auto-check delete & view
+      if (action === "create" && updatedValue) {
+        newPermissions[formattedModule]["delete"] = true;
         newPermissions[formattedModule]["view"] = true;
       }
-
-      if (action === "fullAccess") {
-        const isFullAccess = newPermissions[formattedModule][action];
-        actions.forEach((act) => {
-          newPermissions[formattedModule][act] = isFullAccess;
+  
+      // If "edit" is checked, auto-check delete & view
+      if (action === "edit" && updatedValue) {
+        newPermissions[formattedModule]["delete"] = true;
+        newPermissions[formattedModule]["view"] = true;
+      }
+  
+      // If "delete" is checked, auto-check view
+      if (action === "delete" && updatedValue) {
+        newPermissions[formattedModule]["view"] = true;
+      }
+  
+      // If full Access is manually checked, check everything
+      if (action === "full Access" && updatedValue) {
+        actions.forEach(act => {
+          newPermissions[formattedModule][act] = true;
         });
       }
-
+  
+      // If full Access is manually unchecked, uncheck everything
+      if (action === "full Access" && !updatedValue) {
+        actions.forEach(act => {
+          newPermissions[formattedModule][act] = false;
+        });
+      }
+  
+      // Auto-manage full Access if all basic actions are true
+      const allBasicChecked = actions
+        .filter(a => a !== "full Access")
+        .every(a => newPermissions[formattedModule]?.[a]);
+  
+      newPermissions[formattedModule]["full Access"] = allBasicChecked;
+  
       return newPermissions;
     });
   };
-
+  
   const handleSubmit = async () => {
     if (!title.trim()) {
       Swal.fire({
@@ -165,7 +223,7 @@ const CreateRole = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error!',
-        text: 'Error Creating Role!',
+        text: error?.response?.data?.message || "Something went wrong!"
       });
     } finally {
       setLoading(false); // ✅ Hide loader
@@ -178,9 +236,10 @@ const CreateRole = () => {
   return (
     <Layout>
       <div className="create-role-container">
-        <button className="back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
+        <div className="createrole-header">
+        <button className="createrole-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
         <h2>Create New Role</h2>
-
+        </div>
         <div className="input-group">
           <label>Role Title:</label>
           <div className="autocomplete-container">

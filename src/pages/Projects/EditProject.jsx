@@ -3,14 +3,17 @@ import Layout from '../../components/Layout';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../styles/Projects/AddProject.css';
-import { url } from '../../lib/api';
+import { url, getCustomers } from '../../lib/api';
+import Swal from 'sweetalert2';
+import { toast, ToastContainer } from 'react-toastify';
+import { url2 } from '../../lib/api';
 const EditProject = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [allRoles, setAllRoles] = useState([]);
   const [usersByRole, setUsersByRole] = useState({});
-  const [selectedRoles, setSelectedRoles] = useState({ "Account Manager": [] });
+  const [selectedRoles, setSelectedRoles] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     type: 'Residential',
@@ -21,155 +24,334 @@ const EditProject = () => {
     totalValue: '',
     deliveryAddress: '',
     deliveryHours: '',
+    assignedTeamRoles: {},
     allowClientView: true,
     allowComments: true,
     enableNotifications: true,
-    fileUrls: [],
-  });
+    proposals: [],
+floorPlans: [],
+otherDocuments: [],
 
+  });
+  const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
   const [removedFiles, setRemovedFiles] = useState([]);
-
+  const [customers, setCustomers] = useState([]);
+  const [leadTimeItems, setLeadTimeItems] = useState([]);
+  
+  const fetchLeadTimeItems = async (projectId) => {
+    try {
+      const res = await axios.get(`${url}/items/${projectId}`);
+      setLeadTimeItems(res.data || []);
+    } catch (error) {
+      console.error("Error fetching lead time items:", error);
+    }
+  };
+  
   useEffect(() => {
     fetchRoles();
     fetchProjectDetails();
+    fetchCustomers();
   }, []);
 
   const fetchRoles = async () => {
     const res = await axios.get(`${url}/roles`);
-    const roleTitles = res.data?.data.map(role => role.title) || [];
+    const allowedLevels = [2, 3, 4, 5];
+    const filtered = res.data?.data.filter(role => allowedLevels.includes(role.defaultPermissionLevel));
+    const roleTitles = filtered.map(role => role.title);
     setAllRoles(roleTitles);
   };
 
   const fetchProjectDetails = async () => {
     try {
-      const response = await axios.get(`${url}/projects/${projectId}`);
-      const project = response.data;
+      const res = await axios.get(`${url}/projects/${projectId}`);
+      const project = res.data;
 
       const parsedRoles = typeof project.assignedTeamRoles === 'string'
         ? JSON.parse(project.assignedTeamRoles)
         : project.assignedTeamRoles;
 
       const roleMap = {};
-      parsedRoles.forEach(({ role, users }) => {
+      const selected = [];
+
+      for (const { role, users } of parsedRoles) {
         roleMap[role] = users;
-        fetchUsers(role); // fetch users for dropdown
-      });
-
-      setSelectedRoles(roleMap);
-      setFormData({
-        ...project,
-        fileUrls: Array.isArray(project.fileUrls) ? project.fileUrls : JSON.parse(project.fileUrls || '[]')
-      });
-    } catch (err) {
-      console.error('Error fetching project details:', err);
-    }
-  };
-
-  const fetchUsers = async (role) => {
-    try {
-      const res = await axios.get(`${url}/users-by-role/${encodeURIComponent(role)}`);
-      setUsersByRole(prev => ({ ...prev, [role]: res.data }));
-    } catch (err) {
-      console.error(`Failed to fetch users for role: ${role}`);
-    }
-  };
-
-  const toggleRole = (role) => {
-    setSelectedRoles(prev => {
-      const updated = { ...prev };
-      if (updated[role]) {
-        delete updated[role];
-      } else {
-        updated[role] = [];
+        selected.push(role);
         fetchUsers(role);
       }
-      return updated;
-    });
+      setSelectedRoles(selected);
+      const formatDate = (dateString) =>
+        dateString ? new Date(dateString).toISOString().slice(0, 10) : '';
+      
+      setFormData({
+        ...project,
+        assignedTeamRoles: roleMap,
+        startDate: formatDate(project.startDate),
+        estimatedCompletion: formatDate(project.estimatedCompletion),
+        proposals: JSON.parse(project.proposals || '[]'),
+  floorPlans: JSON.parse(project.floorPlans || '[]'),
+  otherDocuments: JSON.parse(project.otherDocuments || '[]'),
+      });
+      
+      setLeadTimeMatrix(
+        typeof project.leadTimeMatrix === 'string'
+          ? JSON.parse(project.leadTimeMatrix || '[]')
+          : project.leadTimeMatrix || []
+      );
+      await fetchLeadTimeItems(projectId);
+
+      
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+  };
+  const handleAddItemRow = () => {
+    setLeadTimeItems(prev => [
+      ...prev,
+      {
+        itemName: '',
+        quantity: '',
+        expectedDeliveryDate: '',
+        status: 'Pending',
+        projectId,
+      }
+    ]);
+  };
+  
+  const addNewItemToBackend = async (item, index) => {
+    try {
+      const res = await axios.post(`${url}/items/project-items`, {
+        ...item,
+        projectId
+      });
+  
+      const updated = [...leadTimeItems];
+      updated[index] = res.data;
+      setLeadTimeItems(updated);
+      alert("Item added!");
+    } catch (err) {
+      alert("Failed to add item.");
+      console.error(err);
+    }
+  };
+  
+  
+  
+  const fetchUsers = async (role) => {
+    try {
+      const res = await axios.get(`${url}/auth/users-by-role/${encodeURIComponent(role)}`);
+      const users = res.data?.users || [];
+      setUsersByRole(prev => ({ ...prev, [role]: users }));
+    } catch (err) {
+      console.error(`Failed to fetch users for role: ${role}`, err);
+    }
+  };
+  const handleItemChange = (index, field, value) => {
+    const updatedItems = [...leadTimeItems];
+    updatedItems[index][field] = value;
+    setLeadTimeItems(updatedItems);
+  };
+  
+  const updateItem = async (item) => {
+    try {
+      await axios.put(`${url}/items/project-items/${item.id}`, item);
+      Swal.fire("Item updated!");
+    } catch (err) {
+      Swal.fire("Error updating item.");
+      console.error(err);
+    }
+  };
+  
+  
+  
+  const deleteItem = async (id) => {
+    try {
+      await axios.delete(`${url}/items/project-items/${id}`);
+      setLeadTimeItems((prev) => prev.filter((item) => item.id !== id));
+      alert("Item deleted!");
+    } catch (err) {
+      alert("Error deleting item.");
+      console.error(err);
+    }
+  };
+  
+  const fetchCustomers = async () => {
+    try {
+      const data = await getCustomers();
+      setCustomers(data || []);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
   };
 
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
+  const toggleRole = async (role) => {
+    if (selectedRoles.includes(role)) {
+      setSelectedRoles(prev => prev.filter(r => r !== role));
+      setUsersByRole(prev => {
+        const updated = { ...prev };
+        delete updated[role];
+        return updated;
+      });
+      setFormData(prev => {
+        const updated = { ...prev.assignedTeamRoles };
+        delete updated[role];
+        return { ...prev, assignedTeamRoles: updated };
+      });
+    } else {
+      setSelectedRoles(prev => [...prev, role]);
+      fetchUsers(role);
+      setFormData(prev => ({
+        ...prev,
+        assignedTeamRoles: {
+          ...prev.assignedTeamRoles,
+          [role]: [],
+        }
+      }));
+    }
   };
 
-  const handleRemoveExistingFile = (url) => {
+  const handleUserCheckbox = (role, userId, checked) => {
+    const prevSelected = formData.assignedTeamRoles[role] || [];
+    const updatedUsers = checked
+      ? [...prevSelected, userId]
+      : prevSelected.filter(id => id !== userId);
+
+    setFormData(prev => ({
+      ...prev,
+      assignedTeamRoles: {
+        ...prev.assignedTeamRoles,
+        [role]: updatedUsers,
+      }
+    }));
+  };
+
+  const handleFileChange = (category, e) => {
+    setFiles(prev => ({
+      ...prev,
+      [category]: [...(prev[category] || []), ...Array.from(e.target.files)],
+    }));
+  };
+  const handleRemoveExistingFile = (category, url) => {
     setRemovedFiles(prev => [...prev, url]);
     setFormData(prev => ({
       ...prev,
-      fileUrls: prev.fileUrls.filter(f => f !== url),
+      [category]: prev[category].filter(f => f !== url),
     }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
-    }));
+    setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    const error = validateStep();
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: error,
+      });
+      return;
+    }
+  
     const formDataToSend = new FormData();
-
+  
+    const transformedRoles = Object.entries(formData.assignedTeamRoles).map(([role, users]) => ({
+      role,
+      users,
+    }));
+  
     Object.entries(formData).forEach(([key, val]) => {
-      if (key !== 'assignedTeamRoles') {
-        if (Array.isArray(val)) {
-          formDataToSend.append(key, JSON.stringify(val));
-        } else {
-          formDataToSend.append(key, val);
-        }
+      if (!['assignedTeamRoles', 'proposals', 'floorPlans', 'otherDocuments'].includes(key)) {
+        formDataToSend.append(key, Array.isArray(val) ? JSON.stringify(val) : val);
       }
     });
-
-    // Filter duplicate roles (especially "Account Manager")
-    const uniqueRoles = [];
-    const seen = new Set();
-    for (const [role, users] of Object.entries(selectedRoles)) {
-      if (!seen.has(role)) {
-        seen.add(role);
-        uniqueRoles.push({ role, users });
-      }
-    }
-
-    formDataToSend.append("assignedTeamRoles", JSON.stringify(uniqueRoles));
+  
+    formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-    files.forEach(file => formDataToSend.append("files", file));
-
+  
+    Object.entries(files).forEach(([category, fileArray]) => {
+      fileArray.forEach((file) => formDataToSend.append(category, file));
+    });
+  
     try {
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const res = await fetch(`${url}/projects/${projectId}`, {
         method: 'PUT',
-        body: formDataToSend
+        body: formDataToSend,
       });
-      const data = await res.json();
-
+  
       if (res.status === 200) {
-        alert("Project updated successfully!");
+        Swal.fire("Project updated successfully!");
         navigate(`/project-details/${projectId}`);
       } else {
-        alert(`Error: ${data.error}`);
+        const data = await res.json();
+        Swal.fire(`Error: ${data.error}`);
       }
     } catch (err) {
-      alert("Failed to update project");
+      Swal.fire("Failed to update project");
     }
   };
 
-  const nextStep = () => setStep(step + 1);
+  const validateStep = () => {
+    const {
+      name,
+      type,
+      clientName,
+      startDate,
+      estimatedCompletion,
+      totalValue,
+      deliveryAddress,
+      deliveryHours,
+    } = formData;
+  
+    if (step === 1) {
+      if (!name.trim()) return "Project Name is required.";
+      if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
+      if (!type) return "Project Type is required.";
+      if (!clientName) return "Customer selection is required.";
+      if (!startDate) return "Start Date is required.";
+  
+      if (estimatedCompletion) {
+        const start = new Date(startDate);
+        const end = new Date(estimatedCompletion);
+        if (end <= start) {
+          return "Estimated Completion date must be after Start Date.";
+        }
+      }
+    }
+  
+    if (step === 2) {
+      if (!selectedRoles.length) return "At least one role must be assigned.";
+      if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
+      if (!deliveryAddress.trim()) return "Delivery Address is required.";
+      if (!deliveryHours.trim()) return "Delivery Hours are required.";
+    }
+  
+    return null;
+  };
+  
+  const nextStep = () => {
+    const error = validateStep();
+    if (error) {
+      toast.error(`Error ${error}`)
+      return;
+    }
+    setStep(step + 1);
+  };
+  
   const prevStep = () => setStep(step - 1);
 
-
-  
   return (
     <Layout>
+      <ToastContainer/>
       <div className="add-project-container">
         <h2>Edit Project</h2>
         <div className="step-indicator">
@@ -183,211 +365,303 @@ const EditProject = () => {
               <div className="form-card">
                 <h3>Project Details</h3>
                 <div className='form-group-row'>
-                <div className="form-group">
-                  <label>Project Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter project name"
-                    maxLength={20}
-                  />
+                  <div className="form-group">
+                    <label>Project Name</label>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Project Type</label>
+                    <select name="type" value={formData.type} onChange={handleChange}>
+                      <option value="Residential">Residential</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Hospitality">Hospitality</option>
+                      <option value="Custom">Custom</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Project Type</label>
-                  <select name="type" value={formData.type} onChange={handleChange}>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Hospitality">Hospitality</option>
-                    <option value="Custom">Custom</option>
-                  </select>
-                </div>
-                </div>
-                <div className='form-group-row'>
-                <div className="form-group">
-                  <label>Client Name</label>
-                  <input
-                    type="text"
-                    name="clientName"
-                    value={formData.clientName}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter client name"
-                    maxLength={20}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Enter project description"
-                    maxLength={60}
-                  ></textarea>
-                </div>
-                </div>
-                <div className='form-group-row'>
-                <div className="form-group">
-                  <label>Start Date</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Estimated Completion</label>
-                  <input
-                    type="date"
-                    name="estimatedCompletion"
-                    value={formData.estimatedCompletion}
-                    onChange={handleChange}
-                  />
-                </div>
-                </div>
-                <div className='form-group-row'>
-                <div className="form-group">
-  <label>Upload Files (Images/PDFs)</label>
-  <input
-    type="file"
-    name="files"
-    multiple
-    accept=".jpg,.jpeg,.png,.pdf"
-    onChange={handleFileChange}
-  />
-{formData.fileUrls && formData.fileUrls.length > 0 && (
-  <div className="existing-files">
-    <h4>Previously Uploaded Files:</h4>
-    <ul style={{ listStyle: 'none', padding: 0 }}>
-      {formData.fileUrls.map((url, idx) => {
-        const fileName = url.split('/').pop();
-        const fileExt = fileName.split('.').pop().toLowerCase();
-        const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
 
-        return (
-          <li key={idx} style={{ marginBottom: '10px' }}>
-            {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-              <img
-                src={fileUrl}
-                alt={fileName}
-                style={{ width: '100px', height: 'auto', marginRight: '10px' }}
-              />
-            ) : (
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                {fileName}
-              </a>
-            )}
-            <button
-              type="button"
-              onClick={() => handleRemoveExistingFile(url)}
-              style={{
-                marginLeft: '10px',
-                padding: '2px 6px',
-                backgroundColor: '#ff4d4d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Remove
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+                <div className='form-group-row'>
+                  <div className="form-group">
+                    <label>Select Customer</label>
+                    <select name="clientName" value={formData.clientName} onChange={handleChange} required>
+                      <option value="">Select a customer</option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.full_name}>
+                          {customer.full_name} ({customer.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea name="description" value={formData.description} onChange={handleChange} />
+                  </div>
+                </div>
+
+                <div className='form-group-row'>
+  <div className="form-group">
+    <label>Start Date</label>
+    <input
+      type="date"
+      name="startDate"
+      value={formData.startDate}
+      onChange={handleChange}
+      required
+    />
   </div>
-)}
+  <div className="form-group">
+    <label>Estimated Completion</label>
+    <input
+      type="date"
+      name="estimatedCompletion"
+      value={formData.estimatedCompletion}
+      min={formData.startDate || ""}
+      onChange={handleChange}
+    />
+  </div>
+</div>
 
+
+                <div className='form-group-row'>
+  {/* Proposals & Presentations */}
+  <div className="form-group">
+    <label>Upload Proposals & Presentations (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('proposals', e)}
+    />
+    {formData.proposals && formData.proposals.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('proposals', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Floor Plans & CAD Files */}
+  <div className="form-group">
+    <label>Upload Floor Plans & CAD Files (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('floorPlans', e)}
+    />
+    {formData.floorPlans && formData.floorPlans.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('floorPlans', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Other Documents */}
+  <div className="form-group">
+    <label>Upload Other Documents (COI, Permits, etc.) (PDF, Images)</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('otherDocuments', e)}
+    />
+    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('otherDocuments', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
 </div>
-</div>
+
 
                 <div className="form-navigation">
-                  <button type="button" onClick={nextStep}>
-                    Next
-                  </button>
+                  <button type="button" onClick={nextStep}>Next</button>
                 </div>
               </div>
             )}
 
             {step === 2 && (
-              
               <div className="form-card">
                 <h3>Roles & Permissions</h3>
-                <div className='form-group-row'>
-                {allRoles.map(role => (
-                  <div key={role} className="form-group">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={selectedRoles.hasOwnProperty(role)}
-                        onChange={() => toggleRole(role)}
-                      />
-                      {role}
-                    </label>
+                <div className="roles-container-ui">
+                  {allRoles.map((role) => (
+                    <div key={role} className={`role-card ${selectedRoles.includes(role) ? 'active' : ''}`}>
+                      <div className="role-header">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={selectedRoles.includes(role)}
+                            onChange={() => toggleRole(role)}
+                          />
+                          <span className="role-title">{role}</span>
+                        </label>
+                      </div>
 
-                    {selectedRoles[role] && (
-                      <select multiple value={selectedRoles[role]} onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-                        setSelectedRoles(prev => ({
-                          ...prev,
-                          [role]: selected
-                        }));
-                      }}>
-                        {(usersByRole[role] || []).map(user => (
-                          <option key={user.id} value={user.id}>{user.firstName} {user.lastName}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                ))}
-                <div className="form-group">
-                  <label>Total Value</label>
-                  <input
-                    type="number"
-                    name="totalValue"
-                    value={formData.totalValue}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter total value"
-                  />
+                      {selectedRoles.includes(role) && usersByRole[role] && (
+                        <div className="role-users">
+                          {usersByRole[role].map((user) => (
+                            <label key={user.id} className="user-checkbox-pill">
+                              <input
+                                type="checkbox"
+                                checked={(formData.assignedTeamRoles[role] || []).includes(user.id)}
+                                onChange={(e) => handleUserCheckbox(role, user.id, e.target.checked)}
+                              />
+                              {user.firstName} {user.lastName}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
+
+        
+
+                <div className="form-group-row">
+                  <div className="form-group">
+                    <label>Delivery Address</label>
+                    <input type="text" name="deliveryAddress" value={formData.deliveryAddress} onChange={handleChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>Delivery Hours</label>
+                    <input type="text" name="deliveryHours" value={formData.deliveryHours} onChange={handleChange} />
+                  </div>
                 </div>
                 <div className='form-group-row'>
                 <div className="form-group">
-                  <label>Delivery Address</label>
-                  <input
-                    type="text"
-                    name="deliveryAddress"
-                    value={formData.deliveryAddress}
-                    onChange={handleChange}
-                    placeholder="Enter delivery address"
-                    maxLength={50}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Delivery Hours</label>
-                  <input
-                    type="text"
-                    name="deliveryHours"
-                    value={formData.deliveryHours}
-                    onChange={handleChange}
-                    placeholder="Enter delivery hours"
-                  />
-                </div>
-                </div>
+                    <label>Total Value</label>
+                    <input
+                      type="number"
+                      name="totalValue"
+                      value={formData.totalValue}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter total value"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Status</label>
+                    <select name="status" value={formData.status} onChange={handleChange}>
+                    <option value="Proposal">Proposal</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Delivered to Warehouse">Delivered to Warehouse</option>
+                      <option value="nstalled">Installed</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                  </div>
+                  <div className="form-card">
+  <h3>Project Lead Time Matrix</h3>
+  <table className="lead-time-table">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>Quantity</th>
+        <th>Expected Delivery</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {leadTimeItems.map((item, index) => (
+        <tr key={item.id || index}>
+          <td>
+            <input
+              value={item.itemName}
+              onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+            />
+          </td>
+          <td>
+            <input
+              type="number"
+              value={item.quantity}
+              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+            />
+          </td>
+          <td>
+            <input
+              type="date"
+              value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+              onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+            />
+          </td>
+          <td>
+            <select
+              value={item.status}
+              onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+            >
+              <option value="Pending">Pending</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Installed">Insttaled</option>
+            </select> 
+          </td>
+          <td>
+            {item.id ? (
+              <>
+                <button type="button" onClick={() => updateItem(item)}>Update</button>
+                <button type="button" onClick={() => deleteItem(item.id)}>Delete</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <button className="ledbutton" type="button" onClick={handleAddItemRow}>+ Add Row</button>
+</div>
+
+<br/>
+
                 <div className="form-navigation">
-                  <button type="button" onClick={prevStep}>
-                    Previous
-                  </button>
-                  <button type="button" onClick={nextStep}>
-                    Next
-                  </button>
+                  <button type="button" onClick={prevStep}>Previous</button>
+                  <button type="button" onClick={nextStep}>Next</button>
                 </div>
               </div>
             )}
@@ -397,35 +671,18 @@ const EditProject = () => {
                 <h3>Additional Settings</h3>
                 <div className="form-group">
                   <label>Allow Client View</label>
-                  <input
-                    type="checkbox"
-                    name="allowClientView"
-                    checked={formData.allowClientView}
-                    onChange={handleCheckboxChange}
-                  />
+                  <input type="checkbox" name="allowClientView" checked={formData.allowClientView} onChange={handleCheckboxChange} />
                 </div>
                 <div className="form-group">
                   <label>Allow Comments</label>
-                  <input
-                    type="checkbox"
-                    name="allowComments"
-                    checked={formData.allowComments}
-                    onChange={handleCheckboxChange}
-                  />
+                  <input type="checkbox" name="allowComments" checked={formData.allowComments} onChange={handleCheckboxChange} />
                 </div>
                 <div className="form-group">
                   <label>Enable Notifications</label>
-                  <input
-                    type="checkbox"
-                    name="enableNotifications"
-                    checked={formData.enableNotifications}
-                    onChange={handleCheckboxChange}
-                  />
+                  <input type="checkbox" name="enableNotifications" checked={formData.enableNotifications} onChange={handleCheckboxChange} />
                 </div>
                 <div className="form-navigation">
-                  <button type="button" onClick={prevStep}>
-                    Previous
-                  </button>
+                  <button type="button" onClick={prevStep}>Previous</button>
                   <button type="submit">Submit</button>
                 </div>
               </div>

@@ -1,25 +1,63 @@
 import { useEffect, useState } from "react";
-import { getCustomers, deleteCustomer } from "../../lib/api"; // delete API ko bhi import kar liya
+import axios from "axios";
+import { getCustomers, deleteCustomer } from "../../lib/api"; 
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash } from "react-icons/fa";
-
+import { FaEdit, FaTrash, FaEye   } from "react-icons/fa";
+import { MdDelete } from "react-icons/md"
+import useRolePermissions from "../../hooks/useRolePermissions";
+// import { FaEye } from "react-icons/fa";
+import { url } from "../../lib/api";
+import Loader from "../../components/Loader";
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
-    const [customersPerPage] = useState(5);
+    const [customersPerPage] = useState(8);
+    const [projectCounts, setProjectCounts] = useState({}); 
+    const [loader , setLoading] = useState(true)
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user"));
+    const roleId = user?.user?.roleId;
+    const { rolePermissions } = useRolePermissions(roleId);
+
+    const canCreate = rolePermissions?.Customer?.create;
+    const canEdit = rolePermissions?.Customer?.edit;
+    const canDelete = rolePermissions?.Customer?.delete;
+    const canView = rolePermissions?.Customer?.view;
+
 
     useEffect(() => {
-        const fetchCustomers = async () => {
-            const data = await getCustomers();
-            setCustomers(data);
-            setFilteredCustomers(data);
+        const fetchCustomersAndProjects = async () => {
+            try {
+                // Fetch Customers
+                const customersData = await getCustomers();
+                if(customersData){
+                    setLoading(false)
+
+                }
+                setCustomers(customersData);
+                setFilteredCustomers(customersData);
+
+                // Fetch Projects
+                const projectRes = await axios.get(`${url}/projects`);
+                const projects = projectRes.data;
+
+                // Count projects for each customer
+                const counts = {};
+                customersData.forEach(customer => {
+                    counts[customer.id] = projects.filter(project => project.clientId === customer.id).length;
+                });
+
+                setProjectCounts(counts);
+            } catch (error) {
+                console.error("Error fetching customers or projects:", error);
+            }
         };
-        fetchCustomers();
+
+        fetchCustomersAndProjects();
     }, []);
 
     useEffect(() => {
@@ -47,7 +85,7 @@ const Customer = () => {
         if (window.confirm("Are you sure you want to delete this customer?")) {
             try {
                 await deleteCustomer(id);
-                setCustomers(customers.filter(customer => customer.id !== id)); // UI se remove kar diya
+                setCustomers(customers.filter(customer => customer.id !== id));
             } catch (error) {
                 console.error("Error deleting customer", error);
             }
@@ -57,15 +95,18 @@ const Customer = () => {
     return (
         <Layout>
             <div className="roles-container">
-                <h2>Customers</h2>
-                
+                <h2 className="table-header">Customers</h2>
+
                 <div className="roles-header">
-                    <button className="add-role-btn" onClick={() => navigate("/add-customer")}>
-                        + Add 
-                    </button>
-                    <div>
-                        <select 
-                            value={statusFilter} 
+                    {canCreate && (
+                        <button className="add-role-btn" onClick={() => navigate("/add-customer")}>
+                            + Add
+                        </button>
+                    )}
+
+                    <div className="customer-filter">
+                        <select
+                            value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="filter-select"
                         >
@@ -87,41 +128,72 @@ const Customer = () => {
                 <table className="roles-table">
                     <thead>
                         <tr className="bg-gray-100">
+                        <th className="border p-2">Sr. No</th>
                             <th className="border p-2">Name</th>
                             <th className="border p-2">Projects</th>
                             <th className="border p-2">Company</th>
                             <th className="border p-2">Status</th>
-                            <th className="border p-2">Actions</th>
+                            {(canEdit || canDelete || canView) && <th className="border p-2">Actions</th>}
                         </tr>
                     </thead>
-                    <tbody>
+                    {loader ? <Loader/>: <tbody>
                         {currentCustomers.length > 0 ? (
-                            currentCustomers.map((customer) => (
+                            currentCustomers.map((customer , index ) => (
                                 <tr key={customer.id} className="border-b">
+                                 <td>{(currentPage - 1) * customersPerPage + index + 1}</td> 
                                     <td className="border p-2">{customer.full_name}</td>
-                                    <td className="border p-2">NA</td>
+                                    <td className="border p-2">{projectCounts[customer.id] || 0}</td> {/* Project count */}
                                     <td className="border p-2">{customer.company_name}</td>
                                     <td className="border p-2">{customer.status}</td>
-                                    <td className="border p-2">
-                                        <FaEdit 
-                                            className="edit-icon" 
-                                            title="Edit" 
-                                            onClick={() => navigate(`/edit-customer/${customer.id}`)} 
-                                        />
-                                        <FaTrash 
-                                            className="delete-icon" 
-                                            title="Delete"  
-                                            onClick={() => handleDelete(customer.id)}
-                                        />
-                                    </td>
+
+                                    {(canEdit || canDelete || canView) && (
+                                        <td className="actions">
+                                            {canEdit && (
+                                                <FaEdit
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "23px"
+                                                }}
+                                                    className="edit-icon"
+                                                    title="Edit"
+                                                    onClick={() => navigate(`/edit-customer/${customer.id}`)}
+                                                />
+                                            )}
+                                            {canDelete && (
+                                                <MdDelete
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "25px"
+                                                }}
+                                                    className="delete-icon"
+                                                    title="Delete"
+                                                    onClick={() => handleDelete(customer.id)}
+                                                />
+                                            )}
+                                            {canView && (
+                                                <FaEye
+                                                style={{
+                                                    color : "black",
+                                                    fontSize : "23px"
+                                                }}
+                                                    
+                                                    title="View"
+                                                    onClick={() => navigate(`/view-customer/${customer.id}`)}
+                                                />
+                                            )}
+                                        </td>
+                                    )}
+
+
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="text-center p-4">No customers found.</td>
+                                <td colSpan="7" style={{ textAlign: "center" }}>No customer found</td>
                             </tr>
                         )}
-                    </tbody>
+                    </tbody> }
+                    
                 </table>
 
                 {/* 🔄 Pagination */}

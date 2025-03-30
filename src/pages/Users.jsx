@@ -8,22 +8,20 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import useRolePermissions from "../hooks/useRolePermissions";
+import Loader from "../components/Loader";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+const [isLoading , setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    
-      const itemsPerPage = 8; 
+  const itemsPerPage = 8;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
-const roleId = JSON.parse(localStorage.getItem("user"))
-console.log(roleId?.user?.roleId)
+  const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
-  console.log({rolePermissions})
   const navigate = useNavigate();
 
 
-  
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -32,17 +30,39 @@ console.log(roleId?.user?.roleId)
     try {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
+      if(data){
+        setIsLoading(false)
+      }
 
-      if (loggedInUser?.user.userRole === "superadmin") {
-        setUsers(data);
+      // Define role levels
+      const roleLevels = {
+        "Super Admin": 1,
+        "Account Manager": 2,
+        "Sr. Designer": 3,
+        "Operations": 4,
+        "Lead Installer": 5,
+      };
+
+      if (loggedInUser?.user.userRole === "Super Admin") {
+        // Super Admin can see all users
+        setUsers(data.filter(user => user.id !== loggedInUser?.user.id));
       } else {
-        const filteredUsers = data.filter(user => user.createdBy === loggedInUser?.user.id);
+        // Filter users based on the logged-in user's role level
+        const loggedInUserRoleLevel = roleLevels[loggedInUser?.user.userRole];
+        
+        // Filter users who have a role level greater than or equal to the logged-in user's role
+        const filteredUsers = data.filter(user => {
+          const userRoleLevel = roleLevels[user.userRole];
+          return userRoleLevel > loggedInUserRoleLevel;
+        });
+
         setUsers(filteredUsers);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+};
+
 
   const handleDeleteUser = async (id) => {
     const confirmResult = await Swal.fire({
@@ -114,9 +134,9 @@ console.log(roleId?.user?.roleId)
     <Layout>
       <div className="roles-container">
         <h2>Users</h2>
-        <div className="roles-header">
-          {rolePermissions?.UserManagement?.create ?           <button onClick={() => navigate("/users/add")} className="add-user-btn">
-            <GrAdd /> Add User
+        <div className="user-roles-header">
+          {rolePermissions?.UserManagement?.create ? <button onClick={() => navigate("/users/add")} className="add-user-btn">
+             Add User
           </button> : null}
 
           <input
@@ -124,26 +144,28 @@ console.log(roleId?.user?.roleId)
             placeholder="Search users..."
             value={search}
             onChange={handleSearchChange}
-            className="search-input"
+            className="user-search-input"
           />
         </div>
         <table className="roles-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Sr. No</th>
               <th>Name</th>
               <th>Email</th>
               <th>Password</th>
               <th>Role</th>
               <th>Status</th>
-              <th>Actions</th>
+              {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
+                <th>Actions</th>
+              )}
             </tr>
           </thead>
-          <tbody>
+          {isLoading ?  <Loader/> :  <tbody>
             {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
+              paginatedUsers.map((user , index) => (
                 <tr key={user.id}>
-                  <td>{user.id}</td>
+                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
                   <td>{user.firstName} {user.lastName}</td>
                   <td>{user.email}</td>
                   <td>{user.password}</td>
@@ -151,18 +173,41 @@ console.log(roleId?.user?.roleId)
                   <td className={user.status === "active" ? "status_active" : "status_inactive"}>
                     {user.status === "active" ? " Active" : " Inactive"}
                   </td>
-                  <td className="actions">
-                    <FaEdit className="edit-icon" title="Edit" onClick={() => navigate(`/users/edit/${user.id}`)} />
-                    <FaTrash className="delete-icon" title="Delete" onClick={() => handleDeleteUser(user.id)} />
-                  </td>
+                  {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) ? (
+                    <td className="actions">
+                      {rolePermissions?.UserManagement?.edit && (
+                        <FaEdit
+                        style={{
+                          color: "black" , 
+                          fontSize : "22px"
+                        }}
+                          title="Edit"
+                          onClick={() => navigate(`/users/edit/${user.id}`)}
+                        />
+                      )}
+                      {rolePermissions?.UserManagement?.delete && (
+                        <FaTrash
+                        style={{
+                          color: "black" , 
+                          fontSize : "20px"
+                        }}
+                          className="delete-icon"
+                          title="Delete"
+                          onClick={() => handleDeleteUser(user.id)}
+                        />
+                      )}
+                    </td>
+                  ) : null}
+
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: "center" }}>No users found</td>
+                <td colSpan="7" style={{ textAlign: "center" }}>No users found</td>
               </tr>
             )}
-          </tbody>
+          </tbody> }
+         
         </table>
         {totalPages > 1 && (
           <div className="pagination">
