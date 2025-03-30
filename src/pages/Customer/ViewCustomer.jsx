@@ -162,22 +162,21 @@ function ViewCustomer() {
                 {activeTab === "documents" && <div className="tab-panel"> <CustomerProjects customerId = {customer?.id} customerName = {customer?.full_name}/></div>}
                 {activeTab === "projects" && <div className="tab-panel"> <div className="upload-section">
                     <input type="file" ref={fileInputRef} className="hidden-file-input" onChange={(e) => setSelectedFile(e.target.files[0])} />
-                    <button className="upload-btn" onClick={() => fileInputRef.current.click()}>
-                        Choose File</button>
+                    
                     {selectedFile && <button className="upload-btn" onClick={handleUpload}>Upload</button>}
                 </div>
 
                 {/* 📜 Documents Accordion */}
                 <div className="documents-section">
-                    <h2 className="documents-heading">Project</h2>
+                    <h2 className="documents-heading">Documents</h2>
                     <div className="accordion">
                         {documents.length > 0 ? (
-                            documents.map((doc) => (
+                            documents.map((doc  , index) => (
                                 <div key={doc.id} className="accordion-item">
                                     
                                     <div className="accordion-header" onClick={() => toggleComments(doc.id)}>
                                    
-                                        Document {doc.id}
+                                        Document {index+1}
                                         
                                         <span className="arrow"><FaTrash onClick={()=>handleDelete(doc.id)}/> &nbsp;&nbsp;  {showComments[doc.id] ? "▲" : "▼"}</span>
                                       

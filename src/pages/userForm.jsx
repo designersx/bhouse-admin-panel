@@ -5,6 +5,7 @@ import { registerUser, editUser, getRoles, getAllUsers } from "../lib/api";
 import Swal from "sweetalert2";
 import "../styles/users.css";
 import { IoArrowBack } from "react-icons/io5";
+import Loader from "../components/Loader";
 
 const roleLevels = {
   "Super Admin": 1,
@@ -125,15 +126,15 @@ const UserForm = () => {
             ? "Enter a valid 10-digit number"
             : "";
         break;
-      case "password":
-        if (!isEditMode) {
-          newErrors.password = !value
-            ? "Password is required"
-            : !passwordRegex.test(value)
-              ? "Password must be 6 alphanumeric characters"
-              : "";
-        }
-        break;
+      // case "password":
+      //   if (!isEditMode) {
+      //     newErrors.password = !value
+      //       ? "Password is required"
+      //       : !passwordRegex.test(value)
+      //         ? "Password must be 6 alphanumeric characters"
+      //         : "";
+      //   }
+      //   break;
       case "userRole":
         newErrors.userRole = !value ? "Role is required" : "";
         break;
@@ -195,17 +196,12 @@ const UserForm = () => {
   return (
     <Layout>
       <div className="user-form-wrapper">
-        {loading && (
-          <div className="loader-overlay">
-            <div className="loader"></div>
-          </div>
-        )}
+
         <div className="user-form-header">
           <button className="user-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
           <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
         </div>
-
-        <form className="user-form-container user-form" onSubmit={handleSubmit}>
+        {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit}>
           <div className="user-form-row">
             <div className="user-form-group">
               <label>First Name</label>
@@ -215,6 +211,7 @@ const UserForm = () => {
                 placeholder="First Name"
                 value={newUser.firstName}
                 onChange={handleChange}
+                max={20}
               />
               {errors.firstName && <p className="user-error">{errors.firstName}</p>}
             </div>
@@ -226,6 +223,7 @@ const UserForm = () => {
                 placeholder="Last Name"
                 value={newUser.lastName}
                 onChange={handleChange}
+                max={20}
               />
               {errors.lastName && <p className="user-error">{errors.lastName}</p>}
             </div>
@@ -240,6 +238,7 @@ const UserForm = () => {
                 placeholder="Email"
                 value={newUser.email}
                 onChange={handleChange}
+                max={30}
               />
               {errors.email && <p className="user-error">{errors.email}</p>}
             </div>
@@ -255,9 +254,9 @@ const UserForm = () => {
                 value={newUser.password}
                 onChange={handleChange}
                 minLength={6}
-                maxLength={15}
+                maxLength={20}
               />
-              {errors.password && <p className="user-error">{errors.password}</p>}
+              {/* {errors.password && <p className="user-error">{errors.password}</p>} */}
             </div>
           </div>
 
@@ -309,7 +308,8 @@ const UserForm = () => {
           <button type="submit" className="user-submit-btn">
             {isEditMode ? "Update User" : "Add User"}
           </button>
-        </form>
+        </form>} 
+       
       </div>
     </Layout>
   );

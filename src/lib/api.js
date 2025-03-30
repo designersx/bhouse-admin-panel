@@ -3,7 +3,7 @@ import axios from 'axios'
 export const url = 'http://45.77.110.58:8765/api' || ""
 
 
-export const url2 = 'http://localhost:5000' || ""
+export const url2 = 'http://45.77.110.58:8765' || ""
 
 export const registerUser = async (userData) => {
   try {
@@ -40,7 +40,7 @@ export const login = async(email , pass)=>{
 
 }
 export const deleteUser = async (id) => {
-  const response = await fetch(`http://localhost:5000/api/auth/deleteUser/${id}`, {
+  const response = await fetch(`${url}/auth/deleteUser/${id}`, {
     method: "DELETE",
   });
 

@@ -3,7 +3,7 @@ import Layout from '../../components/Layout';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import '../../styles/Projects/project.css';
-
+import { url } from '../../lib/api';
 const ArchivedProjects = () => {
   const [archivedProjects, setArchivedProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,7 +12,7 @@ const ArchivedProjects = () => {
   useEffect(() => {
     const fetchArchivedProjects = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/projects/archived');
+        const res = await axios.get(`${url}/projects/archived`);
         const formatted = res.data.map(project => ({
           ...project,
           assignedTeam: Array.isArray(project.assignedTeamRoles)
@@ -49,7 +49,7 @@ const ArchivedProjects = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.patch(`http://localhost:5000/api/projects/${projectId}/unarchive`);
+        const res = await axios.patch(`${url}/projects/${projectId}/unarchive`);
         if (res.status === 200) {
           Swal.fire('Unarchived!', 'The project has been restored.', 'success');
           setArchivedProjects(prev => prev.filter(p => p.id !== projectId));

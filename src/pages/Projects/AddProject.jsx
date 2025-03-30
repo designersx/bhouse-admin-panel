@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCustomers } from '../../lib/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { url } from '../../lib/api';
 const AddProject = () => {
   const [step, setStep] = useState(1);
   let [clientId , setClientId] = useState()
@@ -140,7 +140,7 @@ const AddProject = () => {
 
       try {
         const encodedRole = encodeURIComponent(role);
-        const res = await fetch(`http://localhost:5000/api/auth/users-by-role/${encodedRole}`);
+        const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         const users = data.users || [];
 
@@ -163,7 +163,7 @@ const AddProject = () => {
 
   useEffect(() => {
     const fetchRoles = async () => {
-      const res = await fetch('http://localhost:5000/api/roles');
+      const res = await fetch(`${url}/roles`);
       const data = await res.json();
       if (data.success) {
         const allowedLevels = [2, 3, 4, 5];
@@ -241,7 +241,7 @@ const AddProject = () => {
   
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/projects', {
+      const response = await fetch(`${url}/projects`, {
         method: 'POST',
         body: formDataToSend
       });

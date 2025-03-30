@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { getAllUsers } from "../lib/api";
+import { url } from "../lib/api";
 import '../../src/styles/CustomerProjects.css'
 function CustomerProjects({ customerId, customerName }) {
     const [projects, setProjects] = useState([]);
@@ -9,7 +10,7 @@ function CustomerProjects({ customerId, customerName }) {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const projectRes = await axios.get("http://localhost:5000/api/projects");
+                const projectRes = await axios.get(`${url}/projects`);
                 const userRes = await getAllUsers();
 
                 const filteredProjects = projectRes.data.filter(

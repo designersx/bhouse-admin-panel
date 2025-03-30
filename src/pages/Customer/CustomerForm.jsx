@@ -2,9 +2,10 @@ import { useState } from "react";
 import { createCustomer } from "../../lib/api";
 import Layout from "../../components/Layout";
 import "./style.css"; // Import External CSS
-import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader";
+import Swal from "sweetalert2";
 const CustomerForm = () => {
     const [formData, setFormData] = useState({
         full_name: "",
@@ -26,7 +27,7 @@ const CustomerForm = () => {
     const [sameAsAddress, setSameAsAddress] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({}); // Tracks if the field was touched
-
+const [loading , setLoading] = useState(false)
     // Regex patterns
     const patterns = {
         full_name: /^[A-Za-z\s]{3,}$/, // Only letters & spaces, min 3 chars
@@ -83,6 +84,7 @@ const CustomerForm = () => {
     };
 
     const handleSubmit = async (e) => {
+        setLoading(true)
         e.preventDefault();
 
         const newErrors = {};
@@ -100,14 +102,15 @@ const CustomerForm = () => {
         }
 
         const response = await createCustomer(formData);
-        toast.success(response.message || "Customer created successfully!");
+          Swal.fire('Customer added successfully!');
+        setLoading(false)
         nevigate('/customers')
     };
 const nevigate = useNavigate()
     return (
         <Layout>
-            <ToastContainer/>
-            <div className="customer-form-container">
+            
+            {loading ? <Loader/> :   <div className="customer-form-container">
                 <h2 className="add-customer">Add New Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
@@ -181,7 +184,8 @@ const nevigate = useNavigate()
 
                     <button type="submit" className="submit-btn">Save Customer</button>
                 </form>
-            </div>
+            </div>}
+          
         </Layout>
     );
 };

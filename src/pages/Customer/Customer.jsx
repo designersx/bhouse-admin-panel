@@ -7,16 +7,17 @@ import { FaEdit, FaTrash, FaEye   } from "react-icons/fa";
 import { MdDelete } from "react-icons/md"
 import useRolePermissions from "../../hooks/useRolePermissions";
 // import { FaEye } from "react-icons/fa";
-
+import { url } from "../../lib/api";
+import Loader from "../../components/Loader";
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
-    const [customersPerPage] = useState(5);
+    const [customersPerPage] = useState(8);
     const [projectCounts, setProjectCounts] = useState({}); 
-
+    const [loader , setLoading] = useState(true)
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const roleId = user?.user?.roleId;
@@ -33,11 +34,15 @@ const Customer = () => {
             try {
                 // Fetch Customers
                 const customersData = await getCustomers();
+                if(customersData){
+                    setLoading(false)
+
+                }
                 setCustomers(customersData);
                 setFilteredCustomers(customersData);
 
                 // Fetch Projects
-                const projectRes = await axios.get("http://localhost:5000/api/projects");
+                const projectRes = await axios.get(`${url}/projects`);
                 const projects = projectRes.data;
 
                 // Count projects for each customer
@@ -123,6 +128,7 @@ const Customer = () => {
                 <table className="roles-table">
                     <thead>
                         <tr className="bg-gray-100">
+                        <th className="border p-2">Sr. No</th>
                             <th className="border p-2">Name</th>
                             <th className="border p-2">Projects</th>
                             <th className="border p-2">Company</th>
@@ -130,10 +136,11 @@ const Customer = () => {
                             {(canEdit || canDelete || canView) && <th className="border p-2">Actions</th>}
                         </tr>
                     </thead>
-                    <tbody>
+                    {loader ? <Loader/>: <tbody>
                         {currentCustomers.length > 0 ? (
-                            currentCustomers.map((customer) => (
+                            currentCustomers.map((customer , index ) => (
                                 <tr key={customer.id} className="border-b">
+                                 <td>{(currentPage - 1) * customersPerPage + index + 1}</td> 
                                     <td className="border p-2">{customer.full_name}</td>
                                     <td className="border p-2">{projectCounts[customer.id] || 0}</td> {/* Project count */}
                                     <td className="border p-2">{customer.company_name}</td>
@@ -182,10 +189,11 @@ const Customer = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="no-data">No customers found.</td>
+                                <td colSpan="7" style={{ textAlign: "center" }}>No customer found</td>
                             </tr>
                         )}
-                    </tbody>
+                    </tbody> }
+                    
                 </table>
 
                 {/* 🔄 Pagination */}

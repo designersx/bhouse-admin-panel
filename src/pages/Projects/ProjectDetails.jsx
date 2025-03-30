@@ -3,10 +3,11 @@ import Layout from '../../components/Layout';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import '../../styles/Projects/ProjectDetails.css';
-import { url} from '../../lib/api';
+import { url, url2} from '../../lib/api';
 import { MdDelete } from "react-icons/md";
 import { FaEye, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -70,7 +71,7 @@ const ProjectDetails = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/items/${projectId}/`);
+        const res = await axios.get(`${url}/items/${projectId}/`);
         setItems(res.data);
       } catch (error) {
         console.error("Error fetching items:", error);
@@ -84,8 +85,8 @@ const ProjectDetails = () => {
     const fetchProjectDetails = async () => {
       try {
         const [projectRes, usersRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/projects/${projectId}`),
-          axios.get(`http://localhost:5000/api/auth/getAllUsers`)
+          axios.get(`${url}/projects/${projectId}`),
+          axios.get(`${url}/auth/getAllUsers`)
         ]);
 
         const fetchedProject = projectRes.data;
@@ -199,7 +200,7 @@ const ProjectDetails = () => {
           <div className="uploaded-files">
             {docCategory.files.map((url, idx) => {
               const fileName = url.split('/').pop();
-              const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+              const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
 
               const handleDownload = async () => {
                 try {
@@ -265,7 +266,7 @@ const ProjectDetails = () => {
               return user ? (
                 <div key={user.id} className="user-card-horizontal">
                   <img 
-                    src={user.profileImage ? `http://localhost:5000/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+                    src={user.profileImage ? `${url2}/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
                     alt={`${user.firstName} ${user.lastName}`} 
                     className="user-profile-img-horizontal" 
                   />

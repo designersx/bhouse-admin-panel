@@ -6,7 +6,7 @@ import '../../styles/Projects/AddProject.css';
 import { url, getCustomers } from '../../lib/api';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
-
+import { url2 } from '../../lib/api';
 const EditProject = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -437,7 +437,7 @@ otherDocuments: [],
         {formData.proposals.map((url, idx) => {
           const fileName = url.split('/').pop();
           const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
 
           return (
             <li key={idx}>
@@ -468,7 +468,7 @@ otherDocuments: [],
         {formData.floorPlans.map((url, idx) => {
           const fileName = url.split('/').pop();
           const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
 
           return (
             <li key={idx}>
@@ -499,7 +499,7 @@ otherDocuments: [],
         {formData.otherDocuments.map((url, idx) => {
           const fileName = url.split('/').pop();
           const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `http://localhost:5000/${url}` : url;
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
 
           return (
             <li key={idx}>

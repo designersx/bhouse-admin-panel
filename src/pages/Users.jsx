@@ -8,13 +8,14 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import useRolePermissions from "../hooks/useRolePermissions";
+import Loader from "../components/Loader";
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-
+const [isLoading , setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 3;
+  const itemsPerPage = 8;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
   const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -29,6 +30,9 @@ const Users = () => {
     try {
       const data = await getAllUsers();
       const loggedInUser = JSON.parse(localStorage.getItem("user"));
+      if(data){
+        setIsLoading(false)
+      }
 
       // Define role levels
       const roleLevels = {
@@ -41,7 +45,7 @@ const Users = () => {
 
       if (loggedInUser?.user.userRole === "Super Admin") {
         // Super Admin can see all users
-        setUsers(data);
+        setUsers(data.filter(user => user.id !== loggedInUser?.user.id));
       } else {
         // Filter users based on the logged-in user's role level
         const loggedInUserRoleLevel = roleLevels[loggedInUser?.user.userRole];
@@ -146,7 +150,7 @@ const Users = () => {
         <table className="roles-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Sr. No</th>
               <th>Name</th>
               <th>Email</th>
               <th>Password</th>
@@ -157,11 +161,11 @@ const Users = () => {
               )}
             </tr>
           </thead>
-          <tbody>
+          {isLoading ?  <Loader/> :  <tbody>
             {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user) => (
+              paginatedUsers.map((user , index) => (
                 <tr key={user.id}>
-                  <td>{user.id}</td>
+                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
                   <td>{user.firstName} {user.lastName}</td>
                   <td>{user.email}</td>
                   <td>{user.password}</td>
@@ -202,7 +206,8 @@ const Users = () => {
                 <td colSpan="7" style={{ textAlign: "center" }}>No users found</td>
               </tr>
             )}
-          </tbody>
+          </tbody> }
+         
         </table>
         {totalPages > 1 && (
           <div className="pagination">

@@ -5,7 +5,8 @@ import '../styles/profile.css';
 import { getUserProfile, updateUserProfile, uploadProfileImage } from '../lib/api';
 import imageCompression from 'browser-image-compression';
 import Swal from 'sweetalert2';
-
+import Loader from '../components/Loader';
+import { url2 } from '../lib/api';
 const Profile = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -39,8 +40,7 @@ const Profile = () => {
     const newErrors = { ...errors };
     const nameRegex = /^[A-Za-z\s]+$/;
     const mobileRegex = /^\d{10}$/;
-    const passwordRegex = /^[A-Za-z0-9]{6}$/;
-
+    const passwordRegex = /^.{6,}$/;
     switch (name) {
       case 'firstName':
       case 'lastName':
@@ -59,11 +59,14 @@ const Profile = () => {
             : '';
         break;
 
-      case 'password':
-        newErrors.password = value && !passwordRegex.test(value)
-          ? 'Password must be 6 alphanumeric characters'
-          : '';
-        break;
+        case "password":
+          newErrors.password = !value
+            ? "Password is required"
+            : !/^.{6,}$/.test(value)
+              ? "Password must be at least 6 characters long"
+              : "";
+          break;
+        
 
       default:
         break;
@@ -138,131 +141,135 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="profile-container">
-        {loading && (
-          <div className="loader-overlay">
-            <div className="loader"></div>
-          </div>
-        )}
+      {loading? <Loader/> : 
+       <div className="profile-container">
+    
 
-
-        <div className="profile-form">
-          <h2>Edit Profile</h2>
+       <div className="profile-form">
+         <h2>Edit Profile</h2>
+        
           <form onSubmit={handleSubmit}>
-            <div className="profile-form-row">
-              <div className="profile-form-group">
-                <label>First Name</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                />
-                {errors.firstName && <p className="error">{errors.firstName}</p>}
-              </div>
-
-              <div className="profile-form-group">
-                <label>Last Name</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                />
-                {errors.lastName && <p className="error">{errors.lastName}</p>}
-              </div>
+          <div className="profile-form-row">
+            <div className="profile-form-group">
+              <label>First Name</label>
+              <input
+                className="profile-input"
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                maxLength={15}
+              />
+              {errors.firstName && <p className="error">{errors.firstName}</p>}
             </div>
 
-            <div className="profile-form-row">
-              <div className="profile-form-group">
-                <label>Email Address</label>
-                <input
-                  className="profile-input"
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  disabled
-                />
-              </div>
-
-              <div className="profile-form-group">
-                <label>Mobile Number</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="mobileNumber"
-                  value={formData.mobileNumber}
-                  onChange={handleChange}
-                  maxLength={10}
-                />
-                {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
-              </div>
+            <div className="profile-form-group">
+              <label>Last Name</label>
+              <input
+                className="profile-input"
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                maxLength={15}
+              />
+              {errors.lastName && <p className="error">{errors.lastName}</p>}
             </div>
-
-            <div className="profile-form-row">
-              <div className="profile-form-group">
-                <label>User Role</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="userRole"
-                  value={formData.userRole}
-                  disabled
-                />
-              </div>
-
-              <div className="profile-form-group">
-                <label>Password:</label>
-                <input
-                  className="profile-input"
-                  type="text"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  minLength={6}
-                  maxLength={15}
-                />
-                {errors.password && <p className="error">{errors.password}</p>}
-              </div>
-            </div>
-
-            <button type="submit" className="update-btn">Update Profile</button>
-          </form>
-        </div>
-
-
-        {/* Right side: Profile card */}
-        <div className="profile-card">
-          <div className="profile-pic-container">
-            <img
-              src={
-                formData.profileImage
-                  ? `http://localhost:5000/${formData.profileImage}`
-                  : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-              }
-              alt="profile"
-              className="profile-pic"
-            />
           </div>
 
-          <label className="edit-btn">
-            <FaPen size={14} /> Edit
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ display: 'none' }}
-            />
-          </label>
+          <div className="profile-form-row">
+            <div className="profile-form-group">
+              <label>Email Address</label>
+              <input
+                className="profile-input"
+                type="email"
+                name="email"
+                value={formData.email}
+                disabled
+                maxLength={20}
+              />
+            </div>
 
-          <h3 className="profile-name">
-            {formData.firstName || "User"} {formData.lastName || ""}
-          </h3>
-          <p className="email-text">{formData.email || "No Email Provided"}</p>
-        </div>
-      </div>
+            <div className="profile-form-group">
+              <label>Mobile Number</label>
+              <input
+                className="profile-input"
+                type="text"
+                name="mobileNumber"
+                value={formData.mobileNumber}
+                onChange={handleChange}
+                maxLength={10}
+              />
+              {errors.mobileNumber && <p className="error">{errors.mobileNumber}</p>}
+            </div>
+          </div>
+
+          <div className="profile-form-row">
+            <div className="profile-form-group">
+              <label>User Role</label>
+              <input
+                className="profile-input"
+                type="text"
+                name="userRole"
+                value={formData.userRole}
+                disabled
+              />
+            </div>
+
+            <div className="profile-form-group">
+              <label>Password:</label>
+              <input
+                className="profile-input"
+                type="text"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                minLength={6}
+                maxLength={15}
+              />
+              {errors.password && <p className="error">{errors.password}</p>}
+            </div>
+          </div>
+
+          <button type="submit" className="update-btn">Update Profile</button>
+        </form>  
+         
+        
+       </div>
+
+
+       {/* Right side: Profile card */}
+       <div className="profile-card">
+         <div className="profile-pic-container">
+           <img
+             src={
+               formData.profileImage
+                 ? `${url2}/${formData.profileImage}`
+                 : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+             }
+             alt="profile"
+             className="profile-pic"
+           />
+         </div>
+
+         <label className="edit-btn">
+           <FaPen size={14} /> Edit
+           <input
+             type="file"
+             accept="image/*"
+             onChange={handleImageChange}
+             style={{ display: 'none' }}
+           />
+         </label>
+
+         <h3 className="profile-name">
+           {formData.firstName || "User"} {formData.lastName || ""}
+         </h3>
+         <p className="email-text">{formData.email || "No Email Provided"}</p>
+       </div>
+     </div>
+      }
+     
     </Layout>
   );
 };

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../styles/Roles.css";
 import useRolePermissions from "../hooks/useRolePermissions";
+import Loader from "../components/Loader";
 
 const rolePermissionLevels = {
   "Super Admin": 1,
@@ -19,6 +20,7 @@ const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading , setLoading] = useState(true)
   const itemsPerPage = 8;
   const navigate = useNavigate();
 
@@ -36,7 +38,9 @@ const Roles = () => {
     try {
       const data = await getRoles();
       const allRoles = data?.data || [];
-
+       if(data){
+        setLoading(false)
+       }
       const loggedUserId = parseInt(loggedInUserId, 10);
       const userLevel = rolePermissionLevels[loggedInUserRole] || 6; // Fetch user level
 
@@ -126,54 +130,57 @@ const Roles = () => {
         <table className="roles-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Sr. No</th>
               <th>Title</th>
               <th>Description</th>
               {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && <th>Actions</th>}
 
             </tr>
           </thead>
-          <tbody>
-            {currentItems.length > 0 ? (
-              currentItems.map((role, index) => (
-                <tr key={index}>
-                  <td>{indexOfFirstItem + index + 1}</td>
-                  <td>{role.title}</td>
-                  <td>{role.description || "N/A"}</td>
-                  {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && (
-                    <td className="actions">
-                      {rolePermissions?.Roles?.edit && (
-                        <FaEdit
-                        style={{
-                          color : "black",
-                          fontSize : "24px"
-                      }}
-                          className="edit-icon"
-                          title="Edit"
-                          onClick={() => navigate(`/edit-role/${role.id}`)}
-                        />
-                      )}
-                      {rolePermissions?.Roles?.delete && (
-                        <FaTrash
-                        style={{
-                          color : "black",
-                          fontSize : "20px"
-                      }}
-                          title="Delete"
-                          onClick={() => handleDelete(role.id)}
-                        />
-                      )}
-                    </td>
-                  )}
+          {loading ? <Loader/> :
+           <tbody>
+           {currentItems.length > 0 ? (
+             currentItems.map((role, index) => (
+               <tr key={index}>
+                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
+                 <td>{role.title}</td>
+                 <td>{role.description || "N/A"}</td>
+                 {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && (
+                   <td className="actions">
+                     {rolePermissions?.Roles?.edit && (
+                       <FaEdit
+                       style={{
+                         color : "black",
+                         fontSize : "24px"
+                     }}
+                         className="edit-icon"
+                         title="Edit"
+                         onClick={() => navigate(`/edit-role/${role.id}`)}
+                       />
+                     )}
+                     {rolePermissions?.Roles?.delete && (
+                       <FaTrash
+                       style={{
+                         color : "black",
+                         fontSize : "20px"
+                     }}
+                         title="Delete"
+                         onClick={() => handleDelete(role.id)}
+                       />
+                     )}
+                   </td>
+                 )}
 
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="no-data">No Data Found</td>
-              </tr>
-            )}
-          </tbody>
+               </tr>
+             ))
+           ) : (
+             <tr>
+               <td colSpan="4" className="no-data">No Data Found</td>
+             </tr>
+           )}
+         </tbody>
+          }
+         
         </table>
 
         {/* Pagination */}

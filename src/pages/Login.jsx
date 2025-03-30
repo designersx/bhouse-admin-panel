@@ -68,13 +68,13 @@ const Login = () => {
       <Navbar isLogin={true} />
       
       {/* Animated Background */}
-      <div className='animated-bg'>
+      {/* <div className='animated-bg'>
         <div className="bubbles">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="bubble"></div>
           ))}
         </div>
-      </div>
+      </div> */}
       
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="login-container">

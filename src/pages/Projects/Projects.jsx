@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
 import { MdDelete } from "react-icons/md"
+import { url } from '../../lib/api';
+import Loader from '../../components/Loader'
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -25,7 +27,7 @@ const Projects = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/getAllUsers');
+        const res = await axios.get('/auth/getAllUsers');
         setAllUsers(res.data);
       } catch (err) {
         console.error("Error fetching users", err);
@@ -54,7 +56,7 @@ const Projects = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/projects');
+        const response = await axios.get(`${url}/projects`);
         const allProjects = response.data;
 
         const localData = JSON.parse(localStorage.getItem('user'));
@@ -142,7 +144,7 @@ const Projects = () => {
     if (result.isConfirmed) {
       try {
         // Call the API to archive the project
-        const response = await axios.patch(`http://localhost:5000/api/projects/${projectId}/archive`);
+        const response = await axios.patch(`${url}/projects/${projectId}/archive`);
         if (response.status === 200) {
           Swal.fire(
             'Archived!',
@@ -194,9 +196,9 @@ const Projects = () => {
         />
       </div>
 
-      <div className="projects-table-container">
+      <div className="roles-table">
         {loading ? (
-          <p>Loading...</p>
+            <Loader/>
         ) : (
           <table className="projects-table">
             <thead>
@@ -211,7 +213,8 @@ const Projects = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProjects.map((project) => (
+              {filteredProjects.length ? <>
+                { filteredProjects.map((project) => (
                 <tr key={project.id}>
                   <td>{project.name}</td>
                   <td>{project.clientName}</td>
@@ -241,6 +244,8 @@ const Projects = () => {
 
                 </tr>
               ))}
+              </> :  <td colSpan="7" style={{ textAlign: "center" }}>No Project found</td> }
+              
             </tbody>
           </table>
         )}
