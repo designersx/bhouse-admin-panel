@@ -9,6 +9,7 @@ import useRolePermissions from "../../hooks/useRolePermissions";
 // import { FaEye } from "react-icons/fa";
 import { url } from "../../lib/api";
 import Loader from "../../components/Loader";
+import Swal from "sweetalert2";
 const Customer = () => {
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -82,12 +83,24 @@ const Customer = () => {
 
     // 🗑️ Delete Customer
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this customer?")) {
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        });
+    
+        if (result.isConfirmed) {
             try {
                 await deleteCustomer(id);
                 setCustomers(customers.filter(customer => customer.id !== id));
+                Swal.fire("Deleted!", "The customer has been deleted.", "success");
             } catch (error) {
                 console.error("Error deleting customer", error);
+                Swal.fire("Error!", "Failed to delete customer.", "error");
             }
         }
     };
