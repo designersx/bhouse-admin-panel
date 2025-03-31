@@ -24,7 +24,7 @@ const Sidebar = () => {
       confirmButtonText: "Yes, Logout!",
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.clear();
+        localStorage.removeItem('user');
         navigate('/');
       }
     });

@@ -27,7 +27,7 @@ const Projects = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('/auth/getAllUsers');
+        const res = await axios.get(`${url}/auth/getAllUsers`);
         setAllUsers(res.data);
       } catch (err) {
         console.error("Error fetching users", err);
@@ -54,7 +54,7 @@ const Projects = () => {
       )
       .join(", ");
   };
-
+console.log(getAssignedUserNames())
 
   useEffect(() => {
     const fetchProjects = async () => {
