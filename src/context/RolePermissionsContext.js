@@ -12,7 +12,10 @@ export const RolePermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      if (!roleId) return;
+      if (!roleId) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await getRoleById(roleId);
         const parsed = typeof res?.data?.permissions === "string"
@@ -28,11 +31,17 @@ export const RolePermissionsProvider = ({ children }) => {
     fetchPermissions();
   }, [roleId]);
 
+  
+  const resetPermissions = () => {
+    setRolePermissions(null);  
+  };
+
   return (
-    <RolePermissionsContext.Provider value={{ rolePermissions, loading }}>
+    <RolePermissionsContext.Provider value={{ rolePermissions, loading, resetPermissions }}>
       {children}
     </RolePermissionsContext.Provider>
   );
 };
 
+// ✅ अब useSidebarPermissions में resetPermissions भी मिल जाएगा
 export const useSidebarPermissions = () => useContext(RolePermissionsContext);

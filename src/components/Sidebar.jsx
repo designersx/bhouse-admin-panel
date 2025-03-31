@@ -6,12 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { AiFillProject } from 'react-icons/ai';
 import { FaUserCircle } from "react-icons/fa";
-import { useSidebarPermissions } from '../context/RolePermissionsContext';
+import { useSidebarPermissions   } from '../context/RolePermissionsContext';
+
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { rolePermissions, loading } = useSidebarPermissions();
+  const { rolePermissions, loading ,resetPermissions} = useSidebarPermissions();
   const user = JSON.parse(localStorage.getItem('user'));
   const handleLogout = () => {
     Swal.fire({
@@ -26,6 +27,8 @@ const Sidebar = () => {
       if (result.isConfirmed) {
         localStorage.removeItem('user');
         navigate('/');
+    // window.location.reload()
+        // resetPermissions()
       }
     });
   };
@@ -33,6 +36,7 @@ const Sidebar = () => {
   // Check only 'view' permissions for visibility
   const canViewUsers = rolePermissions?.UserManagement?.view;
   const canViewRoles = rolePermissions?.Roles?.view;
+  console.log(canViewRoles)
   const canViewCustomers = rolePermissions?.Customer?.view;
   const canViewProjects =  rolePermissions?.ProjectManagement.view
 

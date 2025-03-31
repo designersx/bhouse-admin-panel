@@ -62,7 +62,8 @@ const Login = () => {
       }
 
       localStorage.setItem('user', JSON.stringify(res));
-      navigate('/dashboard');
+      window.location.href = '/dashboard'
+      // navigate('/dashboard');
     } catch (err) {
       toast.error(err.message || '❌ Login failed');
     } finally {
