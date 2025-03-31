@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/Projects/ProjectDetails.css';
 import { url, url2} from '../../lib/api';
+
+import Swal from 'sweetalert2';
+
+
 import { MdDelete } from "react-icons/md";
 import { FaEye, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import BackButton from '../../components/BackButton';
+
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -15,11 +20,55 @@ const ProjectDetails = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
+  const [editableRows, setEditableRows] = useState({});
+  const [punchList, setPunchList] = useState([]);
+  const [showPunchModal, setShowPunchModal] = useState(false);
+  const [newIssue, setNewIssue] = useState({
+    title: '',
+    issueDescription: '',
+    projectItemId: '',
+    productImages: [],
+  });
+  const [projectItems, setProjectItems] = useState([]);
+  useEffect(() => {
+    axios.get(`${url}/items/${projectId}`)
+      .then(res => setProjectItems(res.data))
+      .catch(err => console.error("Failed to load items:", err));
+  }, [projectId]);
+  
+  useEffect(() => {
+    const fetchPunchList = async () => {
+      try {
+        const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
+        const parsed = res.data.map(issue => ({
+          ...issue,
+          productImages: typeof issue.productImages === 'string'
+            ? JSON.parse(issue.productImages)
+            : Array.isArray(issue.productImages)
+            ? issue.productImages
+            : []
+        }));
+        setPunchList(parsed);
+      } catch (err) {
+        console.error("Error fetching punch list:", err);
+      }
+    };
+  
+    fetchPunchList();
+  }, [projectId]);
+  
+
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
+  
+    if (field === 'itemName' && !/^[a-zA-Z\s]*$/.test(value)) return; 
+    if (field === 'quantity' && !/^\d*$/.test(value)) return; 
+  
     updated[index][field] = value;
     setItems(updated);
   };
+  
   
   const updateItem = async (item) => {
     try {
@@ -48,7 +97,7 @@ const ProjectDetails = () => {
       const updated = [...items];
       updated[index] = res.data;
       setItems(updated);
-      alert("Item added!");
+      toast.success("Item added!");
     } catch (err) {
       alert("Failed to add item.");
       console.error(err);
@@ -120,16 +169,6 @@ const ProjectDetails = () => {
     fetchProjectDetails();
   }, [projectId]);
 
-  const getUserNamesByIds = (ids) => {
-    if (!Array.isArray(ids)) return "No users assigned";
-    return ids
-      .map(id => {
-        const user = allUsers.find(u => u.id.toString() === id.toString());
-        return user ? `${user.firstName} ${user.lastName}` : null;
-      })
-      .filter(Boolean)
-      .join(", ");
-  };
 
   if (loading) {
     return (
@@ -145,9 +184,71 @@ const ProjectDetails = () => {
   const removeRow = (index) => {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
+  const handleFileUpload = async (event, category) => {
+    const formData = new FormData();
+    for (const file of event.target.files) {
+      formData.append('files', file);
+    }
+  
+    try {
+      await axios.post(`${url}/projects/${projectId}/upload-files?category=${category}`, formData);
+      toast.success("Files uploaded!");
+      window.location.reload(); 
+    } catch (err) {
+      toast.error("Failed to upload files");
+      console.error(err);
+    }
+  };
+  
+  const handleProjectFileUpdate = async (filePath, category) => {
+    const updatedCategoryFiles = project[category].filter(f => f !== filePath);
+    const updatedProject = {
+      ...project,
+      [category]: updatedCategoryFiles
+    };
+  
+    const formDataToSend = new FormData();
+    formDataToSend.append("removedFiles", JSON.stringify([filePath]));
+  
+    // Append basic fields (add more if required)
+    ['name', 'type', 'clientName', 'description', 'startDate', 'estimatedCompletion', 'totalValue', 'deliveryAddress', 'deliveryHours'].forEach(key => {
+      if (updatedProject[key] !== undefined) {
+        formDataToSend.append(key, updatedProject[key]);
+      }
+    });
+  
+    try {
+      const res = await fetch(`${url}/projects/${projectId}`, {
+        method: 'PUT',
+        body: formDataToSend
+      });
+  
+      if (res.status === 200) {
+        setProject(prev => ({
+          ...prev,
+          [category]: updatedCategoryFiles
+        }));
+        toast.success("File removed and project updated!");
+      } else {
+        const data = await res.json();
+        toast.error(data?.error || "Failed to update project.");
+      }
+    } catch (error) {
+      console.error("Update failed", error);
+      toast.error("Error while updating project.");
+    }
+  };
+  const toggleEditRow = (index) => {
+    setEditableRows(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+  
   
   return (
     <Layout>
+      <ToastContainer/>
       <div className='project-details-page'>
         <BackButton/>
       <div className="project-details-header">
@@ -156,7 +257,7 @@ const ProjectDetails = () => {
       </div>
 
       <div className="tabs">
-        {['overview', 'documents', 'team', 'items', 'settings'].map(tab => (
+        {['overview', 'documents', 'team', 'items', 'punchlist','settings'].map(tab => (
           <button
             key={tab}
             className={activeTab === tab ? 'tab active' : 'tab'}
@@ -191,17 +292,26 @@ const ProjectDetails = () => {
     <h2>Uploaded Documents</h2>
 
     {[
-      { title: "Proposals & Presentations", files: project.proposals },
-      { title: "Floor Plans & CAD Files", files: project.floorPlans },
-      { title: "Other Documents", files: project.otherDocuments },
-    ].map((docCategory, idx) => (
+  { title: "Proposals & Presentations", files: project.proposals, category: 'proposals' },
+  { title: "Floor Plans & CAD Files", files: project.floorPlans, category: 'floorPlans' },
+  { title: "Other Documents", files: project.otherDocuments, category: 'otherDocuments' },
+]
+
+
+.map((docCategory, idx) => (
       <div key={idx} className="document-section">
         <h3>{docCategory.title}</h3>
+        <input
+      type="file"
+      multiple
+      onChange={(e) => handleFileUpload(e, docCategory.category)}
+    />
         {docCategory.files?.length > 0 ? (
           <div className="uploaded-files">
-            {docCategory.files.map((url, idx) => {
-              const fileName = url.split('/').pop();
-              const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+            {docCategory.files.map((filePath, idx) => {
+              const fileName =filePath.split('/').pop();
+              const fileUrl = filePath.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
 
               const handleDownload = async () => {
                 try {
@@ -225,21 +335,57 @@ const ProjectDetails = () => {
                 <div key={idx} className="file-item-enhanced">
                   <span className="file-name-enhanced">{fileName}</span>
                   <div className="file-actions">
-                    <button
-                      className="file-action-btn"
-                      onClick={() => window.open(fileUrl, '_blank')}
-                      title="View"
-                    >
-                      <FaEye />
-                    </button>
-                    <button
-                      className="file-action-btn"
-                      onClick={handleDownload}
-                      title="Download"
-                    >
-                      <FaDownload />
-                    </button>
-                  </div>
+  <button
+    className="file-action-btn"
+    onClick={() => window.open(fileUrl, '_blank')}
+    title="View"
+  >
+    <FaEye />
+  </button>
+  <button
+    className="file-action-btn"
+    onClick={handleDownload}
+    title="Download"
+  >
+    <FaDownload />
+  </button>
+  <button
+  className="file-action-btn"
+  title="Delete"
+  onClick={() => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "Do you want to remove this file?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove it!',
+      cancelButtonText: 'Cancel',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await handleProjectFileUpdate(filePath, docCategory.category);
+      }
+    });
+  }}
+>
+  <MdDelete />
+</button>
+<button 
+  className="file-action-btn"
+  title="Comment"
+  onClick={() => navigate(`/project/${projectId}/file-comments`, {
+    state: {
+      filePath,
+      category: docCategory.category,
+    }
+  })}
+>
+  <FaComment />
+</button>
+
+
+
+</div>
+
                 </div>
               );
             })}
@@ -304,67 +450,228 @@ const ProjectDetails = () => {
         </tr>
       </thead>
       <tbody>
-        {items.map((item, index) => (
-          <tr key={item.id || index}>
-            <td>
-              <input
-                value={item.itemName}
-                onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-              />
-            </td>
-            <td>
-              <input
-                type="number"
-                value={item.quantity}
-                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-              />
-            </td>
-            <td>
-              <input
-                type="date"
-                value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-                onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
-              />
-            </td>
-            <td>
-              <select
-                value={item.status}
-                onChange={(e) => handleItemChange(index, 'status', e.target.value)}
-              >
-                <option value="Pending">Pending</option>
-                <option value="In Transit">In Transit</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Installed">Installed</option>
-              </select>
-            </td>
-            <td>
-            {item.id ? (
-  <>
-    <button onClick={() => deleteItem(item.id)}><MdDelete/></button>
-  </>
-) : (
-  <>
-    <button onClick={() => addNewItemToBackend(item, index)}>Save</button>
-    <button onClick={() => removeRow(index)}>Remove Row</button>
-  </>
-)}
+  {items.map((item, index) => {
+    const isEditable = editableRows[index] || !item.id; 
 
-</td>
+    const handleSave = () => {
+      if (!item.itemName || !item.quantity || !item.expectedDeliveryDate || !item.status) {
+        return toast.error("All fields are required.");
+      }
+    
+      if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
+        return toast.error("Item Name must contain only letters.");
+      }
+    
+      if (!/^\d+$/.test(item.quantity)) {
+        return toast.error("Quantity must be a number.");
+      }
+    
+      if (item.id) {
+        updateItem(item);
+      } else {
+        addNewItemToBackend(item, index);
+      }
+    
+      // ✅ After saving, disable the row
+      setEditableRows(prev => ({ ...prev, [index]: false }));
+    };
+    
 
-          </tr>
-        ))}
-      </tbody>
+    return (
+      <tr key={item.id || index}>
+        <td>
+          <input
+            value={item.itemName}
+            disabled={!isEditable}
+            onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            value={item.quantity}
+            disabled={!isEditable}
+            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+          />
+        </td>
+        <td>
+          <input
+            type="date"
+            value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+            disabled={!isEditable}
+            onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+          />
+        </td>
+        <td>
+          <select
+            value={item.status}
+            disabled={!isEditable}
+            onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+          >
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Installed">Installed</option>
+          </select>
+        </td>
+        <td>
+          {item.id ? (
+            isEditable ? (
+              <button onClick={handleSave}>Save</button>
+            ) : (
+              <>
+                <button onClick={() => toggleEditRow(index)}><MdEdit /></button>
+                <button onClick={() => deleteItem(item.id)}><MdDelete /></button>
+              </>
+            )
+          ) : (
+            <>
+              <button onClick={handleSave}>Save</button>
+              <button onClick={() => removeRow(index)}>Remove</button>
+            </>
+          )}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
     </table>
     <div className='button1' style={{ display: 'flex', justifyContent: 'space-between' }}>
   <button className="ledbutton" onClick={handleAddItemRow}>+ Add Row</button>
-  <button className="ledbutton" onClick={() => {
-    items.forEach(item => {
-      if (item.id) updateItem(item);
-    });
-  }}>Save</button>
 </div>
 
    
+  </div>
+)}
+{activeTab === 'punchlist' && (
+  <div className="project-info-card">
+    <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+  <button className="ledbutton" onClick={() => setShowPunchModal(true)}>
+    + Add Issue
+  </button>
+</div>
+{showPunchModal && (
+  <div className="modal-overlay">
+    <div className="modal-content">
+      <h3>Add Punch List Issue</h3>
+      <label>Title</label>
+      <input
+        value={newIssue.title}
+        onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+      />
+
+      <label>Description</label>
+      <textarea
+        value={newIssue.issueDescription}
+        onChange={(e) => setNewIssue({ ...newIssue, issueDescription: e.target.value })}
+      />
+
+      <label>Item (Category)</label>
+      <select
+        value={newIssue.projectItemId}
+        onChange={(e) => setNewIssue({ ...newIssue, projectItemId: e.target.value })}
+      >
+        <option value="">Select</option>
+        {projectItems.map(item => (
+          <option key={item.id} value={item.id}>{item.itemName}</option>
+        ))}
+      </select>
+
+      <label>Upload Files</label>
+      <input
+        type="file"
+        multiple
+        accept="image/*,.pdf"
+        onChange={(e) => setNewIssue({ ...newIssue, productImages: e.target.files })}
+      />
+
+      <div className="modal-actions">
+        <button
+          className="submit-btn"
+          onClick={async () => {
+            try {
+              const formData = new FormData();
+              formData.append('title', newIssue.title);
+              formData.append('issueDescription', newIssue.issueDescription);
+              formData.append('projectItemId', newIssue.projectItemId);
+              formData.append('projectId', projectId);
+              for (let file of newIssue.productImages) {
+                formData.append('productImages', file);
+              }
+
+              await axios.post(`${url}/projects/${projectId}/punch-list`, formData);
+              toast.success("Issue added!");
+              setShowPunchModal(false);
+              setNewIssue({ title: '', issueDescription: '', projectItemId: '', productImages: [] });
+              const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
+              setPunchList(res.data.map(issue => ({
+                ...issue,
+                productImages: typeof issue.productImages === 'string'
+                  ? JSON.parse(issue.productImages)
+                  : issue.productImages
+              })));
+            } catch (err) {
+              console.error("Failed to add issue", err);
+              toast.error("Error adding issue");
+            }
+          }}
+        >
+          Submit
+        </button>
+        <button className="cancel-btn" onClick={() => setShowPunchModal(false)}>Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
+
+    <h2>Punch List</h2>
+
+    {punchList.length === 0 ? (
+      <p>No punch list issues found.</p>
+    ) : (
+      <div className="punch-list-grid">
+        {punchList.map((issue, idx) => (
+          <div className="punch-card" key={issue.id || idx}>
+            <h4>{issue.title}</h4>
+            <p><strong>Category:</strong> {issue.category}</p>
+            <p><strong>Description:</strong> {issue.issueDescription}</p>
+            {issue.item?.itemName && (
+             <p><strong>Related Item:</strong> {issue.item?.itemName}</p>
+            )}
+            {issue.productImages?.length > 0 && (
+              <div className="punch-images">
+                {Array.isArray(issue.productImages) &&
+  issue.productImages.map((file, i) => {
+    const isPDF = file.toLowerCase().endsWith('.pdf');
+    const fileUrl = `${url2}/${file}`;
+    
+    return (
+      <div key={i} className="punch-file-preview">
+        {isPDF ? (
+          <iframe
+            src={fileUrl}
+            title={`PDF Preview ${i}`}
+            className="punch-pdf"
+          />
+        ) : (
+          <img
+            src={fileUrl}
+            alt={`Product Image ${i}`}
+            className="punch-image"
+          />
+        )}
+      </div>
+    );
+  })}
+
+
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 )}
 
