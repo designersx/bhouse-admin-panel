@@ -9,6 +9,7 @@ import useRolePermissions from "../hooks/useRolePermissions";
 import Loader from "../components/Loader";
 
 const rolePermissionLevels = {
+  "Admin" : 0 , 
   "Super Admin": 1,
   "Account Manager": 2,
   "Sr. Designer": 3,

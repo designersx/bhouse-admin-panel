@@ -7,6 +7,7 @@ import { getCustomers } from '../../lib/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { url } from '../../lib/api';
+import BackButton from '../../components/BackButton';
 const AddProject = () => {
   const [step, setStep] = useState(1);
   let [clientId , setClientId] = useState()
@@ -275,6 +276,7 @@ const AddProject = () => {
     <Layout>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="add-project-container">
+        <BackButton/>
         {loading && (
           <div className="loader-overlay">
             <div className="loader"></div>

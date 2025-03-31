@@ -27,7 +27,7 @@ const Projects = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('/auth/getAllUsers');
+        const res = await axios.get(`${url}/auth/getAllUsers`);
         setAllUsers(res.data);
       } catch (err) {
         console.error("Error fetching users", err);
@@ -39,9 +39,12 @@ const Projects = () => {
     if (!Array.isArray(assignedTeamRoles)) return "";
 
     const userMap = {};
-    allUsers.forEach(user => {
-      userMap[user.id] = `${user.firstName} ${user.lastName}`;
-    });
+    if(allUsers){
+      allUsers?.forEach(user => {
+        userMap[user.id] = `${user.firstName} ${user.lastName}`;
+      });
+    }
+   
 
     return assignedTeamRoles
       .flatMap(roleEntry =>
@@ -51,7 +54,7 @@ const Projects = () => {
       )
       .join(", ");
   };
-
+console.log(getAssignedUserNames())
 
   useEffect(() => {
     const fetchProjects = async () => {
