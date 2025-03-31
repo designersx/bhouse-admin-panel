@@ -39,7 +39,8 @@ const Projects = () => {
     if (!Array.isArray(assignedTeamRoles)) return "";
 
     const userMap = {};
-    allUsers.forEach(user => {
+    
+    allUsers?.forEach(user => {
       userMap[user.id] = `${user.firstName} ${user.lastName}`;
     });
 
