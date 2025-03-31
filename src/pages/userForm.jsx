@@ -190,6 +190,7 @@ const UserForm = () => {
       setLoading(false);
     }
   };
+  console.log({newUser})
 
   return (
     <Layout>

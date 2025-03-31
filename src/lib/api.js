@@ -3,6 +3,9 @@ export const url = 'http://localhost:5000/api' || ""
 // export const url = 'https://bhouse.truet.net/api' || ""
 
 
+
+// export const url2 = 'https://bhouse.truet.net' || ""
+
 export const url2 = 'http://localhost:5000' || ""
 
 export const registerUser = async (userData) => {

@@ -17,8 +17,11 @@ const Login = () => {
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail');
-    if (savedEmail) {
+    const savedPassword = localStorage.getItem('rememberedPassword'); // Fetch password
+
+    if (savedEmail && savedPassword) {
       setEmail(savedEmail);
+      setPassword(savedPassword); // Set password
       setRememberMe(true);
     }
   }, []);
@@ -35,7 +38,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     if (!email || !password) {
       toast.error('⚠️ Email and password are required.');
       setIsLoading(false);
@@ -49,13 +52,18 @@ const Login = () => {
     try {
       const res = await login(email, password);
       toast.success('✅ Login Successful');
+
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberedPassword', password); // Save password (Unsafe)
       } else {
         localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedPassword'); // Remove password
       }
+
       localStorage.setItem('user', JSON.stringify(res));
-      navigate('/dashboard');
+      window.location.href = '/dashboard'
+      // navigate('/dashboard');
     } catch (err) {
       toast.error(err.message || '❌ Login failed');
     } finally {
@@ -66,53 +74,59 @@ const Login = () => {
   return (
     <>
       <Navbar isLogin={true} />
-      
-      {/* Animated Background */}
-      {/* <div className='animated-bg'>
-        <div className="bubbles">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="bubble"></div>
-          ))}
-        </div>
-      </div> */}
-      
+
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="login-container">
         <form className="login-form" onSubmit={handleLogin}>
           <h2>Welcome Back 👋</h2>
-          
+
           <div className="input-group">
-            <input 
-              className='login-input' 
-              type="email" 
-              value={email} 
+            <input
+              className='login-input'
+              type="email"
+              value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 validateEmail(e.target.value);
-              }} 
-              placeholder="Email" 
+              }}
+              placeholder="Email"
             />
             {emailError && <p className="error-text">{emailError}</p>}
           </div>
 
           <div className="input-group">
-            <input 
-              className='password-input' 
-              type="password" 
-              value={password} 
+            <input
+              className='password-input'
+              type="password"
+              value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
                 validatePassword(e.target.value);
-              }} 
+              }}
               minLength={6}
               maxLength={15}
-              placeholder="Password" 
+              placeholder="Password"
             />
             {passwordError && <p className="error-text">{passwordError}</p>}
           </div>
 
+          {/* Remember Me Checkbox */}
+          <div className='form_footer'>
+          <div className="remember-me">
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={() => setRememberMe(!rememberMe)}
+            />
+            <label htmlFor="rememberMe">Remember Me</label>
+          </div>
+
           <div className="login-options">
-            <span className="forgot-password" onClick={() => navigate('/forgot-password')}>Forgot Password?</span>
+            <span className="forgot-password" onClick={() => navigate('/forgot-password')}>
+              Forgot Password?
+            </span>
+          </div>
           </div>
 
           <button type="submit" className="login-btn" disabled={isLoading}>

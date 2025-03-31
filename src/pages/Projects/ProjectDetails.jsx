@@ -4,10 +4,14 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../styles/Projects/ProjectDetails.css';
 import { url, url2} from '../../lib/api';
-import { MdDelete, MdEdit } from "react-icons/md";
-import { FaEye, FaDownload, FaComment } from 'react-icons/fa';
-import { toast, ToastContainer } from 'react-toastify';
+
 import Swal from 'sweetalert2';
+
+
+import { MdDelete } from "react-icons/md";
+import { FaEye, FaDownload } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import BackButton from '../../components/BackButton';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -246,6 +250,7 @@ const ProjectDetails = () => {
     <Layout>
       <ToastContainer/>
       <div className='project-details-page'>
+        <BackButton/>
       <div className="project-details-header">
         <h1>{project.name}</h1>
         <p className="project-subtitle">{project.type} Project</p>
