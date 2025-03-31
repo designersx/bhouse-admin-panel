@@ -39,10 +39,10 @@ const Sidebar = () => {
   console.log(canViewRoles)
   const canViewCustomers = rolePermissions?.Customer?.view;
   const canViewProjects =  rolePermissions?.ProjectManagement.view
-
+console.log({rolePermissions})
   return (
     <div className="sidebar">
-      <div className="logo">Hi, {user?.user?.firstName || 'User'}</div>
+      {rolePermissions? <>    <div className="logo">Hi, {user?.user?.firstName || 'User'}</div>
       <ul>
         <li className={location.pathname === '/dashboard' ? 'active' : ''}>
           <Link to="/dashboard"><FiHome /> Dashboard</Link>
@@ -83,7 +83,8 @@ const Sidebar = () => {
         <li onClick={handleLogout}>
           <Link><CiLogout /> Logout</Link>
         </li>
-      </ul>
+      </ul></> : null}
+  
     </div>
   );
 };

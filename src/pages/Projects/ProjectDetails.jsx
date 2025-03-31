@@ -7,7 +7,7 @@ import { url, url2} from '../../lib/api';
 import { MdDelete } from "react-icons/md";
 import { FaEye, FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-
+import BackButton from '../../components/BackButton';
 const ProjectDetails = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
@@ -149,6 +149,7 @@ const ProjectDetails = () => {
   return (
     <Layout>
       <div className='project-details-page'>
+        <BackButton/>
       <div className="project-details-header">
         <h1>{project.name}</h1>
         <p className="project-subtitle">{project.type} Project</p>

@@ -6,6 +6,7 @@ import "./style.css"; // Import External CSS
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import Swal from "sweetalert2";
+import BackButton from "../../components/BackButton";
 const CustomerForm = () => {
     const [formData, setFormData] = useState({
         full_name: "",
@@ -111,10 +112,13 @@ const nevigate = useNavigate()
         <Layout>
             
             {loading ? <Loader/> :   <div className="customer-form-container">
+                <div>
+                <BackButton/>
+                </div>
                 <h2 className="add-customer">Add New Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
-                        <label>Full Name</label>
+                        <label>Full Name  </label>
                         <input type="text" name="full_name" value={formData.full_name} maxLength={25} onChange={handleChange} onBlur={handleBlur} required />
                         {touched.full_name && errors.full_name && <p className="error">{errors.full_name}</p>}
                         

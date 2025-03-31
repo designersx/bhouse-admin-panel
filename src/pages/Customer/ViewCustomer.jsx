@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import Layout from "../../components/Layout";
+import BackButton from "../../components/BackButton";
 import { getCustomerById, uploadDocument, getDocumentsByCustomer, getCommentsByDocument, addComment, url  , deleteDocument} from "../../lib/api"; 
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -126,6 +127,10 @@ function ViewCustomer() {
         <Layout>
               <div className="tabs-container">
             {/* Tab Headers */}
+            <div>
+               <BackButton/>
+
+            </div>
             <div className="tabs-header">
                 <button 
                     className={`tab-button ${activeTab === "details" ? "active" : ""}`} 

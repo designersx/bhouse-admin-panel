@@ -36,6 +36,7 @@ const [isLoading , setIsLoading] = useState(true)
 
       // Define role levels
       const roleLevels = {
+        "Admin" : 1 , 
         "Super Admin": 1,
         "Account Manager": 2,
         "Sr. Designer": 3,
@@ -43,9 +44,13 @@ const [isLoading , setIsLoading] = useState(true)
         "Lead Installer": 5,
       };
 
-      if (loggedInUser?.user.userRole === "Super Admin") {
+      if (loggedInUser?.user.userRole === "Super Admin" ) {
         // Super Admin can see all users
         setUsers(data.filter(user => user.id !== loggedInUser?.user.id));
+      }
+      else if(loggedInUser?.user.userRole === "Admin"){
+        setUsers(data.filter(user => user.id !== loggedInUser?.user.id && user?.userRole !=="Super Admin"));
+
       } else {
         // Filter users based on the logged-in user's role level
         const loggedInUserRoleLevel = roleLevels[loggedInUser?.user.userRole];
