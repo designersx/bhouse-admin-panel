@@ -5,7 +5,6 @@ import '../../styles/Projects/project.css';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
-import { MdDelete } from "react-icons/md"
 import { url } from '../../lib/api';
 import Loader from '../../components/Loader'
 const Projects = () => {

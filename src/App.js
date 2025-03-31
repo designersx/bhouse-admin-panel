@@ -27,6 +27,7 @@ import CustomerForm from './pages/Customer/CustomerForm';
 import UserForm from './pages/userForm';
 import EditCustomer from './components/EditCustomer';
 import ViewCustomer from './pages/Customer/ViewCustomer';
+import FileCommentsPage from './pages/Projects/FileCommentPage';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -59,6 +60,7 @@ const token = userData?.token;
           <Route path="/edit-project/:projectId" element={<ProtectedRoute><EditProject/></ProtectedRoute>} />
           <Route path="/customers" element={<ProtectedRoute><Customer/></ProtectedRoute>} />
           <Route path="/add-customer" element={<ProtectedRoute><CustomerForm/></ProtectedRoute>} />
+          <Route path="/project/:projectId/file-comments" element={<ProtectedRoute><FileCommentsPage /></ProtectedRoute>} />
 
           <Route path="/users/add" element={<UserForm />} />
           <Route path="/users/edit/:id" element={<UserForm />} />
