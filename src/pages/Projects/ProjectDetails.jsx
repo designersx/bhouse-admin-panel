@@ -294,7 +294,9 @@ const ProjectDetails = () => {
       productImages: prev.productImages.filter((_, i) => i !== index)
     }));
   };
-    
+
+  
+ 
   return (
     <Layout>
       <ToastContainer/>
@@ -348,13 +350,14 @@ const ProjectDetails = () => {
 
 
 .map((docCategory, idx) => (
-      <div key={idx} className="document-section">
+      <div key={idx} className="  -section">
         <h3>{docCategory.title}</h3>
         <input
       type="file"
       multiple
       onChange={(e) => handleFileUpload(e, docCategory.category)}
     />
+   
         {docCategory.files?.length > 0 ? (
           <div className="uploaded-files">
             {docCategory.files.map((filePath, idx) => {

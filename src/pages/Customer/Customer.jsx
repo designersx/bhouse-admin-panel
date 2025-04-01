@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState , useRef } from "react";
 import axios from "axios";
 import { getCustomers, deleteCustomer , addCustomerComment , getCustomerComments} from "../../lib/api"; 
 import Layout from "../../components/Layout";
@@ -14,7 +14,7 @@ import { FaBullseye } from "react-icons/fa6";
 import Offcanvas from "../../components/OffCanvas/OffCanvas";
 import { FaTelegramPlane } from 'react-icons/fa';
 const Customer = () => {
- 
+  const commentsEndRef = useRef(null)
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [search, setSearch] = useState("");
@@ -178,6 +178,11 @@ const Customer = () => {
       };
     
       const groupedComments = groupCommentsByDate();
+      useEffect(() => {
+        if (commentsEndRef.current) {
+          commentsEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, [groupedComments]);
     return (
         <Layout>
             <div className="roles-container">
@@ -330,12 +335,15 @@ const Customer = () => {
 
 <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas}>
 <div className="right-panel">
-        <div className="comments-list">
+        <div 
+          className="comments-list" 
+          style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }} // Flex column to ensure bottom stacking
+        >
           {/* Display grouped comments by date */}
           {Object.keys(groupedComments).map((date) => (
             <div key={date} className="comment-date-group">
               <p>{date}</p> {/* Display actual date */}
-              {groupedComments[date].reverse().map((comment) => ( // Reverse order to ensure latest comment at the bottom
+              {groupedComments[date].reverse().map((comment) => ( // Reverse to show latest at bottom
                 <div key={comment.id}>
                   <div className="whatsapp-comment-box">
                     <div className="whatsapp-comment-user-info">
@@ -346,7 +354,7 @@ const Customer = () => {
                       />
                       <div>
                         <p className="whatsapp-comment-author">
-                          {comment?.users?.firstName} 
+                          {comment?.users?.firstName}
                           <span className="comment-user-role"> ({comment?.users?.userRole})</span>
                         </p>
                       </div>
@@ -360,6 +368,8 @@ const Customer = () => {
               ))}
             </div>
           ))}
+          {/* Empty div to scroll to latest comment */}
+          <div ref={commentsEndRef}></div>
         </div>
       </div>
 
