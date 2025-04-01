@@ -98,36 +98,187 @@
     padding: 1rem;
   }
   
-  .left-panel,
-  .right-panel {
-    flex: 1;
+  .left-panel{
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      width: 62%;
+      /* margin: 0 auto; */
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      height: 70vh;
+      transition: 0.5s ease;
+     
+  }
+  .left-panel2{
     display: flex;
     flex-direction: column;
+    padding: 20px;
+    width: 80%;
+    /* margin: 0 auto; */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 70vh;
+    transition: 0.5s ease;
+
   }
-  
-  .left-panel {
-    max-width: 50%;
+  .view-doc {
+    background-color: #004680;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    height: 35px;
   }
-  
-  .right-panel {
-    border-left: 1px solid #ccc;
-    padding-left: 1.5rem;
-    max-height: 100%;
-    overflow-y: auto;
-  }
-  
-  .file-preview {
-    flex: 1;
-  }
-  
-  .comment-form {
-    margin-top: auto;
-  }
-  
-  .comments-list {
-    flex: 1;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    max-height: 400px;
-  }
-  
+
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: scroll;
+}
+
+/* Comments List */
+.comments-list {
+  max-height: 500px;
+
+  padding-right: 10px;
+}
+
+/* Grouped Comment Date */
+.whatsapp-comment-date {
+  font-size: 16px;
+  color: #444;
+  text-align: center;
+  width: 100%;
+  margin: 20px 0;
+  font-weight: 600;
+  background-color: #f1f1f1;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Individual comment boxes */
+.whatsapp-comment-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+/* Comment User Info */
+.whatsapp-comment-user-info {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+  margin-bottom: 10px;
+}
+
+.whatsapp-comment-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #25d366;
+  margin-right: 10px;
+}
+
+.whatsapp-comment-author {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Comment Text Styling */
+.whatsapp-comment-text {
+  background-color: #e5e5e5;
+  padding: 12px;
+  border-radius: 20px;
+  max-width: 75%;
+  word-wrap: break-word;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for sent comments */
+.whatsapp-comment-box.sent .whatsapp-comment-text {
+  background-color: #dcf8c6;
+  margin-left: auto;
+}
+
+/* Comment Metadata (Time) */
+.whatsapp-comment-meta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+  text-align: left;
+  width: 100%;
+  font-weight: 300;
+  margin-bottom: 15px; /* space after time */
+}
+
+/* Input field for adding a comment */
+.whatsapp-comment-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+}
+
+.whatsapp-comment-input {
+  width: 80%;
+  padding: 15px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+  background-color: #f4f4f4;
+  resize: none;
+  transition: border-color 0.3s ease;
+}
+
+.whatsapp-comment-input:focus {
+  outline: none;
+  border-color: #25d366; /* Green border on focus */
+}
+
+.whatsapp-submit-btn {
+  background-color: #25d366;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.whatsapp-submit-btn:hover {
+  background-color: #128c7e;
+}
+
+.whatsapp-submit-btn:focus {
+  outline: none;
+}
+
+/* Styling for "No comments yet" message */
+.comments-list p {
+  color: #888;
+  font-size: 16px;
+  text-align: center;
+  /* margin-top: 30px; */
+  font-weight: 300;
+}

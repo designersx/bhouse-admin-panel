@@ -54,8 +54,9 @@
 
 /* Update Profile Button */
 .update-btn {
-  background-color: #4f46e5;
+  background-color: #004680e6;
   color: #fff;
+ 
   padding: 12px;
   border: none;
   border-radius: 8px;
@@ -95,7 +96,7 @@
   background: #f0f0f0;
   margin-bottom: 15px;
   overflow: hidden;
-  border: 1px solid #4f46e5;
+  border: 1px solid #004680;
 }
 
 /* Profile Picture */
@@ -108,7 +109,7 @@
 
 /* Edit Button */
 .edit-btn {
-  background-color: #4f46e5;
+  background-color: #004680e7;
   color: white;
   padding: 8px 16px;
   border-radius: 20px;

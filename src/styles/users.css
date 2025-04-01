@@ -7,7 +7,7 @@
   }
   
   .add-user-btn {
-    background-color: #4f46e5;
+    background-color: #004680;
     color: #fff;
     border: none;
     padding: 10px 15px;
@@ -309,7 +309,7 @@
 
   .user-roles-header .add-user-btn {
     margin-right: auto; /* Push search input to the right when button exists */
-    background-color: #4f46e5;
+    background-color: #004680;
     color: white;
     border: none;
     padding: 8px 12px;

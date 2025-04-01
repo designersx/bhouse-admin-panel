@@ -183,7 +183,7 @@ const [isLoading , setIsLoading] = useState(true)
                       {rolePermissions?.UserManagement?.edit && (
                         <FaEdit
                         style={{
-                          color: "black" , 
+                          color: "#004680" , 
                           fontSize : "22px"
                         }}
                           title="Edit"
@@ -193,7 +193,7 @@ const [isLoading , setIsLoading] = useState(true)
                       {rolePermissions?.UserManagement?.delete && (
                         <FaTrash
                         style={{
-                          color: "black" , 
+                          color: "#004680"  , 
                           fontSize : "20px"
                         }}
                           className="delete-icon"

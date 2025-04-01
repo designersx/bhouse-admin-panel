@@ -27,7 +27,7 @@
 
 
 .add-role-btn {
-  background-color: #4f46e5;
+  background-color: #004680e8;
   color: #fff;
   border: none;
   padding: 10px 15px;
@@ -61,7 +61,8 @@
 }
 
 .roles-table th {
-  background: #f8f9fa;
+  background: #EEF7FF;
+  /* color: #fff; */
 }
 
 .actions {

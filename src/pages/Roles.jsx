@@ -151,7 +151,7 @@ const Roles = () => {
                      {rolePermissions?.Roles?.edit && (
                        <FaEdit
                        style={{
-                         color : "black",
+                        color: "#004680" ,
                          fontSize : "24px"
                      }}
                          className="edit-icon"
@@ -162,7 +162,7 @@ const Roles = () => {
                      {rolePermissions?.Roles?.delete && (
                        <FaTrash
                        style={{
-                         color : "black",
+                        color: "#004680" ,
                          fontSize : "20px"
                      }}
                          title="Delete"

@@ -74,6 +74,9 @@ const UserForm = () => {
   
       if (userRole === "Super Admin") {
         filteredRoles = allRoles;
+      }
+      else if (userRole === "Admin") {
+        filteredRoles = allRoles.filter(role => role.title !== "Super Admin");
       } else {
         filteredRoles = allRoles.filter((role) => {
           const isPredefinedAndAbove = role.defaultPermissionLevel < 6 && role.defaultPermissionLevel > userLevel;

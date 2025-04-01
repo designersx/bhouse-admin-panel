@@ -7,11 +7,12 @@ import { url, url2} from '../../lib/api';
 
 import Swal from 'sweetalert2';
 
-
+import { ToastContainer } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
-import { FaEye, FaDownload } from 'react-icons/fa';
+import { FaEye, FaComment  ,  FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import BackButton from '../../components/BackButton';
+import { MdEdit } from 'react-icons/md';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();

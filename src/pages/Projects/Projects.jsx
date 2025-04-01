@@ -77,7 +77,7 @@ console.log(getAssignedUserNames())
 
         let visibleProjects = [];
 
-        if (userRole === "Super Admin") {
+        if (userRole === "Super Admin" || userRole==="Admin") {
           visibleProjects = allProjects;
         } else {
           visibleProjects = allProjects.filter(project => {

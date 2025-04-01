@@ -164,7 +164,7 @@ const Customer = () => {
                                             {canEdit && (
                                                 <FaEdit
                                                 style={{
-                                                    color : "black",
+                                                    color: "#004680" ,
                                                     fontSize : "23px"
                                                 }}
                                                     className="edit-icon"
@@ -175,7 +175,7 @@ const Customer = () => {
                                             {canDelete && (
                                                 <MdDelete
                                                 style={{
-                                                    color : "black",
+                                                    color: "#004680" ,
                                                     fontSize : "25px"
                                                 }}
                                                     className="delete-icon"

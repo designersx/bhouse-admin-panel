@@ -20,7 +20,7 @@
 }
 
 .projects-page .add-user-btn {
-  background-color: #007bff;
+  background-color: #004680ec;
   color: white;
   padding: 8px 16px;
   border-radius: 5px;
@@ -77,9 +77,12 @@
   vertical-align: middle;
   word-wrap: break-word; /* Prevents overflow */
 }
+.projects-table th{
+  background-color: #EEF7FF;
+}
 
 .projects-page .projects-table th {
-  background-color: #f5f8fa;
+  background-color: #fff;
   font-weight: 600;
   color: #444;
 }
