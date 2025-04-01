@@ -74,8 +74,7 @@ const Customer = () => {
         }
         if (search) {
             filteredData = filteredData.filter(customer =>
-                customer.full_name.toLowerCase().includes(search.toLowerCase()) ||
-                customer.email.toLowerCase().includes(search.toLowerCase())
+                customer.full_name.toLowerCase().includes(search.toLowerCase()) 
             );
         }
         setFilteredCustomers(filteredData);

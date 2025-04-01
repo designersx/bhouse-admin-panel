@@ -103,7 +103,13 @@ const [loading , setLoading] = useState(false)
         }
 
         const response = await createCustomer(formData);
-          Swal.fire('Customer added successfully!');
+        if(response?.error){
+            Swal.fire(`Error  ${response?.error?.errors[0].message}`);
+        }
+       else{
+        Swal.fire('Customer added successfully!');
+       }
+        
         setLoading(false)
         nevigate('/customers')
     };
