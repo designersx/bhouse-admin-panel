@@ -101,7 +101,7 @@ comments.forEach((comment) => {
                 className="whatsapp-comment-user-avatar"
               />
               <div>
-                <p className="whatsapp-comment-author">{c.user?.firstName}{c.user?.userRole}</p>
+                <p className="whatsapp-comment-author">{c.user?.firstName} <span className='comment-user-role'>({c.user.userRole})</span></p>
               </div>
             </div>
 

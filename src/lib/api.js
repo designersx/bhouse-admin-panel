@@ -1,12 +1,12 @@
 import axios from 'axios'
-export const url = 'http://localhost:5000/api' || ""
-// export const url = 'https://bhouse.truet.net/api' || ""
+// export const url = 'http://localhost:5000/api' || ""
+export const url = 'https://bhouse.truet.net/api' || ""
 
 
 
-// export const url2 = 'https://bhouse.truet.net' || ""
+export const url2 = 'https://bhouse.truet.net' || ""
 
-export const url2 = 'http://localhost:5000' || ""
+// export const url2 = 'http://localhost:5000' || ""
 
 export const registerUser = async (userData) => {
   try {
@@ -307,4 +307,18 @@ export const deleteDocument = async (documentId) => {
       console.error("Error deleting document:", error);
       throw error;
   }
+};
+
+
+export const addCustomerComment = async (customerId, commentData) => {
+  const response = await fetch(`${url}/customer/addComment/${customerId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(commentData),
+  });
+  return response.json();
+};
+export const getCustomerComments = async (customerId) => {
+  const response = await fetch(`${url}/customer/getComment/${customerId}`);
+  return response.json();
 };

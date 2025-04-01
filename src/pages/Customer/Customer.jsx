@@ -1,34 +1,40 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getCustomers, deleteCustomer } from "../../lib/api"; 
+import { getCustomers, deleteCustomer , addCustomerComment , getCustomerComments} from "../../lib/api"; 
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash, FaEye   } from "react-icons/fa";
 import { MdDelete } from "react-icons/md"
 import useRolePermissions from "../../hooks/useRolePermissions";
-// import { FaEye } from "react-icons/fa";
-import { url } from "../../lib/api";
+import { FaCommentAlt } from "react-icons/fa";
+import { url , url2 } from "../../lib/api";
 import Loader from "../../components/Loader";
 import Swal from "sweetalert2";
+import { FaBullseye } from "react-icons/fa6";
+import Offcanvas from "../../components/OffCanvas/OffCanvas";
+import { FaTelegramPlane } from 'react-icons/fa';
 const Customer = () => {
+ 
     const [customers, setCustomers] = useState([]);
     const [filteredCustomers, setFilteredCustomers] = useState([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [customersPerPage] = useState(8);
+    const [customerId , setCustomerId] = useState()
     const [projectCounts, setProjectCounts] = useState({}); 
+  
+
     const [loader , setLoading] = useState(true)
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const roleId = user?.user?.roleId;
     const { rolePermissions } = useRolePermissions(roleId);
-
+    
     const canCreate = rolePermissions?.Customer?.create;
     const canEdit = rolePermissions?.Customer?.edit;
     const canDelete = rolePermissions?.Customer?.delete;
     const canView = rolePermissions?.Customer?.view;
-
 
     useEffect(() => {
         const fetchCustomersAndProjects = async () => {
@@ -105,6 +111,74 @@ const Customer = () => {
         }
     };
 
+      const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
+    
+      const openOffcanvas = () => {
+        setIsOffcanvasOpen(true);
+      };
+    
+      const closeOffcanvas = () => {
+        setIsOffcanvasOpen(false);
+      };
+      const [comments, setComments] = useState([]);
+      const [newComment, setNewComment] = useState("");
+      useEffect(() => {
+        if (customerId) {
+          fetchComments();
+        }
+      }, [customerId]);
+    
+      const fetchComments = async () => {
+        try {
+          const data = await getCustomerComments(customerId);
+          // Sort comments by createdAt in descending order (latest first)
+          data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setComments(data); // Store sorted comments in state
+        } catch (error) {
+          console.error("Error fetching comments:", error);
+        }
+      };
+    
+      const handleAddComment = async () => {
+        if (!newComment.trim()) return; // Prevent empty comments
+        let data = JSON.parse(localStorage.getItem("user"))
+        let userId = data?.user?.id
+        let userRole = data?.user?.userRole
+        const commentData = {
+          comment: newComment,
+          userId,
+          userRole,
+        };
+    
+        try {
+          await addCustomerComment(customerId, commentData);
+          setNewComment(""); // Clear input
+          fetchComments(); // Refresh comments
+        } catch (error) {
+          console.error("Error adding comment:", error);
+        }
+      };
+    
+      // Group comments by date (show actual date, not "Today")
+      const groupCommentsByDate = () => {
+        const grouped = {};
+        comments.forEach((comment) => {
+          const commentDate = new Date(comment.createdAt);
+          const today = new Date();
+    
+          // Format the date to a readable string (e.g., "Apr 1, 2025")
+          const dateKey = commentDate.toLocaleDateString();
+    
+          if (!grouped[dateKey]) {
+            grouped[dateKey] = [];
+          }
+          grouped[dateKey].push(comment);
+        });
+    
+        return grouped;
+      };
+    
+      const groupedComments = groupCommentsByDate();
     return (
         <Layout>
             <div className="roles-container">
@@ -186,7 +260,7 @@ const Customer = () => {
                                             {canView && (
                                                 <FaEye
                                                 style={{
-                                                    color : "black",
+                                                    color : "#004680",
                                                     fontSize : "23px"
                                                 }}
                                                     
@@ -194,6 +268,18 @@ const Customer = () => {
                                                     onClick={() => navigate(`/view-customer/${customer.id}`)}
                                                 />
                                             )}
+
+                                              <FaCommentAlt  style={{
+                                                    color : "#004680",
+                                                    fontSize : "19px"
+                                                }}
+                                                title="Comments" 
+                                                
+                                                onClick={()=>{ openOffcanvas() ;
+                                                    setCustomerId(customer.id);
+                                                }
+                                                   
+                                                }/>
                                         </td>
                                     )}
 
@@ -240,6 +326,61 @@ const Customer = () => {
                     </div>
                 )}
             </div>
+
+{/* comments offcanvas */}
+
+<Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas}>
+<div className="right-panel">
+        <div className="comments-list">
+          {/* Display grouped comments by date */}
+          {Object.keys(groupedComments).map((date) => (
+            <div key={date} className="comment-date-group">
+              <p>{date}</p> {/* Display actual date */}
+              {groupedComments[date].reverse().map((comment) => ( // Reverse order to ensure latest comment at the bottom
+                <div key={comment.id}>
+                  <div className="whatsapp-comment-box">
+                    <div className="whatsapp-comment-user-info">
+                      <img
+                        src={`${url2}/${comment?.users?.profileImage}` || `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+                        alt="User"
+                        className="whatsapp-comment-user-avatar"
+                      />
+                      <div>
+                        <p className="whatsapp-comment-author">
+                          {comment?.users?.firstName} 
+                          <span className="comment-user-role"> ({comment?.users?.userRole})</span>
+                        </p>
+                      </div>
+                    </div>
+                    <p className="whatsapp-comment-text">{comment.comment}</p>
+                    <p className="whatsapp-comment-meta">
+                      {new Date(comment.createdAt).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="whatsapp-comment-form">
+        <textarea
+          placeholder="Write your comment..."
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          className="whatsapp-comment-input"
+        />
+        <button onClick={handleAddComment} className="whatsapp-submit-btn">
+          <FaTelegramPlane />
+        </button>
+      </div>
+   
+    
+      </Offcanvas>
+
+
+
         </Layout>
     );
 };
