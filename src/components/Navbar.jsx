@@ -4,7 +4,7 @@ import { CiLogout } from 'react-icons/ci';
 import { Link, useNavigate } from 'react-router-dom';
 import { IoNotificationsOutline } from "react-icons/io5";
 import Swal from 'sweetalert2';
-
+import { CgProfile } from "react-icons/cg";
 const Navbar = ({ isLogin }) => {
   const navigate = useNavigate();
 
@@ -51,6 +51,7 @@ const Navbar = ({ isLogin }) => {
         {!isLogin && (
           <>
             <li><IoNotificationsOutline /></li>
+            <CgProfile onClick={()=>navigate('/profile')} />
             <Link to="/settings"><FiSettings className='setting' /></Link>
             <li onClick={handleLogout}>
               <Link><CiLogout className='logout' /></Link>
