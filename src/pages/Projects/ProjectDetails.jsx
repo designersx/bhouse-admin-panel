@@ -321,7 +321,9 @@ const ProjectDetails = () => {
       productImages: prev.productImages.filter((_, i) => i !== index)
     }));
   };
-    
+
+  
+ 
   return (
     <Layout>
       <ToastContainer/>
@@ -375,13 +377,14 @@ const ProjectDetails = () => {
 
 
 .map((docCategory, idx) => (
-      <div key={idx} className="document-section">
+      <div key={idx} className="  -section">
         <h3>{docCategory.title}</h3>
         <input
       type="file"
       multiple
       onChange={(e) => handleFileUpload(e, docCategory.category)}
     />
+
      {selectedFiles[docCategory.category]?.length > 0 && (
     <div className="file-preview-section">
       <h4>Files to be uploaded:</h4>
@@ -426,6 +429,7 @@ const ProjectDetails = () => {
             alert("Download failed, please try again.");
           }
         };
+
 
         return (
           <div key={idx} className="file-item-enhanced">

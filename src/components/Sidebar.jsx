@@ -54,9 +54,9 @@ console.log({rolePermissions})
           </li>
         ) : null}
 
-        <li className={location.pathname === '/profile' ? 'active' : ''}>
+        {/* <li className={location.pathname === '/profile' ? 'active' : ''}>
           <Link to="/profile"><FiUser /> Profile</Link>
-        </li>
+        </li> */}
 
         {loading || canViewRoles ? (
           <li className={location.pathname === '/roles' ? 'active' : ''}>
