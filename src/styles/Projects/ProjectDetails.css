@@ -1,7 +1,6 @@
 /* ---------- General Layout ---------- */
 .project-details-page .project-details-header {
   text-align: center;
-  margin-top: 40px;
 }
 
 .project-details-page .project-details-header h1 {
@@ -300,87 +299,239 @@
   color: #666;
 }
 
-/* Unique wrapper to scope all project details CSS */
-.project-details-page {
-  all: initial;
-  line-height: 1.5;
-  color: #222;
-  background: #f4f6f8;
-  padding: 40px 20px;
-  box-sizing: border-box;
-}
-.button1{
-  display: flex;
-  justify-content: space-between;
-}
-.punch-list-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-.punch-card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem;
-  background-color: #f9f9f9;
-}
-.punch-image {
-  width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  margin-top: 0.5rem;
-  border-radius: 4px;
-}
-.punch-file-preview {
-  margin-top: 0.5rem;
-}
-
-.punch-image {
-  max-width: 100%;
-  max-height: 200px;
-  object-fit: contain;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-
-.punch-pdf {
-  width: 100%;
-  height: 300px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+/* Modal Styling */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 1000;
 }
+
 .modal-content {
-  background: white;
+  background: #fff;
   padding: 2rem;
-  border-radius: 8px;
-  width: 400px;
-  max-height: 90vh;
-  overflow-y: auto;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+  animation: fadeInScale 0.3s ease;
 }
+
+.modal-content h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content label {
+  font-weight: 600;
+  margin-top: 1rem;
+  display: block;
+}
+
 .modal-content input,
 .modal-content textarea,
 .modal-content select {
   width: 100%;
-  margin-bottom: 1rem;
+  padding: 0.5rem;
+  margin-top: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
+
 .modal-actions {
+  margin-top: 1.5rem;
   display: flex;
   justify-content: space-between;
 }
+
+.submit-btn, .cancel-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
 .cancel-btn {
-  background: #ccc;
-  color: black;
-  padding: 0.5rem 1rem;
+  background-color: #ccc;
+}
+
+/* Punch List Grid */
+.punch-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Compact Beautiful Cards */
+.punch-card-small {
+  background: #fff;
+  border: 1px solid #e1e1e1;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.punch-card-small:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
+}
+
+.punch-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.punch-card-top h4 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Status Badge Styling */
+.status-badge {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: #fff;
+}
+
+/* Color variants */
+.status-badge.pending {
+  background-color: #f0ad4e; /* yellow/orange */
+}
+
+.status-badge.resolved {
+  background-color: #28a745; /* green */
+}
+
+.status-badge.rejected {
+  background-color: #dc3545; /* red */
+}
+
+
+/* Mini Info */
+.punch-mini-info {
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.punch-mini-info p {
+  margin: 0.25rem 0;
+}
+
+/* Attachments */
+.punch-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.punch-attachment-preview {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.file-mini-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-mini-pdf {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Status Section */
+.status-control {
+  display: flex;
+
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.status-dropdown {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+}
+
+.update-status-btn {
+  background-color: #28a745;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.image-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.preview-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.remove-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 5;
 }
