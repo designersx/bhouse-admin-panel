@@ -26,6 +26,12 @@ const ProjectDetails = () => {
   const [punchList, setPunchList] = useState([]);
   const [showPunchModal, setShowPunchModal] = useState(false);
   const [statusMap, setStatusMap] = useState({});
+  const [selectedFiles, setSelectedFiles] = useState({
+    proposals: [],
+    floorPlans: [],
+    otherDocuments: []
+  });
+  
   const [newIssue, setNewIssue] = useState({
     title: '',
     issueDescription: '',
@@ -192,21 +198,42 @@ const ProjectDetails = () => {
   const removeRow = (index) => {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
-  const handleFileUpload = async (event, category) => {
+  const handleFileUpload = (e, category) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => ({
+      ...prev,
+      [category]: [...prev[category], ...files]
+    }));
+  };
+  const removeSelectedFile = (category, index) => {
+    setSelectedFiles(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index)
+    }));
+  };
+  const uploadSelectedFiles = async (category) => {
+    if (!selectedFiles[category].length) return;
+  
     const formData = new FormData();
-    for (const file of event.target.files) {
-      formData.append('files', file);
-    }
+    selectedFiles[category].forEach(file => formData.append('files', file));
+    formData.append('category', category);
   
     try {
       await axios.post(`${url}/projects/${projectId}/upload-files?category=${category}`, formData);
       toast.success("Files uploaded!");
-      window.location.reload(); 
-    } catch (err) {
-      toast.error("Failed to upload files");
-      console.error(err);
+  
+      // Clear selected files
+      setSelectedFiles(prev => ({ ...prev, [category]: [] }));
+  
+      // Refresh project data
+      const res = await axios.get(`${url}/projects/${projectId}`);
+      setProject(res.data);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Upload failed.");
     }
   };
+    
   
   const handleProjectFileUpdate = async (filePath, category) => {
     const updatedCategoryFiles = project[category].filter(f => f !== filePath);
@@ -357,94 +384,105 @@ const ProjectDetails = () => {
       multiple
       onChange={(e) => handleFileUpload(e, docCategory.category)}
     />
-   
-        {docCategory.files?.length > 0 ? (
-          <div className="uploaded-files">
-            {docCategory.files.map((filePath, idx) => {
-              const fileName =filePath.split('/').pop();
-              const fileUrl = filePath.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
+     {selectedFiles[docCategory.category]?.length > 0 && (
+    <div className="file-preview-section">
+      <h4>Files to be uploaded:</h4>
+      <ul className="preview-list">
+        {selectedFiles[docCategory.category].map((file, i) => (
+          <li key={i} className="preview-item">
+            {file.name}
+            <span className="remove-preview" onClick={() => removeSelectedFile(docCategory.category, i)}>×</span>
+          </li>
+        ))}
+      </ul>
+      <button className="upload-btn" onClick={() => uploadSelectedFiles(docCategory.category)}>Upload</button>
+    </div>
+  )}
+ {(() => {
+  const files = Array.isArray(docCategory.files)
+    ? docCategory.files
+    : typeof docCategory.files === 'string'
+      ? JSON.parse(docCategory.files)
+      : [];
+
+  return files.length > 0 ? (
+    <div className="uploaded-files">
+      {files.map((filePath, idx) => {
+        const fileName = filePath.split('/').pop();
+        const fileUrl = filePath.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
+        const handleDownload = async () => {
+          try {
+            const response = await fetch(fileUrl);
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+          } catch (error) {
+            console.error("Download failed", error);
+            alert("Download failed, please try again.");
+          }
+        };
 
 
-              const handleDownload = async () => {
-                try {
-                  const response = await fetch(fileUrl);
-                  const blob = await response.blob();
-                  const downloadUrl = window.URL.createObjectURL(blob);
-                  const link = document.createElement('a');
-                  link.href = downloadUrl;
-                  link.download = fileName;
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                  window.URL.revokeObjectURL(downloadUrl);
-                } catch (error) {
-                  console.error("Download failed", error);
-                  alert("Download failed, please try again.");
-                }
-              };
-
-              return (
-                <div key={idx} className="file-item-enhanced">
-                  <span className="file-name-enhanced">{fileName}</span>
-                  <div className="file-actions">
-  <button
-    className="file-action-btn"
-    onClick={() => window.open(fileUrl, '_blank')}
-    title="View"
-  >
-    <FaEye />
-  </button>
-  <button
-    className="file-action-btn"
-    onClick={handleDownload}
-    title="Download"
-  >
-    <FaDownload />
-  </button>
-  <button
-  className="file-action-btn"
-  title="Delete"
-  onClick={() => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "Do you want to remove this file?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, remove it!',
-      cancelButtonText: 'Cancel',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        await handleProjectFileUpdate(filePath, docCategory.category);
-      }
-    });
-  }}
->
-  <MdDelete />
-</button>
-<button 
-  className="file-action-btn"
-  title="Comment"
-  onClick={() => navigate(`/project/${projectId}/file-comments`, {
-    state: {
-      filePath,
-      category: docCategory.category,
-    }
-  })}
->
-  <FaComment />
-</button>
-
-
-
-</div>
-
-                </div>
-              );
-            })}
+        return (
+          <div key={idx} className="file-item-enhanced">
+            <span className="file-name-enhanced">{fileName}</span>
+            <div className="file-actions">
+              <button className="file-action-btn" onClick={() => window.open(fileUrl, '_blank')} title="View">
+                <FaEye />
+              </button>
+              <button className="file-action-btn" onClick={handleDownload} title="Download">
+                <FaDownload />
+              </button>
+              <button
+                className="file-action-btn"
+                title="Delete"
+                onClick={() => {
+                  Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Do you want to remove this file?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, remove it!',
+                    cancelButtonText: 'Cancel',
+                  }).then(async (result) => {
+                    if (result.isConfirmed) {
+                      await handleProjectFileUpdate(filePath, docCategory.category);
+                    }
+                  });
+                }}
+              >
+                <MdDelete />
+              </button>
+              <button 
+                className="file-action-btn"
+                title="Comment"
+                onClick={() => navigate(`/project/${projectId}/file-comments`, {
+                  state: {
+                    filePath,
+                    category: docCategory.category,
+                  }
+                })}
+              >
+                <FaComment />
+              </button>
+            </div>
           </div>
-        ) : (
-          <p>No documents uploaded.</p>
-        )}
+        );
+      })}
+    </div>
+  ) : (
+    <p>No documents uploaded.</p>
+  );
+})()}
+
       </div>
     ))}
   </div>
@@ -618,6 +656,7 @@ const ProjectDetails = () => {
       <textarea
         value={newIssue.issueDescription}
         onChange={(e) => setNewIssue({ ...newIssue, issueDescription: e.target.value })}
+        minLength={50}
         maxLength={200}
       />
 
@@ -661,6 +700,28 @@ const ProjectDetails = () => {
           onClick={async () => {
             try {
               const formData = new FormData();
+              const stored = JSON.parse(localStorage.getItem('user'));
+
+const storedUser = stored?.user;
+const storedCustomer = JSON.parse(localStorage.getItem('customer'));
+
+let createdById = '';
+let createdByType = '';
+
+if (storedUser?.id) {
+  createdById = storedUser.id;
+  createdByType = 'user';
+} else if (storedCustomer?.id) {
+  createdById = storedCustomer.id;
+  createdByType = 'customer';
+} else {
+  toast.error("User not logged in");
+  return;
+}
+
+formData.append('createdById', createdById);
+formData.append('createdByType', createdByType);
+
               formData.append('title', newIssue.title);
               formData.append('issueDescription', newIssue.issueDescription);
               formData.append('projectItemId', newIssue.projectItemId);
@@ -761,11 +822,18 @@ const ProjectDetails = () => {
                       </a>
                       
                       )}
-                    </div>
+                    </div>                  
                   );
                 })}
-              </div>
+              </div>  
             )}
+             <p><strong>Created At:</strong> {new Date(issue.createdAt).toLocaleString()}</p>
+
+<p><strong>Created By:</strong> {
+  issue.createdByType === 'user'
+    ? `${issue.creatorUser?.firstName || ''} ${issue.creatorUser?.lastName || ''}`
+    : issue.creatorCustomer?.full_name || 'N/A'
+}</p>
           </div>
         );
       })}
