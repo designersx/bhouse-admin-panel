@@ -25,6 +25,7 @@ const ProjectDetails = () => {
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
   const [showPunchModal, setShowPunchModal] = useState(false);
+  const [statusMap, setStatusMap] = useState({});
   const [newIssue, setNewIssue] = useState({
     title: '',
     issueDescription: '',
@@ -51,10 +52,16 @@ const ProjectDetails = () => {
             : []
         }));
         setPunchList(parsed);
+        const initialStatus = {};
+        parsed.forEach(item => {
+          initialStatus[item.id] = item.status || 'Pending';
+        });
+        setStatusMap(initialStatus);
       } catch (err) {
         console.error("Error fetching punch list:", err);
       }
     };
+    
   
     fetchPunchList();
   }, [projectId]);
@@ -246,7 +253,48 @@ const ProjectDetails = () => {
     }));
   };
   
+  const handlePunchStatusUpdate = async (id, status) => {
+    try {
+      await axios.put(`${url}/punch-list/${id}/status`, { status });
+      toast.success("Punch List status updated!");
   
+      // Refresh punch list after update
+      const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
+      const parsed = res.data.map(issue => ({
+        ...issue,
+        productImages: typeof issue.productImages === 'string'
+          ? JSON.parse(issue.productImages)
+          : Array.isArray(issue.productImages)
+          ? issue.productImages
+          : []
+      }));
+      setPunchList(parsed);
+    } catch (err) {
+      console.error("Status update failed:", err);
+      toast.error("Failed to update punch list status.");
+    }
+  };
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const totalFiles = [...newIssue.productImages, ...files];
+  
+    if (totalFiles.length > 5) {
+      toast.error("You can only upload up to 5 images.");
+      return;
+    }
+  
+    setNewIssue((prev) => ({
+      ...prev,
+      productImages: totalFiles,
+    }));
+  };
+  const removeImage = (index) => {
+    setNewIssue((prev) => ({
+      ...prev,
+      productImages: prev.productImages.filter((_, i) => i !== index)
+    }));
+  };
+    
   return (
     <Layout>
       <ToastContainer/>
@@ -549,7 +597,7 @@ const ProjectDetails = () => {
   <div className="project-info-card">
     <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
   <button className="ledbutton" onClick={() => setShowPunchModal(true)}>
-    + Add Issue
+    + Add
   </button>
 </div>
 {showPunchModal && (
@@ -560,12 +608,14 @@ const ProjectDetails = () => {
       <input
         value={newIssue.title}
         onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+        maxLength={30}
       />
 
       <label>Description</label>
       <textarea
         value={newIssue.issueDescription}
         onChange={(e) => setNewIssue({ ...newIssue, issueDescription: e.target.value })}
+        maxLength={200}
       />
 
       <label>Item (Category)</label>
@@ -581,11 +631,26 @@ const ProjectDetails = () => {
 
       <label>Upload Files</label>
       <input
-        type="file"
-        multiple
-        accept="image/*,.pdf"
-        onChange={(e) => setNewIssue({ ...newIssue, productImages: e.target.files })}
-      />
+  type="file"
+  multiple
+  accept="image/*"
+  onChange={handleImageSelect}
+/>
+{newIssue.productImages.length > 0 && (
+  <div className="image-preview-grid">
+    {newIssue.productImages.map((img, index) => {
+      const imageUrl = typeof img === 'string' ? img : URL.createObjectURL(img);
+
+      return (
+        <div key={index} className="preview-wrapper">
+          <img src={imageUrl} alt={`preview-${index}`} className="preview-img" />
+          <span className="remove-btn" onClick={() => removeImage(index)}>×</span>
+        </div>
+      );
+    })}
+  </div>
+)}
+
 
       <div className="modal-actions">
         <button
@@ -597,6 +662,7 @@ const ProjectDetails = () => {
               formData.append('issueDescription', newIssue.issueDescription);
               formData.append('projectItemId', newIssue.projectItemId);
               formData.append('projectId', projectId);
+              formData.append('category', projectItems.find(p => p.id == newIssue.projectItemId)?.itemName || '');
               for (let file of newIssue.productImages) {
                 formData.append('productImages', file);
               }
@@ -631,47 +697,76 @@ const ProjectDetails = () => {
     {punchList.length === 0 ? (
       <p>No punch list issues found.</p>
     ) : (
-      <div className="punch-list-grid">
-        {punchList.map((issue, idx) => (
-          <div className="punch-card" key={issue.id || idx}>
-            <h4>{issue.title}</h4>
-            <p><strong>Category:</strong> {issue.category}</p>
-            <p><strong>Description:</strong> {issue.issueDescription}</p>
-            {issue.item?.itemName && (
-             <p><strong>Related Item:</strong> {issue.item?.itemName}</p>
-            )}
-            {issue.productImages?.length > 0 && (
-              <div className="punch-images">
-                {Array.isArray(issue.productImages) &&
-  issue.productImages.map((file, i) => {
-    const isPDF = file.toLowerCase().endsWith('.pdf');
-    const fileUrl = `${url2}/${file}`;
+      <div className="punch-list-grid compact-style">
+      {punchList.map((issue, idx) => {
+        const files = Array.isArray(issue.productImages) ? issue.productImages : [];
+        const currentStatus = statusMap[issue.id] || 'Pending';
     
-    return (
-      <div key={i} className="punch-file-preview">
-        {isPDF ? (
-          <iframe
-            src={fileUrl}
-            title={`PDF Preview ${i}`}
-            className="punch-pdf"
-          />
-        ) : (
-          <img
-            src={fileUrl}
-            alt={`Product Image ${i}`}
-            className="punch-image"
-          />
-        )}
-      </div>
-    );
-  })}
+        return (
+          <div className="punch-card-small" key={issue.id || idx}>
+            <div className="punch-card-top">
+              <h4>{issue.title}</h4>
+              <span className={`status-badge ${issue.status?.toLowerCase() || 'pending'}`}>
+  {issue.status || 'Pending'}
+</span>
 
-
+            </div>
+    
+            <div className="punch-mini-info">
+              <p><strong>Item:</strong> {issue.item?.itemName || 'N/A'}</p>
+              <p><strong>Description:</strong> {issue.issueDescription}</p>
+            </div>
+    
+            {/* Status Dropdown + Update Button */}
+            <div className="status-control">
+              <select
+                className="status-dropdown"
+                value={currentStatus}
+                onChange={(e) =>
+                  setStatusMap((prev) => ({ ...prev, [issue.id]: e.target.value }))
+                }
+              >
+                <option value="Pending">Pending</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button
+                className="update-status-btn"
+                onClick={() => handlePunchStatusUpdate(issue.id, currentStatus)}
+              >
+                Save
+              </button>
+            </div>
+    
+            {/* Attachments */}
+            {files.length > 0 && (
+              <div className="punch-attachments">
+                {files.map((file, i) => {
+                  const isPDF = file.toLowerCase().endsWith('.pdf');
+                  const fileUrl = `${url2}/${file}`;
+                  return (
+                    <div key={i} className="punch-attachment-preview">
+                      {isPDF ? (
+                        <iframe src={fileUrl} title={`PDF-${i}`} className="file-mini-pdf" />
+                      ) : (
+                        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={fileUrl}
+                          alt={`Img-${i}`}
+                          className="file-mini-img"
+                        />
+                      </a>
+                      
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
-        ))}
-      </div>
+        );
+      })}
+    </div>
     )}
   </div>
 )}
