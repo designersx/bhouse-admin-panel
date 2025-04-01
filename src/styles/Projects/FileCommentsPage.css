@@ -149,6 +149,18 @@
   overflow-y: scroll;
   min-height: 500px;
 }
+.right-panel::-webkit-scrollbar {
+  width: 5px; /* Scroll bar width ko patla karne ke liye */
+}
+
+.right-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3); /* Scroll bar ka color */
+  border-radius: 10px; /* Round edges */
+}
+
+.right-panel::-webkit-scrollbar-track {
+  background: transparent; /* Scroll track ko transparent karne ke liye */
+}
 
 /* Comments List */
 .comments-list {
