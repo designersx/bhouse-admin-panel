@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import { FaBullseye } from "react-icons/fa6";
 import Offcanvas from "../../components/OffCanvas/OffCanvas";
 import { FaTelegramPlane } from 'react-icons/fa';
+
 const Customer = () => {
   const commentsEndRef = useRef(null)
     const [customers, setCustomers] = useState([]);
