@@ -16,8 +16,8 @@
     position: fixed;
     top: 0;
     right: -100%; /* Initially hidden */
-    max-width: 450px;
-    min-width: 350px;
+    width: 450px;
+    /* min-width: 350px; */
     height: 100%;
     background: white;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);

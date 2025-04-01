@@ -148,18 +148,18 @@ const Roles = () => {
                  <td>{role.description || "N/A"}</td>
                  {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && (
                    <td className="actions">
-                     {rolePermissions?.Roles?.edit && (
-                       <FaEdit
-                       style={{
-                        color: "#004680" ,
-                         fontSize : "24px"
-                     }}
-                         className="edit-icon"
-                         title="Edit"
-                         onClick={() => navigate(`/edit-role/${role.id}`)}
-                       />
-                     )}
-                     {rolePermissions?.Roles?.delete && (
+                  {rolePermissions?.Roles?.edit && role.title !== "Super Admin" ? (
+  <FaEdit
+    style={{
+      color: "#004680",
+      fontSize: "24px",
+    }}
+    className="edit-icon"
+    title="Edit"
+    onClick={() => navigate(`/edit-role/${role.id}`)}
+  />
+) : "NA"}
+                     {/* {rolePermissions?.Roles?.delete && (
                        <FaTrash
                        style={{
                         color: "#004680" ,
@@ -168,7 +168,7 @@ const Roles = () => {
                          title="Delete"
                          onClick={() => handleDelete(role.id)}
                        />
-                     )}
+                     )} */}
                    </td>
                  )}
 
