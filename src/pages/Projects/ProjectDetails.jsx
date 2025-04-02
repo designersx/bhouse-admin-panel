@@ -6,13 +6,13 @@ import '../../styles/Projects/ProjectDetails.css';
 import { url, url2} from '../../lib/api';
 import Loader from '../../components/Loader'
 import Swal from 'sweetalert2';
-
 import { ToastContainer } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
 import { FaEye, FaComment  ,  FaDownload } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import BackButton from '../../components/BackButton';
 import { MdEdit } from 'react-icons/md';
+import Offcanvas from '../../components/OffCanvas/OffCanvas';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -27,6 +27,13 @@ const ProjectDetails = () => {
   const [showPunchModal, setShowPunchModal] = useState(false);
   const [statusMap, setStatusMap] = useState({});
   const [loadingDoc , setLoadingDoc] = useState(false)
+  const [invoiceFiles, setInvoiceFiles] = useState([]);
+  const [selectedInvoiceFiles, setSelectedInvoiceFiles] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [offcanvasOpen, setOffcanvasOpen] = useState(false);
+  const [userComments, setUserComments] = useState([]);
+  const [newCommentText, setNewCommentText] = useState('');
+  
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -40,6 +47,42 @@ const ProjectDetails = () => {
     productImages: [],
   });
   const [projectItems, setProjectItems] = useState([]);
+  const fetchUserComments = async (toUserId) => {
+    try {
+      const res = await axios.get(`${url}/user-comments/${projectId}/${toUserId}`);
+      setUserComments(res.data);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+    }
+  };
+  
+  const handleOpenComments = async (user) => {
+    setSelectedUser(user);
+    await fetchUserComments(user.id);
+    setOffcanvasOpen(true);
+  };
+  
+  const handleAddComment = async () => {
+    const stored = JSON.parse(localStorage.getItem('user'));
+    const fromUserId = stored?.user?.id;
+  
+    if (!newCommentText.trim()) return;
+  
+    try {
+      const res = await axios.post(`${url}/user-comments`, {
+        projectId,
+        fromUserId,
+        toUserId: selectedUser.id,
+        comment: newCommentText,
+      });
+  
+      setUserComments(prev => [res.data, ...prev]);
+      setNewCommentText('');
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    }
+  };
+  
   useEffect(() => {
     axios.get(`${url}/items/${projectId}`)
       .then(res => setProjectItems(res.data))
@@ -171,6 +214,11 @@ const ProjectDetails = () => {
         fetchedProject.otherDocuments = Array.isArray(fetchedProject.otherDocuments)
           ? fetchedProject.otherDocuments
           : JSON.parse(fetchedProject.otherDocuments || '[]');
+          fetchedProject.invoice = Array.isArray(fetchedProject.invoice)
+          ? fetchedProject.invoice
+          : JSON.parse(fetchedProject.invoice || '[]');
+        
+        setInvoiceFiles(fetchedProject.invoice);
         
 
         setProject(fetchedProject);
@@ -351,7 +399,7 @@ setLoadingDoc(false)
  : 
  <>
   <div className="tabs">
-        {['overview', 'documents', 'team', 'items', 'punchlist','settings'].map(tab => (
+        {['overview', 'documents', 'team', 'items', 'punchlist','invoice','settings'].map(tab => (
           <button
             key={tab}
             className={activeTab === tab ? 'tab active' : 'tab'}
@@ -511,7 +559,7 @@ return files.length > 0 ? (
 <h2>Assigned Team</h2>
 {project.assignedTeamRoles.length > 0 ? (
 <div className="team-grid">
-  {project.assignedTeamRoles.map((roleGroup, index) => (
+  {project.assignedTeamRoles.map((roleGroup, index) => ( 
     <div key={index} className="role-card">
       <h3 className="role-title">{roleGroup.role}</h3>
       {roleGroup.users.map((userId) => {
@@ -526,6 +574,13 @@ return files.length > 0 ? (
             <div className="user-info-horizontal">
               <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
               <span className="user-email-horizontal">{user.email}</span>
+              <button
+  className="comment-btn"
+  onClick={() => handleOpenComments(user)}
+>
+  Comment
+</button>
+
             </div>
           </div>
         ) : null;
@@ -538,6 +593,31 @@ return files.length > 0 ? (
 )}
 </div>
 )}
+<Offcanvas isOpen={offcanvasOpen} closeOffcanvas={() => setOffcanvasOpen(false)}>
+  <h3>Comments for {selectedUser?.firstName}</h3>
+
+  <div className="comment-section">
+    <textarea
+      placeholder="Write a comment..."
+      value={newCommentText}
+      onChange={(e) => setNewCommentText(e.target.value)}
+    ></textarea>
+    <button className="submit-btn" onClick={handleAddComment}>Post</button>
+  </div>
+
+  <div className="comment-list">
+    {userComments.length === 0 ? (
+      <p>No comments yet.</p>
+    ) : (
+      userComments.map((c, i) => (
+        <div key={i} className="comment-item">
+          <strong>{c.fromUser?.firstName}:</strong> {c.comment}
+          <div className="comment-time">{new Date(c.createdAt).toLocaleString()}</div>
+        </div>
+      ))
+    )}
+  </div>
+</Offcanvas>
 
 
 
@@ -857,8 +937,161 @@ issue.createdByType === 'user'
 )}
 </div>
 )}
+{activeTab === 'invoice' && (
+  <div className="project-info-card">
+    <h2>Invoices</h2>
 
+    <input
+      type="file"
+      multiple
+      accept=".pdf"
+      onChange={(e) =>
+        setSelectedInvoiceFiles(Array.from(e.target.files))
+      }
+    />
 
+    {selectedInvoiceFiles.length > 0 && (
+      <div  className="file-preview-section">
+        <ul className="preview-list">
+          {selectedInvoiceFiles.map((file, index) => (
+            <li className="preview-item" key={index}>
+              {file.name}
+              <button
+                type="button"
+                className="remove-preview"
+                onClick={() =>
+                  setSelectedInvoiceFiles((prev) =>
+                    prev.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="upload-btn"
+          onClick={async () => {
+            const formData = new FormData();
+            selectedInvoiceFiles.forEach((file) =>
+              formData.append("invoice", file)
+            );
+
+            try {
+              const res = await fetch(`${url}/projects/${projectId}`, {
+                method: "PUT",
+                body: formData,
+              });
+
+              if (res.status === 200) {
+                toast.success("Invoices uploaded!");
+                const updated = await axios.get(`${url}/projects/${projectId}`);
+                const parsed = Array.isArray(updated.data.invoice)
+                  ? updated.data.invoice
+                  : typeof updated.data.invoice === "string"
+                  ? JSON.parse(updated.data.invoice)
+                  : [];
+                setProject(updated.data);
+                setInvoiceFiles(parsed);
+                setSelectedInvoiceFiles([]);
+              } else {
+                toast.error("Failed to upload.");
+              }
+            } catch (err) {
+              console.error("Upload error:", err);
+              toast.error("Upload failed.");
+            }
+          }}
+        >
+          Upload Invoices
+        </button>
+      </div>
+    )}
+
+    <h3>Uploaded Invoices</h3>
+    {Array.isArray(invoiceFiles) && invoiceFiles.length > 0 ? (
+      <ul className="uploaded-files">
+        {invoiceFiles.map((file, idx) => {
+          const fileName = file.split("/").pop();
+          const fileUrl = file.startsWith("uploads") ? `${url2}/${file}` : file;
+
+          return (
+            <li key={idx} className="file-item-enhanced">
+              <span className="file-name-enhanced">{fileName}</span>
+              <div className="file-actions">
+                <button className="add-user-btn" onClick={() => window.open(fileUrl, "_blank")}>
+                  <FaEye />
+                </button>
+                <button
+                  className="add-user-btn"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(fileUrl);
+                      const blob = await response.blob();
+                      const downloadUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = downloadUrl;
+                      link.download = fileName;
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(downloadUrl);
+                    } catch (err) {
+                      toast.error("Download failed");
+                    }
+                  }}
+                >
+                  <FaDownload />
+                </button>
+                <button
+                  className="add-user-btn"
+                  onClick={async () => {
+                    const result = await Swal.fire({
+                      title: "Are you sure?",
+                      text: "Do you want to remove this invoice file?",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonText: "Yes, delete it!",
+                      cancelButtonText: "Cancel",
+                    });
+
+                    if (result.isConfirmed) {
+                      try {
+                        const formData = new FormData();
+                        formData.append("removedFiles", JSON.stringify([file]));
+                        formData.append("invoice", JSON.stringify(invoiceFiles.filter(f => f !== file)));
+
+                        const res = await fetch(`${url}/projects/${projectId}`, {
+                          method: "PUT",
+                          body: formData,
+                        });
+
+                        if (res.status === 200) {
+                          toast.success("Invoice deleted!");
+                          setInvoiceFiles(prev => prev.filter(f => f !== file));
+                        } else {
+                          toast.error("Failed to delete invoice.");
+                        }
+                      } catch (error) {
+                        toast.error("Delete request failed.");
+                        console.error(error);
+                      }
+                    }
+                  }}
+                >
+                  <MdDelete />
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    ) : (
+      <p>No invoice files uploaded yet.</p>
+    )}
+  </div>
+)}
   {activeTab === 'settings' && (
     <div className="project-info-card">
       <h2>Settings</h2>
@@ -868,8 +1101,6 @@ issue.createdByType === 'user'
     </div>
   )}
 </div></>
- 
-
 }
     
       </div>

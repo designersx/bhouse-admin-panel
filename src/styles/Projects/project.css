@@ -147,3 +147,36 @@
     gap: 6px;
   }
 }
+.badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: white;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.badge.proposal {
+  background-color: gray;
+}
+
+.badge.in-progress {
+  background-color: #f0ad4e; 
+}
+
+.badge.warehouse {
+  background-color: #5bc0de; 
+}
+
+.badge.installed {
+  background-color: #5cb85c; 
+}
+
+.badge.completed {
+  background-color: #0275d8; 
+}
+
+.badge.default {
+  background-color: #999;
+}
