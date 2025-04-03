@@ -163,11 +163,18 @@ body {
   .dark-mode .settings-option button:hover {
     background-color: #4338ca;
   }
-  .back-btn{
-    font-size: 22px;
-    background-color: #fff;
+  .back-btn {
+    display: inline-flex
+;
+    align-items: center;
+    background: transparent;
     border: none;
-  }
+    color: #333;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    font-size: 30px;
+    margin: 10px;
+}
   .back-btn:hover{
    cursor: pointer;
   }

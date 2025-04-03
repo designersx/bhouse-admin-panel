@@ -148,7 +148,7 @@ const Roles = () => {
                  <td>{role.description || "N/A"}</td>
                  {(rolePermissions?.Roles?.edit || rolePermissions?.Roles?.delete) && (
                    <td className="actions">
-                  {rolePermissions?.Roles?.edit && role.title !== "Super Admin" ? (
+                  {rolePermissions?.Roles?.edit && role.title !== "Super Admins " ? (
   <FaEdit
     style={{
       color: "#004680",
