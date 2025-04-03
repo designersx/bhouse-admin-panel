@@ -159,6 +159,7 @@ const [isLoading , setIsLoading] = useState(true)
             className="user-search-input"
           />
         </div>
+        {isLoading ?  <Loader/> : 
         <table className="roles-table">
           <thead>
             <tr>
@@ -173,7 +174,8 @@ const [isLoading , setIsLoading] = useState(true)
               )}
             </tr>
           </thead>
-          {isLoading ?  <Loader/> :  <tbody>
+         
+          <tbody>
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map((user , index) => (
                 <tr key={user.id}>
@@ -236,9 +238,10 @@ const [isLoading , setIsLoading] = useState(true)
                 <td colSpan="7" style={{ textAlign: "center" }}>No users found</td>
               </tr>
             )}
-          </tbody> }
+          </tbody> 
          
         </table>
+      }
         {totalPages > 1 && (
           <div className="pagination">
             <button

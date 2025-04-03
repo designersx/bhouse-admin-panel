@@ -3,6 +3,7 @@ import { getCustomerById, updateCustomer } from "../lib/api";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "./Layout";
 import Swal from "sweetalert2";
+import { toast, ToastContainer } from "react-toastify";
 
 const EditCustomer = () => {
     const { id } = useParams();
@@ -39,30 +40,36 @@ const EditCustomer = () => {
         fetchCustomer();
     }, [id]);
 
+    // Validation Rules
     const validateForm = () => {
         let newErrors = {};
 
-        // Full Name: Only letters and spaces
-        if (!/^[A-Za-z\s]+$/.test(formData.full_name)) {
-            newErrors.full_name = "Full Name should contain only letters and spaces.";
+        if (!/^[A-Za-z\s]{3,}$/.test(formData.full_name)) {
+            newErrors.full_name = "Full Name must be at least 3 letters long and contain only alphabets.";
         }
 
-        // Email Validation
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Enter a valid email address.";
+            newErrors.email = "Enter a valid email address (e.g. user@example.com).";
         }
 
-        // Phone: Only numbers, minimum 10 digits
-        if (!/^\d{10,}$/.test(formData.phone)) {
-            newErrors.phone = "Phone number should be at least 10 digits.";
+        if (!/^\d{10,15}$/.test(formData.phone)) {
+            newErrors.phone = "Phone number must be between 10 to 15 digits.";
         }
 
-        // Address Required
         if (!formData.address.trim()) {
-            newErrors.address = "Address is required.";
+            newErrors.address = "Address cannot be empty.";
+        }
+
+        if (!/^.{6,}$/.test(formData.password)) {
+            newErrors.password = "Password must be at least 6 characters long.";
         }
 
         setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+           toast.error(Object.values(newErrors)[0])
+        }
+
         return Object.keys(newErrors).length === 0;
     };
 
@@ -86,13 +93,11 @@ const EditCustomer = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
         await updateCustomer(id, formData);
 
-        // SweetAlert Success Notification
+        // Success Notification
         Swal.fire({
             icon: "success",
             title: "Customer Updated!",
@@ -105,55 +110,55 @@ const EditCustomer = () => {
 
     return (
         <Layout>
+                <ToastContainer position="top-right" autoClose={3000} />
             <div className="customer-form-container">
                 <h2 className="add-customer">Edit Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} required  maxLength={15}/>
-                        {errors.full_name && <p className="error">{errors.full_name}</p>}
+                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} maxLength={25} />
+                    
                     </div>
 
                     <div className="form-group">
                         <label>Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} required maxLength={15} />
-                        {errors.email && <p className="error">{errors.email}</p>}
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} maxLength={50} />
+                   
                     </div>
 
                     <div className="form-group">
                         <label>Phone</label>
-                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} maxLength={15}/>
-                        {errors.phone && <p className="error">{errors.phone}</p>}
+                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} maxLength={15} />
+                      
                     </div>
 
                     <div className="form-group">
                         <label>Company Name</label>
-                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange}maxLength={25}/>
+                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} maxLength={25} />
                     </div>
 
                     <div className="full-width">
                         <label>Address</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleChange} maxLength={35} required />
-                        {errors.address && <p className="error">{errors.address}</p>}
+                        <input type="text" name="address" value={formData.address} onChange={handleChange} maxLength={55} />
+                       
                     </div>
 
                     <div className="checkbox-group">
                         <label className="checkbox-label">
-                            <input type="checkbox" name="sameAsAddress" checked={sameAsAddress} maxLength={35}  onChange={handleChange} />
+                            <input type="checkbox" name="sameAsAddress" checked={sameAsAddress} onChange={handleChange} />
                             Same as Company Address
                         </label>
                     </div>
 
                     <div className="full-width">
                         <label>Delivery Address</label>
-                        <input
-                            type="text"
-                            name="delivery_address"
-                            value={formData.delivery_address}
-                            onChange={handleChange}
-                            disabled={sameAsAddress}
-                            maxLength={35} 
-                        />
+                        <input type="text" name="delivery_address" value={formData.delivery_address} onChange={handleChange} disabled={sameAsAddress} maxLength={55} />
+                    </div>
+
+                    <div className="full-width">
+                        <label>Password</label>
+                        <input type="password" name="password" value={formData.password} onChange={handleChange} maxLength={15} />
+                       
                     </div>
 
                     <div className="checkbox-group">

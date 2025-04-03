@@ -2,13 +2,34 @@ import React from 'react'
 import '../styles/loader.css'
 function Loader() {
   return (
-    <div>
-              <div className="profile-container">
-       
-          <div className="loader-overlay">
-            <div className="loader"></div>
-          </div>
+    <div className='main-loader'>
+           
+<div className="boxes ">
+    <div class="box">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
     </div>
+    <div className="box">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div className="box">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div className="box">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</div>
     </div>
   )
 }

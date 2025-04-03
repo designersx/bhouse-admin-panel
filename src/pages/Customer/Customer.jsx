@@ -114,6 +114,7 @@ const Customer = () => {
       const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
     
       const openOffcanvas = () => {
+        fetchComments()
         setIsOffcanvasOpen(true);
       };
     
@@ -334,7 +335,7 @@ const Customer = () => {
 
 {/* comments offcanvas */}
 
-<Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas}>
+<Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
 <div className="right-panel">
         <div 
           className="comments-list" 

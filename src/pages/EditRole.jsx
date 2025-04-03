@@ -186,6 +186,7 @@ const EditRole = () => {
                 onClick={() => setDropdownOpen(true)}
                 placeholder="Select role..."
                 className="custom-input"
+                required
               />
               {isDropdownOpen && suggestions.length > 0 && (
                 <ul className="suggestions-list" ref={suggestionBoxRef}>

@@ -9,7 +9,7 @@ import useRolePermissions from "../hooks/useRolePermissions";
 import Loader from "../components/Loader";
 
 const rolePermissionLevels = {
-  "Admin" : 0 , 
+  "Admin" : 1 , 
   "Super Admin": 1,
   "Account Manager": 2,
   "Sr. Designer": 3,
@@ -127,7 +127,7 @@ const Roles = () => {
             className="search-input"
           />
         </div>
-
+        {loading ? <Loader/> :
         <table className="roles-table">
           <thead>
             <tr>
@@ -138,7 +138,7 @@ const Roles = () => {
 
             </tr>
           </thead>
-          {loading ? <Loader/> :
+          
            <tbody>
            {currentItems.length > 0 ? (
              currentItems.map((role, index) => (
@@ -180,9 +180,10 @@ const Roles = () => {
              </tr>
            )}
          </tbody>
-          }
+        
          
         </table>
+      }
 
         {/* Pagination */}
         {totalPages > 1 && (
