@@ -46,17 +46,28 @@ const CreateRole = () => {
   const modules = [
     "User Management",
     "Project Management",
-    "Notification Management",
-    "Invoicing and Payment",
-    "Installation & Delivery Scheduling",
-    "Document Management",
-    "Reports & Analytics",
+  
+    "Invoicing",
+   
     "Reviews/Feedback & Comments",
     "Customer",
     "Roles"
   ];
+  
+  const actions = ["create", "delete", "view", "edit", "fullAccess"];
+  const otherModules = [
+    "Customer Comments" , 
+    "Customer Document" ,
+    "Comments on Document" ,
+    "Project Document" , 
+    "Punch List"  , 
+    "Assigned Team Comments"
+  ]
+  
+  
+  
+    const other_Actions  = ["view" , "add"]
 
-  const actions = ["full Access","create", "delete", "view", "edit" ];
 
   useEffect(() => {
     if (rolePermissions) {
@@ -98,33 +109,7 @@ const CreateRole = () => {
     setDropdownOpen(false);
   };
 
-  //27/03/2025
-  // const handleCheckboxChange = (module, action) => {
-  //   const formattedModule = module.replace(/\s+/g, "");
 
-  //   setPermissions((prev) => {
-  //     let newPermissions = {
-  //       ...prev,
-  //       [formattedModule]: {
-  //         ...prev[formattedModule],
-  //         [action]: !prev[formattedModule]?.[action],
-  //       },
-  //     };
-
-  //     if (action === "edit" && newPermissions[formattedModule][action]) {
-  //       newPermissions[formattedModule]["view"] = true;
-  //     }
-
-  //     if (action === "full Access") {
-  //       const isFullAccess = newPermissions[formattedModule][action];
-  //       actions.forEach((act) => {
-  //         newPermissions[formattedModule][act] = isFullAccess;
-  //       });
-  //     }
-
-  //     return newPermissions;
-  //   });
-  // };
 
   const handleCheckboxChange = (module, action) => {
     const formattedModule = module.replace(/\s+/g, "");
@@ -198,6 +183,14 @@ const CreateRole = () => {
 
       actions.forEach((action) => {
         finalPermissions[formattedModule][action] = permissions[formattedModule]?.[action] || false;
+      });
+    });
+    otherModules.forEach((module) => {
+      const formattedModule = module.replace(/\s+/g, "");
+      finalPermissions[formattedModule] = {};
+      other_Actions.forEach((action) => {
+        finalPermissions[formattedModule][action] =
+          permissions[formattedModule]?.[action] || false;
       });
     });
 
@@ -307,6 +300,35 @@ const CreateRole = () => {
             })}
           </tbody>
         </table>
+        <table className="permissions-table">
+  <thead>
+    <tr>
+      <th>Module</th>
+      {other_Actions.map((action) => (
+        <th key={action}>{action.charAt(0).toUpperCase() + action.slice(1)}</th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {otherModules.map((module) => {
+      const formattedModule = module.replace(/\s+/g, "");
+      return (
+        <tr key={module}>
+          <td>{module}</td>
+          {other_Actions.map((action) => (
+            <td key={action}>
+              <input
+                type="checkbox"
+                checked={permissions[formattedModule]?.[action] || false}
+                onChange={() => handleCheckboxChange(module, action)}
+              />
+            </td>
+          ))}
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
 
         <div className="button-group">
           <button className="submit-btn" onClick={handleSubmit} >

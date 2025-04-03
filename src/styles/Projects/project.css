@@ -6,11 +6,16 @@
 }
 
 /* Project header styling */
-.projects-page .project-first-header {
+.projects-page  {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+}
+.project-first-header{
+  display: flex;
+  /* flex-direction: column; */
+  justify-content: space-between;
 }
 
 .projects-page .table-header {

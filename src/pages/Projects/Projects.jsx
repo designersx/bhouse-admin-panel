@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
 import { url } from '../../lib/api';
 import Loader from '../../components/Loader'
+import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -196,9 +197,10 @@ console.log(getAssignedUserNames())
   
   return (
     <Layout>
-      <div className="projects-page">
+      <div className="roles-container">
         <div className='project-first-header'>
-        <h2 className='table-header'>Projects</h2>
+        <h2 >Projects</h2>
+       
         {canCreate && (
           <button className="add-user-btn" onClick={handleArchivedProjectClick}>
             Archived Projects
@@ -207,9 +209,9 @@ console.log(getAssignedUserNames())
         </div>
       
       
-
+       
       
-      <div className="header-actions">
+      <div className="user-roles-header">
         {canCreate && (
           <button className="add-user-btn" onClick={handleNewProjectClick}>
            Add Project
@@ -221,7 +223,7 @@ console.log(getAssignedUserNames())
           placeholder="Search projects..."
           value={searchQuery}
           onChange={handleSearch}
-          className="search-bar"
+          className="user-search-input"
         />
       </div>
 
@@ -232,6 +234,7 @@ console.log(getAssignedUserNames())
           <table className="projects-table">
             <thead>
               <tr>
+              <th>Sr No</th>
                 <th>Project Name</th>
                 <th>Client Name</th>
                 <th>Status</th>
@@ -243,8 +246,9 @@ console.log(getAssignedUserNames())
             </thead>
             <tbody>
               {filteredProjects.length ? <>
-                { filteredProjects.map((project) => (
+                { filteredProjects.map((project , index) => (
                 <tr key={project.id}>
+                  <td>{index+1}</td>
                   <td>{project.name}</td>
                   <td>{project.clientName}</td>
                   <td>
@@ -266,21 +270,45 @@ console.log(getAssignedUserNames())
                   <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
                   <td className="actions">
                     {canEdit && (
-                      <button className="action-btn edit" onClick={() => handleEditProject(project.id)}>
-                        <i className="fas fa-edit"></i>
-                      </button>
+                    
+                      <FaEdit  
+                      style={{
+                        color: "#004680" , 
+                        fontSize : "22px" , 
+                         cursor: "pointer"
+                      }}
+                        title="Edit"
+                        onClick={() => handleEditProject(project.id)}
+                      />
                     )}
 
                     {canView && (
-                      <button className="action-btn view" onClick={() => handleViewProject(project.id)}>
-                        <i className="fas fa-eye"></i>
-                      </button>
+                     
+                      <FaEye
+                      style={{
+                        color: "#004680" , 
+                        fontSize : "22px" , 
+                         cursor: "pointer"
+                      }}
+                        title="View"
+                        onClick={() => handleViewProject(project.id)}
+                      />
                     )}
 
                     {canDelete && (
-                      <button onClick={() => handleArchiveProject(project.id)}>
-                      <i className='fa fa-trash'></i>
-                     </button>
+                    //   <button onClick={() => handleArchiveProject(project.id)}>
+                    //   <i className='fa fa-trash'></i>
+                    //  </button>
+                    <FaTrash 
+                    style={{
+                      color: "#004680" , 
+                      fontSize : "20px",
+                      cursor: "pointer"
+                    }}
+                      title="Delete"
+                      onClick={() => handleArchiveProject(project.id)}
+                    />
+                    
                     )}
                   </td>
 

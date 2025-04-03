@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "./Layout";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
+import BackButton from "./BackButton";
 
 const EditCustomer = () => {
     const { id } = useParams();
@@ -112,6 +113,7 @@ const EditCustomer = () => {
         <Layout>
                 <ToastContainer position="top-right" autoClose={3000} />
             <div className="customer-form-container">
+                <BackButton/>
                 <h2 className="add-customer">Edit Customer</h2>
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
