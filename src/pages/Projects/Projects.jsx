@@ -21,7 +21,17 @@ const Projects = () => {
   const canEdit = rolePermissions?.ProjectManagement?.edit;
   const canDelete = rolePermissions?.ProjectManagement?.delete;
   const canView = rolePermissions?.ProjectManagement?.view;
-
+  const getStatusClass = (status) => {
+    switch (status) {
+      case "In Progress": return "badge in-progress";
+      case "Delivered to Warehouse": return "badge warehouse";
+      case "Installed": return "badge installed";
+      case "Completed": return "badge completed";
+      case "Proposal": return "badge proposal";
+      default: return "badge default";
+    }
+  };
+  
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -166,7 +176,24 @@ console.log(getAssignedUserNames())
       }
     }
   };
-
+  const handleStatusChange = async (projectId, newStatus) => {
+    try {
+      const response = await axios.put(`${url}/projects/${projectId}`, { status: newStatus });
+      if (response.status === 200) {
+        setProjects(prev =>
+          prev.map(p => (p.id === projectId ? { ...p, status: newStatus } : p))
+        );
+        setFilteredProjects(prev =>
+          prev.map(p => (p.id === projectId ? { ...p, status: newStatus } : p))
+        );
+        Swal.fire("Status updated!");
+      }
+    } catch (error) {
+      console.error("Error updating status", error);
+      Swal.fire("Failed to update status");
+    }
+  };
+  
   return (
     <Layout>
       <div className="projects-page">
@@ -220,7 +247,20 @@ console.log(getAssignedUserNames())
                 <tr key={project.id}>
                   <td>{project.name}</td>
                   <td>{project.clientName}</td>
-                  <td>{project.status}</td>
+                  <td>
+  <select
+    className={getStatusClass(project.status)}
+    value={project.status}
+    onChange={(e) => handleStatusChange(project.id, e.target.value)}
+  >
+    <option value="Proposal">Proposal</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Delivered to Warehouse">Delivered to Warehouse</option>
+    <option value="Installed">Installed</option>
+    <option value="Completed">Completed</option>
+  </select>
+</td>
+
                   <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
                   <td>{new Date(project.startDate).toLocaleDateString()}</td>
                   <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>

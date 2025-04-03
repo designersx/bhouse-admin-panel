@@ -41,7 +41,8 @@
 
 .project-details-page .tab:hover,
 .project-details-page .tab.active {
-  background: linear-gradient(to right, #1a73e8, #4dabf7);
+  background: linear-gradient(to right, #1a73e8, #004680
+  );
   color: #fff;
   transform: translateY(-2px);
   border-color: transparent;

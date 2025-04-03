@@ -339,7 +339,7 @@ const Customer = () => {
 <div className="right-panel">
         <div 
           className="comments-list" 
-          style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }} // Flex column to ensure bottom stacking
+          style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }} 
         >
           {/* Display grouped comments by date */}
           {Object.keys(groupedComments).map((date) => (

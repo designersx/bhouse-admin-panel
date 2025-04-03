@@ -385,11 +385,14 @@ otherDocuments: [],
                     <label>Select Customer</label>
                     <select name="clientName" value={formData.clientName} onChange={handleChange} required>
                       <option value="">Select a customer</option>
-                      {customers.map((customer) => (
+{customers.length?<>
+  {customers?.map((customer) => (
                         <option key={customer.id} value={customer.full_name}>
                           {customer.full_name} ({customer.email})
                         </option>
                       ))}
+</> : <></>}
+                      
                     </select>
                   </div>
                   <div className="form-group">
@@ -589,7 +592,7 @@ otherDocuments: [],
                     <option value="Proposal">Proposal</option>
                       <option value="In Progress">In Progress</option>
                       <option value="Delivered to Warehouse">Delivered to Warehouse</option>
-                      <option value="nstalled">Installed</option>
+                      <option value="Installed">Installed</option>
                       <option value="Completed">Completed</option>
                     </select>
                   </div>
@@ -637,7 +640,7 @@ otherDocuments: [],
               <option value="Pending">Pending</option>
               <option value="In Transit">In Transit</option>
               <option value="Delivered">Delivered</option>
-              <option value="Installed">Insttaled</option>
+              <option value="Installed">Installed</option>
             </select> 
           </td>
           <td>
