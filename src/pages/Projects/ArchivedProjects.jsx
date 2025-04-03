@@ -72,7 +72,7 @@ const ArchivedProjects = () => {
         <h1>Archived Projects</h1>
         <input
           type="text"
-          className="search-bar"
+          className="user-search-input"
           placeholder="Search by project or client..."
           value={searchQuery}
           onChange={handleSearch}
@@ -92,7 +92,7 @@ const ArchivedProjects = () => {
                 <th>Client Name</th>
                 <th>Status</th>
                 <th>Assigned Roles</th>
-                <th>Start Date</th>
+                <th>Type</th>
                 <th>Est. Completion</th>
                 <th>Action</th>
               </tr>
@@ -104,11 +104,11 @@ const ArchivedProjects = () => {
                   <td>{project.clientName}</td>
                   <td>{project.status}</td>
                   <td>{project.assignedTeam}</td>
-                  <td>{project.startDateFormatted}</td>
+                  <td>{project.type}</td>
                   <td>{project.completionDateFormatted}</td>
                   <td>
                     <button
-                      className="action-btn unarchive"
+                      className="add-user-btna"
                       onClick={() => handleUnarchive(project.id)}
                     >
                       Unarchive

@@ -453,7 +453,7 @@ setLoadingDoc(false)
         <div className="info-group"><strong>Type:</strong> {project.type}</div>
         <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
        
-        <div className="info-group"><strong>Estimated Completion:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+        <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
         <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
         <div className="info-group"><strong>Advance Payment:</strong> ₹ {project.advancePayment?.toLocaleString() || "N/A"}</div>
       </div>
