@@ -260,45 +260,70 @@
   padding-bottom: 8px;
 }
 
-.project-details-page .user-card-horizontal {
+.user-card-horizontal {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
-  background: white;
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-  transition: box-shadow 0.2s, transform 0.2s;
+  gap: 16px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.project-details-page .user-card-horizontal:hover {
+.user-card-horizontal:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-.project-details-page .user-profile-img-horizontal {
-  width: 45px;
-  height: 45px;
+.user-profile-img-horizontal {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 10px;
+  border: 3px solid #e0e6f0;
 }
 
-.project-details-page .user-info-horizontal {
+.user-info-horizontal {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-.project-details-page .user-name-horizontal {
-  font-weight: 500;
+.user-name-horizontal {
+  font-weight: 600;
+  font-size: 18px;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.user-email-horizontal {
   font-size: 14px;
-  color: #333;
+  color: #6b7280;
+  margin-bottom: 8px;
 }
 
-.project-details-page .user-email-horizontal {
-  font-size: 12px;
-  color: #666;
+.comment-btna {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color:#4f46e5;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
 }
+
+.comment-btn svg {
+  margin-left: 4px;
+}
+
 
 /* Punch List Section */
 .project-info-card {
@@ -595,3 +620,31 @@
 .upload-btn:hover {
   background-color: #1d4ed8;
 }
+.item-description-input {
+  width: 100%;
+  min-height: 40px;
+  max-height: 60px;
+  resize: none; /* Prevent resizing */
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  line-height: 1.4;
+  overflow-y: auto;
+  transition: border-color 0.3s ease;
+}
+
+.item-description-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.item-description-input:disabled {
+  background-color: #f5f5f5;
+  color: #888;
+}
+.item-description-input {
+  height: 48px;
+  line-height: 1.4;
+}
+
