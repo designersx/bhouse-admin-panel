@@ -297,10 +297,6 @@
   cursor: not-allowed;
 }
 
-.form-navigation button:not(:disabled) {
-  background-color:#007bff;
-  color: #fff;
-}
 
 .form-navigation button:not(:disabled):hover {
   background-color: #007bff;
@@ -311,4 +307,71 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+/* General table styling */
+.lead-time-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.lead-time-table th,
+.lead-time-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+/* Input styles inside table */
+.user-search-inputa,
+.user-search-inputa[type="date"],
+.user-search-inputa[type="text"],
+.user-search-inputa select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fdfdfd;
+  transition: border 0.2s;
+}
+
+.user-search-inputa:focus {
+  border-color: #4a90e2;
+  outline: none;
+}
+.btn-up{
+  display: flex;
+}
+/* Button styles inside table */
+.add-user-btna {
+  background-color: #004680;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 6px;
+  transition: background-color 0.2s;
+
+
+}
+
+.add-user-btna:hover {
+  background-color: #3a7bd5;
+}
+
+/* Zebra stripe effect */
+.lead-time-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Header style */
+.lead-time-table thead th {
+  background-color: #f0f4f8;
+  font-weight: 600;
+  border-bottom: 2px solid #ccc;
 }

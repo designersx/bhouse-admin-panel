@@ -239,7 +239,7 @@ console.log(getAssignedUserNames())
                 <th>Client Name</th>
                 <th>Status</th>
                 <th>Assigned Team</th>
-                <th>Start Date</th>
+                <th>Type</th>
                 <th>Estimated Completion</th>
                 {(canEdit || canDelete || canView) && <th>Actions</th>}
               </tr>
@@ -257,16 +257,21 @@ console.log(getAssignedUserNames())
     value={project.status}
     onChange={(e) => handleStatusChange(project.id, e.target.value)}
   >
-    <option value="Proposal">Proposal</option>
-    <option value="In Progress">In Progress</option>
-    <option value="Delivered to Warehouse">Delivered to Warehouse</option>
+    <option value="In progress">In progress</option>
+    <option value="Aproved">Aproved</option>
+    <option value="Waiting on Advance">Waiting on Advance</option>
+    <option value="Advance Paid">Advance Paid</option>
+    <option value="Order Processed">Order Processed</option>
+    <option value="Arrived">Arrived</option>
+    <option value="Delivered">Delivered</option>
     <option value="Installed">Installed</option>
-    <option value="Completed">Completed</option>
+    <option value="Punch">Punch</option>
+    <option value="Completed">Balance Owed</option>
   </select>
 </td>
 
                   <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
-                  <td>{new Date(project.startDate).toLocaleDateString()}</td>
+                  <td>{project.type}</td>
                   <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
                   <td className="actions">
                     {canEdit && (
