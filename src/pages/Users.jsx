@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { getAllUsers, deleteUser } from "../lib/api";
 import "../styles/users.css";
-import { GrAdd } from "react-icons/gr";
 import "../styles/Roles.css";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useRolePermissions from "../hooks/useRolePermissions";
 import Loader from "../components/Loader";
 const Users = () => {
@@ -14,6 +14,7 @@ const Users = () => {
   const [search, setSearch] = useState("");
 const [isLoading , setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   const itemsPerPage = 8;
   let createdBYId = JSON.parse(localStorage.getItem("user"));
@@ -25,7 +26,13 @@ const [isLoading , setIsLoading] = useState(true)
   useEffect(() => {
     fetchUsers();
   }, []);
-
+  const togglePasswordVisibility = (userId) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
+  
   const fetchUsers = async () => {
     try {
       const data = await getAllUsers();
@@ -152,13 +159,14 @@ const [isLoading , setIsLoading] = useState(true)
             className="user-search-input"
           />
         </div>
+        {isLoading ?  <Loader/> : 
         <table className="roles-table">
           <thead>
             <tr>
               <th>Sr. No</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Password</th>
+              <th className="pass">Password</th>
               <th>Role</th>
               <th>Status</th>
               {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
@@ -166,14 +174,33 @@ const [isLoading , setIsLoading] = useState(true)
               )}
             </tr>
           </thead>
-          {isLoading ?  <Loader/> :  <tbody>
+         
+          <tbody>
             {paginatedUsers.length > 0 ? (
               paginatedUsers.map((user , index) => (
                 <tr key={user.id}>
                 <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
                   <td>{user.firstName} {user.lastName}</td>
                   <td>{user.email}</td>
-                  <td>{user.password}</td>
+                  <td>
+  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <span>{visiblePasswords[user.id] ? user.password : "•".repeat(user.password.length)}</span>
+    {visiblePasswords[user.id] ? (
+      <FaEyeSlash
+        style={{ cursor: "pointer", color: "#666" }}
+        onClick={() => togglePasswordVisibility(user.id)}
+        title="Hide Password"
+      />
+    ) : (
+      <FaEye
+        style={{ cursor: "pointer", color: "#666" }}
+        onClick={() => togglePasswordVisibility(user.id)}
+        title="Show Password"
+      />
+    )}
+  </div>
+</td>
+
                   <td>{user.userRole || "N/A"}</td>
                   <td className={user.status === "active" ? "status_active" : "status_inactive"}>
                     {user.status === "active" ? " Active" : " Inactive"}
@@ -211,9 +238,10 @@ const [isLoading , setIsLoading] = useState(true)
                 <td colSpan="7" style={{ textAlign: "center" }}>No users found</td>
               </tr>
             )}
-          </tbody> }
+          </tbody> 
          
         </table>
+      }
         {totalPages > 1 && (
           <div className="pagination">
             <button

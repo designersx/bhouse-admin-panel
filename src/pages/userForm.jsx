@@ -6,7 +6,9 @@ import Swal from "sweetalert2";
 import "../styles/users.css";
 import { IoArrowBack } from "react-icons/io5";
 import Loader from "../components/Loader";
-
+import Required from "../components/Required";
+import { toast, ToastContainer} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const roleLevels = {
   "Super Admin": 1,
   "Account Manager": 2,
@@ -98,7 +100,7 @@ const UserForm = () => {
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^\d{10}$/;
-    const passwordRegex = /^[A-Za-z0-9]{6}$/;
+    const passwordRegex = /^[A-Za-z0-9]{6,20}$/;
 
     switch (name) {
       case "firstName":
@@ -132,8 +134,8 @@ const UserForm = () => {
         case "password":
           newErrors.password = !value
             ? "Password is required"
-            : !/^.{6,}$/.test(value)
-              ? "Password must be at least 6 characters long"
+            : !passwordRegex.test(value)
+              ? "Password must be 6-20 characters long (no spaces or special characters)"
               : "";
           break;
       case "userRole":
@@ -142,7 +144,7 @@ const UserForm = () => {
       default:
         break;
     }
-
+console.log("eerror p " , newErrors?.password)
     setErrors(newErrors);
   };
 
@@ -162,43 +164,71 @@ const UserForm = () => {
 
     validateField(name, value);
   };
-
   const validateForm = (user) => {
+    const newErrors = {};
     const fields = ["firstName", "lastName", "email", "mobileNumber", "userRole"];
     if (!isEditMode) fields.push("password");
+  
     fields.forEach((field) => validateField(field, user[field]));
-
-    return Object.values(errors).some((error) => error !== "");
+  
+    setErrors(newErrors); // ✅ Ensure state is updated before checking errors
+  
+    return Object.values(newErrors).some((error) => error !== ""); 
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const hasErrors = validateForm(newUser);
-    if (hasErrors) return;
+
+    // Regex patterns
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+$/;
+    const mobileRegex = /^\d{10}$/;
+    const passwordRegex = /^[A-Za-z0-9]{6,20}$/;
+
+    // Validation (Only one toast at a time)
+    if (!newUser.firstName) return toast.error("First Name is required", { toastId: "firstName" });
+    if (!nameRegex.test(newUser.firstName)) return toast.error("First Name must contain only letters", { toastId: "firstName" });
+
+    if (!newUser.lastName) return toast.error("Last Name is required", { toastId: "lastName" });
+    if (!nameRegex.test(newUser.lastName)) return toast.error("Last Name must contain only letters", { toastId: "lastName" });
+
+    if (!newUser.email) return toast.error("Email is required", { toastId: "email" });
+    if (!emailRegex.test(newUser.email)) return toast.error("Enter a valid email address", { toastId: "email" });
+
+    if (!newUser.mobileNumber) return toast.error("Mobile Number is required", { toastId: "mobileNumber" });
+    if (!mobileRegex.test(newUser.mobileNumber)) return toast.error("Enter a valid 10-digit mobile number", { toastId: "mobileNumber" });
+
+    if (!newUser.userRole) return toast.error("Role is required", { toastId: "userRole" });
+
+    if (!isEditMode) {
+        if (!newUser.password) return toast.error("Password is required", { toastId: "password" });
+        if (!passwordRegex.test(newUser.password)) return toast.error("Password must be 6-20 characters long (no spaces or special characters)", { toastId: "password" });
+    }
 
     try {
-      setLoading(true);
-      if (isEditMode) {
-        await editUser(id, newUser);
-        Swal.fire("Success", "User updated successfully!", "success");
-      } else {
-        await registerUser(newUser);
-        Swal.fire("Success", "User added successfully!", "success");
-      }
-      navigate("/users");
+        setLoading(true);
+        if (isEditMode) {
+            await editUser(id, newUser);
+            toast.success("User updated successfully!", { toastId: "success" });
+        } else {
+            await registerUser(newUser);
+            toast.success("User added successfully!", { toastId: "success" });
+        }
+        navigate("/users");
     } catch (err) {
-      console.log(err.message)
-      Swal.fire("Error", err.message || "Something went wrong!", "error");
+        toast.error(err.message || "Something went wrong!", { toastId: "error" });
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
+
+
   console.log({newUser})
 
   return (
     <Layout>
       <div className="user-form-wrapper">
-
+      <ToastContainer position="top-right" autoClose={3000} />
         <div className="user-form-header">
           <button className="user-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
           <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
@@ -206,7 +236,7 @@ const UserForm = () => {
         {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit}>
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>First Name</label>
+              <label>First Name <Required/></label>
               <input
                 type="text"
                 name="firstName"
@@ -215,10 +245,10 @@ const UserForm = () => {
                 onChange={handleChange}
                 max={20}
               />
-              {errors.firstName && <p className="user-error">{errors.firstName}</p>}
+              {/* {errors.firstName && <p className="user-error">{errors.firstName}</p>} */}
             </div>
             <div className="user-form-group">
-              <label>Last Name</label>
+              <label>Last Name <Required/></label>
               <input
                 type="text"
                 name="lastName"
@@ -227,44 +257,54 @@ const UserForm = () => {
                 onChange={handleChange}
                 max={20}
               />
-              {errors.lastName && <p className="user-error">{errors.lastName}</p>}
+              {/* {errors.lastName && <p className="user-error">{errors.lastName}</p>} */}
             </div>
           </div>
 
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>Email</label>
+              <label>Email <Required/></label>
               <input
                 type="email"
                 name="email"
                 placeholder="Email"
                 value={newUser.email}
                 onChange={handleChange}
-                max={30}
+                maxLength={40}
               />
-              {errors.email && <p className="user-error">{errors.email}</p>}
+              {/* {errors.email && <p className="user-error">{errors.email}</p>} */}
             </div>
           {/* </div> */}
 
           {/* <div className="user-form-row"> */}
             <div className="user-form-group">
-              <label>Password {isEditMode && <span style={{ fontWeight: "normal", fontSize: "13px" }}>(optional)</span>}</label>
+              <label>Password <Required/></label>
               <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={newUser.password}
-                onChange={handleChange}
-                minLength={6}
-                maxLength={20}
-              />
+  type="password"
+  name="password"
+  placeholder="Password"
+  value={newUser.password}
+  onChange={(e) => {
+    // Remove spaces and emojis while allowing letters and numbers
+    const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
+    setNewUser({ ...newUser, password: noSpaceEmojiValue });
+  }}
+  onKeyDown={(e) => {
+    // Block spaces and emojis
+    if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
+      e.preventDefault();
+    }
+  }}
+  
+/>
+
               {/* {errors.password && <p className="user-error">{errors.password}</p>} */}
             </div>
           </div>
 
 
             <div className="user-form-group mobnumber">
-              <label>Mobile Number</label>
+              <label>Mobile Number <Required/></label>
               <input
                 type="text"
                 name="mobileNumber"
@@ -278,7 +318,7 @@ const UserForm = () => {
 
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>Select a Role</label>
+              <label>Select a Role <Required/></label>
               <select
                 name="userRole"
                 value={newUser.userRole}

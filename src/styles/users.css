@@ -25,6 +25,9 @@
     width: 100%;
     border-collapse: collapse;
   }
+  .pass{
+    width: 150px;
+  }
   
   th, td {
     padding: 12px;

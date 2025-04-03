@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getRoleById, updateRole } from "../lib/api";
 import Layout from "../components/Layout";
 import Swal from "sweetalert2";
+import BackButton from "../components/BackButton";
 
 const predefinedRoles = [
   "Super Admin",
@@ -171,6 +172,7 @@ const EditRole = () => {
   return (
     <Layout>
       <div className="create-role-container">
+        <BackButton/>
         <h2>Edit Role</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -184,6 +186,7 @@ const EditRole = () => {
                 onClick={() => setDropdownOpen(true)}
                 placeholder="Select role..."
                 className="custom-input"
+                required
               />
               {isDropdownOpen && suggestions.length > 0 && (
                 <ul className="suggestions-list" ref={suggestionBoxRef}>

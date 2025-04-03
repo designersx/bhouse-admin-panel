@@ -568,23 +568,27 @@ const AddProject = () => {
   {leadTimeMatrix.map((item, index) => (
     <div key={index} className="item-row">
       <input
+      className='user-search-input'
         type="text"
         placeholder="Item Name"
         value={item.itemName}
         onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
       />
       <input
+       className='user-search-input'
         type="number"
         placeholder="Quantity"
         value={item.quantity}
         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
       />
       <input
+       className='user-search-input'
         type="date"
         value={item.expectedDeliveryDate}
         onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
       />
       <select
+       className='user-search-input'
         value={item.status}
         onChange={(e) => handleItemChange(index, 'status', e.target.value)}
       >

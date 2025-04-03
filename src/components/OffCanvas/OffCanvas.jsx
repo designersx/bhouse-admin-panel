@@ -1,7 +1,7 @@
 import React from 'react';
 import './offcanvas.css';  
-
-const Offcanvas = ({ isOpen, closeOffcanvas, children }) => {
+import { LuRefreshCw } from "react-icons/lu";
+const Offcanvas = ({ isOpen, closeOffcanvas, children  , getLatestComment}) => {
   return (
     <>
       {/* Backdrop Overlay (fades background) */}
@@ -13,6 +13,7 @@ const Offcanvas = ({ isOpen, closeOffcanvas, children }) => {
             <button onClick={closeOffcanvas} className="close-btn">
               &times;
             </button>
+           <LuRefreshCw onClick={getLatestComment}/>
             
             <div className="offcanvas-body">{children}</div>
           </div>

@@ -144,12 +144,12 @@ function ViewCustomer() {
                 >
                     Project Details
                 </button>
-                <button 
+                {/* <button 
                     className={`tab-button ${activeTab === "projects" ? "active" : ""}`} 
                     onClick={() => setActiveTab("projects")}
                 >
                    Documents
-                </button>
+                </button> */}
             </div>
 
             {/* Tab Content */}
@@ -233,12 +233,7 @@ function ViewCustomer() {
             </div>
         </div>
     
-            <div className="view-customer-container">
-               
- 
-                {/* 📂 Document Upload */}
-               
-            </div>
+           
           
         </Layout>
     );
