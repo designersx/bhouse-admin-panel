@@ -362,7 +362,7 @@ const AddProject = () => {
   </select>
 </div>
 <div className="form-group">
-  <label>Estimated Completion</label>
+  <label>Estimated Occupancy Date</label>
   <input
     type="date"
     name="estimatedCompletion"
