@@ -15,7 +15,7 @@ import { MdEdit } from 'react-icons/md';
 import Offcanvas from '../../components/OffCanvas/OffCanvas';
 import { FaTelegramPlane } from "react-icons/fa"; 
 import { useRef } from 'react'; 
-
+import useRolePermissions from '../../hooks/useRolePermissions'
 
 
 const ProjectDetails = () => {
@@ -44,6 +44,8 @@ const commentsEndRef = useRef(null);
     floorPlans: [],
     otherDocuments: []
   });
+  const roleId = JSON.parse(localStorage.getItem("user"))
+  const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
   
   const [newIssue, setNewIssue] = useState({
     title: '',
@@ -413,7 +415,15 @@ setLoadingDoc(false)
     }));
   };
 
-  
+  const tabModules = [
+    { key: "overview", label: "Overview", permissionKey: null, alwaysVisible: true },
+    { key: "documents", label: "Documents", permissionKey: "ProjectDocument" },
+    { key: "team", label: "Team", permissionKey: "AssignedTeamComments" },
+    { key: "manufacturer", label: "Manufacturer", permissionKey: null, alwaysVisible: true },
+    { key: "punchlist", label: "Punch List", permissionKey: "PunchList" },
+    { key: "invoice", label: "Invoice", permissionKey: "Invoicing" },
+    { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
+  ];
  
   return (
     <Layout>
@@ -432,17 +442,24 @@ setLoadingDoc(false)
 <div className='doc-loader'><Loader/></div>
  : 
  <>
-  <div className="tabs">
-        {['overview', 'documents', 'team', 'manufacturer', 'punchlist','invoice','settings'].map(tab => (
-          <button
-            key={tab}
-            className={activeTab === tab ? 'tab active' : 'tab'}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
+ <div className="tabs">
+    {tabModules.map(({ key, label, permissionKey, alwaysVisible }) => {
+      const hasPermission =
+        alwaysVisible || // Show if marked alwaysVisible
+        (permissionKey && (rolePermissions?.[permissionKey]?.view ));
+
+      return hasPermission ? (
+        <button
+          key={key}
+          className={activeTab === key ? "tab active" : "tab"}
+          onClick={() => setActiveTab(key)}
+        >
+          {label}
+        </button>
+      ) : null; // Hide tab if not allowed
+    })}
+  </div>
+
   <div className="tab-content">
   {activeTab === 'overview' && (
     <div className="project-details-container">
@@ -469,7 +486,7 @@ setLoadingDoc(false)
 <h2>Uploaded Documents</h2>
 
 {[
-{ title: "Installation Docs", files: project.proposals, category: 'proposals' },
+{ title: "Installation Docs", files: project.proposals, category: 'proposals'  },
 { title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
 { title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' },
 ]
@@ -478,11 +495,14 @@ setLoadingDoc(false)
 .map((docCategory, idx) => (
 <div key={idx} className="  -section">
   <h3>{docCategory.title}</h3>
-  <input
-type="file"
-multiple
-onChange={(e) => handleFileUpload(e, docCategory.category)}
-/>
+  {rolePermissions?.ProjectDocument?.add ? 
+    <input
+    type="file"
+    multiple
+    onChange={(e) => handleFileUpload(e, docCategory.category)}
+    />
+  : null}
+
 
 {selectedFiles[docCategory.category]?.length > 0 && (
 <div className="file-preview-section">
