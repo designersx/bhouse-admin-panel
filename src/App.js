@@ -28,6 +28,7 @@ import UserForm from './pages/userForm';
 import EditCustomer from './components/EditCustomer';
 import ViewCustomer from './pages/Customer/ViewCustomer';
 import FileCommentsPage from './pages/Projects/FileCommentPage';
+import Requestform from './pages/RequestForm/Requestform';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -66,6 +67,8 @@ const token = userData?.token;
           <Route path="/users/edit/:id" element={<UserForm />} />
           <Route path="/edit-customer/:id" element={<EditCustomer />} />
           <Route path="/view-customer/:id" element={<ViewCustomer />} />
+
+          <Route path="/requested_customer" element={<Requestform/>} />
 
         </Routes>
     </ThemeProvider>
