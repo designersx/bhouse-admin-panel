@@ -14,7 +14,8 @@ const rolePermissionLevels = {
   "Account Manager": 2,
   "Sr. Designer": 3,
   "Operations": 4,
-  "Lead Installer": 5,
+  "Junior Designer" : 5 ,
+  "Lead Installer": 6,
 };
 
 const Roles = () => {
@@ -46,7 +47,7 @@ const Roles = () => {
       const userLevel = rolePermissionLevels[loggedInUserRole] || 6; // Fetch user level
 
       const filteredRoles = allRoles.filter((role) => {
-        const roleLevel = role.defaultPermissionLevel || 6;
+        const roleLevel = role.defaultPermissionLevel || 7;
         const createdById = parseInt(role.createdBy, 10); // Ensure it's a number
 
         if (userLevel === 1) return true; // Super Admin can see all
@@ -57,7 +58,7 @@ const Roles = () => {
         }
 
         // ✅ Correct condition to show only lower level roles or roles created by the user
-        const shouldShow = (roleLevel > userLevel && roleLevel < 6) || createdById === loggedUserId;
+        const shouldShow = (roleLevel > userLevel && roleLevel < 7) || createdById === loggedUserId;
         return shouldShow;
       });
 

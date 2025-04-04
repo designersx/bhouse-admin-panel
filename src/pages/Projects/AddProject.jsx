@@ -236,7 +236,7 @@ const AddProject = () => {
       });
   
       const data = await response.json();
-  
+    console.log(data , "ye le data")
       if (response.status === 201) {
         Swal.fire('Project added successfully!');
         navigate('/projects');
@@ -575,7 +575,7 @@ const AddProject = () => {
   className='user-search-input'
   type="text" 
   placeholder="Description"
-  value={item.quantity}
+  value={item.description}
   onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
   maxLength={50}
 />
