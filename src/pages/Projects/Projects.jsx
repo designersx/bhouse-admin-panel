@@ -17,6 +17,8 @@ const Projects = () => {
   const localData = JSON.parse(localStorage.getItem('user'));
   const userRole = localData?.user?.userRole;
   const roleId = localData?.user?.roleId;
+  const [sortOrder, setSortOrder] = useState("default");
+
   const { rolePermissions } = useRolePermissions(roleId);
   const canCreate = rolePermissions?.ProjectManagement?.create;
   const canEdit = rolePermissions?.ProjectManagement?.edit;
@@ -70,11 +72,12 @@ console.log(getAssignedUserNames())
     const fetchProjects = async () => {
       try {
         const response = await axios.get(`${url}/projects`);
-        const allProjects = response.data;
-
+        const allProjects = response.data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
         const localData = JSON.parse(localStorage.getItem('user'));
         const userData = localData?.user;
-
+    
         if (!userData) {
           console.log("No user data found in localStorage");
           setProjects([]);
@@ -82,51 +85,71 @@ console.log(getAssignedUserNames())
           setLoading(false);
           return;
         }
-
+    
         const userId = userData.id;
         const userRole = userData.userRole;
-
+    
         let visibleProjects = [];
-
-        if (userRole === "Super Admin" || userRole==="Admin") {
+    
+        if (userRole === "Super Admin" || userRole === "Admin") {
           visibleProjects = allProjects;
         } else {
           visibleProjects = allProjects.filter(project => {
-            const assigned = project.assignedTeamRoles?.some(role => {
-              return Array.isArray(role.users) && role.users.includes(userId);
-            });
-            if (assigned) {
-            }
-            return assigned;
+            return project.assignedTeamRoles?.some(role =>
+              Array.isArray(role.users) && role.users.includes(userId)
+            );
           });
         }
+    
+        visibleProjects.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+setProjects(visibleProjects);
+setFilteredProjects(visibleProjects);
 
-        setProjects(visibleProjects);
-        setFilteredProjects(visibleProjects);
         setLoading(false);
       } catch (error) {
         console.error("❌ Error fetching projects", error);
         setLoading(false);
-
       }
     };
+    
 
     fetchProjects();
   }, []);
 
-
-  const handleSearch = (event) => {
-    setSearchQuery(event.target.value);
-    if (event.target.value === "") {
-      setFilteredProjects(projects);
+  const sortAndSetProjects = (list, order) => {
+    let sorted = [...list];
+  
+    if (order === "atoz") {
+      sorted.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    } else if (order === "ztoa") {
+      sorted.sort((a, b) => b.name.toLowerCase().localeCompare(a.name.toLowerCase()));
     } else {
-      const filtered = projects.filter(project =>
-        project.name.toLowerCase().includes(event.target.value.toLowerCase()) ||
-        project.clientName.toLowerCase().includes(event.target.value.toLowerCase())
-      );
-      setFilteredProjects(filtered);
+      // default: sort by createdAt descending (latest first)
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
+  
+    setFilteredProjects(sorted);
   };
+  
+  const handleSearch = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+  
+    let filtered = [...projects];
+  
+    if (query) {
+      filtered = filtered.filter(project =>
+        project.name.toLowerCase().includes(query.toLowerCase()) ||
+        project.clientName.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+  
+    sortAndSetProjects(filtered, sortOrder);
+  };
+  useEffect(() => {
+    sortAndSetProjects(filteredProjects, sortOrder);
+  }, [sortOrder]);
+  
 
   const navigate = useNavigate();
   const handleViewProject = (projectId) => {
@@ -217,6 +240,16 @@ console.log(getAssignedUserNames())
            Add Project
           </button>
         )}
+        <div className="user-roles-headerb">
+<select
+  className="user-sort-input"
+  value={sortOrder}
+  onChange={(e) => setSortOrder(e.target.value)}
+>
+  <option value="default">Sort: Latest First</option>
+  <option value="atoz">Sort A - Z</option>
+  <option value="ztoa">Sort Z - A</option>
+</select>
 
         <input
           type="text"
@@ -226,7 +259,7 @@ console.log(getAssignedUserNames())
           className="user-search-input"
         />
       </div>
-
+</div>
       <div className="roles-table">
         {loading ? (
             <Loader/>
@@ -301,9 +334,6 @@ console.log(getAssignedUserNames())
                     )}
 
                     {canDelete && (
-                    //   <button onClick={() => handleArchiveProject(project.id)}>
-                    //   <i className='fa fa-trash'></i>
-                    //  </button>
                     <FaTrash 
                     style={{
                       color: "#004680" , 

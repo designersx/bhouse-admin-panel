@@ -39,6 +39,16 @@ const ProjectDetails = () => {
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
 const [groupedComments, setGroupedComments] = useState({});
 const commentsEndRef = useRef(null);
+useEffect(() => {
+  if (isOffcanvasOpen) {
+    setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+}, [userComments, newCommentText]);
+
+
+
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -96,32 +106,24 @@ const commentsEndRef = useRef(null);
     if (!newCommentText.trim()) return;
   
     try {
-      const res = await axios.post(`${url}/projects/${projectId}/user-comments`, {
+      await axios.post(`${url}/projects/${projectId}/user-comments`, {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
       });
   
-      setUserComments(prev => {
-        const updated = [res.data, ...prev];
-        
-        const grouped = updated.reduce((acc, comment) => {
-          const date = new Date(comment.createdAt).toLocaleDateString();
-          if (!acc[date]) acc[date] = [];
-          acc[date].push(comment);
-          return acc;
-        }, {});
-        setGroupedComments(grouped);
-        
-        return updated;
-      });
-      
       setNewCommentText('');
+      await fetchUserComments(selectedUser.id);
+      setTimeout(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+  
     } catch (err) {
       console.error("Error posting comment:", err);
-      toast.error("Failed to add comment");
     }
   };
+  
+  
   
   useEffect(() => {
     axios.get(`${url}/items/${projectId}`)
@@ -328,8 +330,19 @@ setLoadingDoc(false)
   };
     
   
+  const parseSafeArray = (value) => {
+    if (Array.isArray(value)) return value;
+    try {
+      return JSON.parse(value) || [];
+    } catch {
+      return [];
+    }
+  };
+  
   const handleProjectFileUpdate = async (filePath, category) => {
-    const updatedCategoryFiles = project[category].filter(f => f !== filePath);
+    const existingFiles = parseSafeArray(project[category]);
+  
+    const updatedCategoryFiles = existingFiles.filter(f => f !== filePath);
     const updatedProject = {
       ...project,
       [category]: updatedCategoryFiles
@@ -338,7 +351,7 @@ setLoadingDoc(false)
     const formDataToSend = new FormData();
     formDataToSend.append("removedFiles", JSON.stringify([filePath]));
   
-    // Append basic fields (add more if required)
+    // Append required fields
     ['name', 'type', 'clientName', 'description', 'startDate', 'estimatedCompletion', 'totalValue', 'deliveryAddress', 'deliveryHours'].forEach(key => {
       if (updatedProject[key] !== undefined) {
         formDataToSend.append(key, updatedProject[key]);
@@ -366,6 +379,7 @@ setLoadingDoc(false)
       toast.error("Error while updating project.");
     }
   };
+  
   const toggleEditRow = (index) => {
     setEditableRows(prev => ({
       ...prev,
@@ -470,8 +484,8 @@ setLoadingDoc(false)
         <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
        
         <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
-        <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
-        <div className="info-group"><strong>Advance Payment:</strong> ₹ {project.advancePayment?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Total Value:</strong> $ {project.totalValue?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Advance Payment:</strong> $ {project.advancePayment?.toLocaleString() || "N/A"}</div>
       </div>
       <div className="project-info-card">
         <h2>Delivery Details</h2>
@@ -714,14 +728,18 @@ return (
 </td>
 
 
-  <td>
-    <input
-      type="date"
-      value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-      disabled={!isEditable}
-      onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
-    />
-  </td>
+<td>
+  <input
+    type="date"
+    value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+    min={new Date().toISOString().split("T")[0]} 
+    disabled={!isEditable}
+    onChange={(e) =>
+      handleItemChange(index, 'expectedDeliveryDate', e.target.value)
+    }
+  />
+</td>
+
   <td>
     <select
       value={item.status}
@@ -1140,43 +1158,58 @@ issue.createdByType === 'user'
       </div>
       <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
   <div className="right-panel">
-    <div
-      className="comments-list"
-      style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }}
-    >
+  <div
+  className="comments-list"
+  style={{
+    overflowY: "auto",
+    maxHeight: "500px",
+    display: "flex",
+    flexDirection: "column", 
+  }}
+>
+
       {/* Grouped Comments by Date */}
       {Object.keys(groupedComments).map((date) => (
         <div key={date} className="comment-date-group">
           <p className="comment-date">{date}</p>
-          {groupedComments[date].reverse().map((comment) => (
-            <div key={comment.id}>
-              <div className="whatsapp-comment-box">
-                <div className="whatsapp-comment-user-info">
-                  <img
-                    src={
-                      comment?.fromUser?.profileImage
-                        ? `${url2}/${comment.fromUser.profileImage}`
-                        : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-                    }
-                    alt="User"
-                    className="whatsapp-comment-user-avatar"
-                  />
-                  <div>
-                    <p className="whatsapp-comment-author">
-                      {comment?.fromUser?.firstName} {comment?.fromUser?.lastName}
-                    </p>
-                  </div>
+          {Object.keys(groupedComments)
+  .sort((a, b) => new Date(a) - new Date(b)) // sort ascending by date
+  .map((date) => (
+    <div key={date} className="comment-date-group">
+      <p className="comment-date">{date}</p>
+      {groupedComments[date]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map((comment) => (
+          <div key={comment.id}>
+            <div className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment?.fromUser?.profileImage
+                      ? `${url2}/${comment.fromUser.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                    {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                  </p>
                 </div>
-                <p className="whatsapp-comment-text">{comment.comment}</p>
-                <p className="whatsapp-comment-meta">
-                  {new Date(comment.createdAt).toLocaleTimeString()}
-                </p>
               </div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
             </div>
-          ))}
+          </div>
+        ))}
+    </div>
+))}
+
         </div>
       ))}
-      {/* Scroll Anchor */}
       <div ref={commentsEndRef}></div>
     </div>
   </div>
