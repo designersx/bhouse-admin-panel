@@ -36,7 +36,7 @@ const AddProject = () => {
   const [files, setFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([
-    { itemName: "", quantity: "", expectedDeliveryDate: "", status: "Pending" },
+    { itemName: "", quantity: "", expectedDeliveryDate: "",expectedArrivalDate:"", status: "Pending" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -92,6 +92,7 @@ const AddProject = () => {
         itemName: "",
         quantity: "",
         expectedDeliveryDate: "",
+        expectedArrivalDate:"",
         status: "Pending",
       },
     ]);
@@ -227,12 +228,18 @@ const AddProject = () => {
       JSON.stringify(transformedRoles)
     );
     const sanitizedMatrix = leadTimeMatrix.map((item) => ({
-      ...item,
-      quantity: item.quantity && !isNaN(item.quantity) ? parseInt(item.quantity) : 0,  
+      itemName: item.itemName,
+      quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
         ? new Date(item.expectedDeliveryDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
+      expectedArrivalDate: item.expectedArrivalDate
+        ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
+        : null,
+      status: item.status || "Pending" 
     }));
+    
+    
     formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
     
     
@@ -664,6 +671,15 @@ const AddProject = () => {
     handleItemChange(index, "expectedDeliveryDate", e.target.value)
   }
 />
+<input
+  className="user-search-input"
+  type="date"
+  required
+  value={item.expectedArrivalDate}
+  onChange={(e) =>
+    handleItemChange(index, "expectedArrivalDate", e.target.value)
+  }
+/>
 
                       <select
                         className="user-search-input"
@@ -673,7 +689,9 @@ const AddProject = () => {
                         }
                       >
                         <option value="Pending">Pending</option>
+                        <option value="In Transit">In Transit</option>
                         <option value="Delivered">Delivered</option>
+                        <option value="Installed">Installed</option>
                       </select>
                       {leadTimeMatrix.length > 1 && (
                         <button
