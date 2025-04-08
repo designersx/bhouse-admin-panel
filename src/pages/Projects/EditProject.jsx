@@ -112,6 +112,7 @@ otherDocuments: [],
         itemName: '',
         quantity: '',
         expectedDeliveryDate: '',
+        expectedArrivalDate: '',
         status: 'Pending',
         projectId,
       }
@@ -329,19 +330,18 @@ otherDocuments: [],
       name,
       type,
       clientName,
-      startDate,
-      estimatedCompletion,
       totalValue,
-      deliveryAddress,
-      deliveryHours,
+      advancePayment,
+      
     } = formData;
   
     if (step === 1) {
       if (!name.trim()) return "Project Name is required.";
-      if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
       if (!type) return "Project Type is required.";
       if (!clientName) return "Customer selection is required.";
       if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
+      if (!advancePayment|| isNaN(advancePayment) || advancePayment <= 0) return "Total Value must be a valid positive number.";
+
     }
   
     if (step === 2) {
@@ -645,6 +645,7 @@ otherDocuments: [],
         <th>Manufacturer Name</th>
         <th>Description</th>
         <th>Expected Delivery</th>
+        <th>Expected Arrival</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
@@ -678,6 +679,14 @@ otherDocuments: [],
             />
           </td>
           <td>
+            <input
+            className='user-search-inputa'
+              type="date"
+              value={item.expectedArrivalDate?.slice(0, 10) || ''}
+              onChange={(e) => handleItemChange(index, 'expectedArrivalDate', e.target.value)}
+            />
+          </td>
+          <td>
             <select
             className='user-search-inputa'
               value={item.status}
@@ -706,10 +715,10 @@ otherDocuments: [],
       ))}
     </tbody>
   </table>
+  <br/>
   <button className='add-user-btna' type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>
 
-<br/>
 
                 <div className="form-navigation">
                   <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
