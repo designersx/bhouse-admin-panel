@@ -3,14 +3,14 @@ import axios from "axios";
 import { getCustomers, deleteCustomer , addCustomerComment , getCustomerComments} from "../../lib/api"; 
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaTrash, FaEye   } from "react-icons/fa";
+import { FaEdit, FaEye   } from "react-icons/fa";
 import { MdDelete } from "react-icons/md"
 import useRolePermissions from "../../hooks/useRolePermissions";
 import { FaCommentAlt } from "react-icons/fa";
 import { url , url2 } from "../../lib/api";
 import Loader from "../../components/Loader";
 import Swal from "sweetalert2";
-import { FaBullseye } from "react-icons/fa6";
+
 import Offcanvas from "../../components/OffCanvas/OffCanvas";
 import { FaTelegramPlane } from 'react-icons/fa';
 
@@ -185,6 +185,7 @@ const Customer = () => {
           commentsEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
       }, [groupedComments]);
+      console.log({projectCounts})
     return (
         <Layout>
             <div className="roles-container">
@@ -218,6 +219,7 @@ const Customer = () => {
                 </div>
 
                 {/* 📌 Customers Table */}
+                {loader ? <Loader/>:  
                 <table className="roles-table">
                     <thead>
                         <tr className="bg-gray-100">
@@ -229,7 +231,8 @@ const Customer = () => {
                             {(canEdit || canDelete || canView) && <th className="border p-2">Actions</th>}
                         </tr>
                     </thead>
-                    {loader ? <Loader/>: <tbody>
+                   
+                    <tbody>
                         {currentCustomers.length > 0 ? (
                             currentCustomers.map((customer , index ) => (
                                 <tr key={customer.id} className="border-b">
@@ -274,18 +277,20 @@ const Customer = () => {
                                                     onClick={() => navigate(`/view-customer/${customer.id}`)}
                                                 />
                                             )}
+{rolePermissions?.CustomerComments?.view  ? 
+  <FaCommentAlt  style={{
+    color : "#004680",
+    fontSize : "19px"
+}}
+title="Comments" 
 
-                                              <FaCommentAlt  style={{
-                                                    color : "#004680",
-                                                    fontSize : "19px"
-                                                }}
-                                                title="Comments" 
-                                                
-                                                onClick={()=>{ openOffcanvas() ;
-                                                    setCustomerId(customer.id);
-                                                }
-                                                   
-                                                }/>
+onClick={()=>{ openOffcanvas() ;
+    setCustomerId(customer.id);
+}
+   
+}/>
+: null}
+                                            
                                         </td>
                                     )}
 
@@ -297,9 +302,10 @@ const Customer = () => {
                                 <td colSpan="7" style={{ textAlign: "center" }}>No customer found</td>
                             </tr>
                         )}
-                    </tbody> }
+                    </tbody> 
                     
                 </table>
+              }
 
                 {/* 🔄 Pagination */}
                 {totalPages > 1 && (
@@ -374,18 +380,20 @@ const Customer = () => {
           <div ref={commentsEndRef}></div>
         </div>
       </div>
-
-      <div className="whatsapp-comment-form">
-        <textarea
-          placeholder="Write your comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="whatsapp-comment-input"
-        />
-        <button onClick={handleAddComment} className="whatsapp-submit-btn">
-          <FaTelegramPlane />
-        </button>
-      </div>
+   {rolePermissions?.CustomerComments?.add  ? 
+     <div className="whatsapp-comment-form">
+     <textarea
+       placeholder="Write your comment..."
+       value={newComment}
+       onChange={(e) => setNewComment(e.target.value)}
+       className="whatsapp-comment-input"
+     />
+     <button onClick={handleAddComment} className="whatsapp-submit-btn">
+       <FaTelegramPlane />
+     </button>
+   </div>
+   :  null}
+    
    
     
       </Offcanvas>

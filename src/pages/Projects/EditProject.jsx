@@ -16,10 +16,10 @@ const EditProject = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'Residential',
+    type: 'Corporate Office',
     clientName: '',
     description: '',
-    startDate: '',
+    advancePayment: '', 
     estimatedCompletion: '',
     totalValue: '',
     deliveryAddress: '',
@@ -147,9 +147,9 @@ otherDocuments: [],
     }
   };
   const handleItemChange = (index, field, value) => {
-    const updatedItems = [...leadTimeItems];
-    updatedItems[index][field] = value;
-    setLeadTimeItems(updatedItems);
+    const updated = [...leadTimeItems];
+    updated[index][field] = value;
+    setLeadTimeItems(updated); 
   };
   
   const updateItem = async (item) => {
@@ -317,22 +317,11 @@ otherDocuments: [],
       if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
       if (!type) return "Project Type is required.";
       if (!clientName) return "Customer selection is required.";
-      if (!startDate) return "Start Date is required.";
-  
-      if (estimatedCompletion) {
-        const start = new Date(startDate);
-        const end = new Date(estimatedCompletion);
-        if (end <= start) {
-          return "Estimated Completion date must be after Start Date.";
-        }
-      }
+      if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
     }
   
     if (step === 2) {
       if (!selectedRoles.length) return "At least one role must be assigned.";
-      if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
-      if (!deliveryAddress.trim()) return "Delivery Address is required.";
-      if (!deliveryHours.trim()) return "Delivery Hours are required.";
     }
   
     return null;
@@ -372,10 +361,11 @@ otherDocuments: [],
                   <div className="form-group">
                     <label>Project Type</label>
                     <select name="type" value={formData.type} onChange={handleChange}>
-                      <option value="Residential">Residential</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Hospitality">Hospitality</option>
-                      <option value="Custom">Custom</option>
+                    <option value="Corporate Office">Corporate Office</option>
+    <option value="Hospitality">Hospitality</option>
+    <option value="Education">Education</option>
+    <option value="Healthcare">Healthcare</option>
+    <option value="Multi-family">Multi-family</option>
                     </select>
                   </div>
                 </div>
@@ -402,18 +392,25 @@ otherDocuments: [],
                 </div>
 
                 <div className='form-group-row'>
+
   <div className="form-group">
-    <label>Start Date</label>
-    <input
-      type="date"
-      name="startDate"
-      value={formData.startDate}
-      onChange={handleChange}
-      required
-    />
-  </div>
-  <div className="form-group">
-    <label>Estimated Completion</label>
+  
+                    <label>Status</label>
+                    <select name="status" value={formData.status} onChange={handleChange}>
+                    <option value="In progress">In progress</option>
+    <option value="Aproved">Aproved</option>
+    <option value="Waiting on Advance">Waiting on Advance</option>
+    <option value="Advance Paid">Advance Paid</option>
+    <option value="Order Processed">Order Processed</option>
+    <option value="Arrived">Arrived</option>
+    <option value="Delivered">Delivered</option>
+    <option value="Installed">Installed</option>
+    <option value="Punch">Punch</option>
+    <option value="Completed">Balance Owed</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+    <label>Estimated Occupancy Date</label>
     <input
       type="date"
       name="estimatedCompletion"
@@ -424,105 +421,36 @@ otherDocuments: [],
   </div>
 </div>
 
-
-                <div className='form-group-row'>
-  {/* Proposals & Presentations */}
-  <div className="form-group">
-    <label>Upload Proposals & Presentations (PDF, Images)</label>
-    <input
-      type="file"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) => handleFileChange('proposals', e)}
-    />
-    {formData.proposals && formData.proposals.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.proposals.map((url, idx) => {
-          const fileName = url.split('/').pop();
-          const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
-
-          return (
-            <li key={idx}>
-              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                <img src={fileUrl} alt={fileName} width="100" />
-              ) : (
-                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
-              )}
-              <button type="button" onClick={() => handleRemoveExistingFile('proposals', url)}>Remove</button>
-            </li>
-          );
-        })}
-      </ul>
-    )}
-  </div>
-
-  {/* Floor Plans & CAD Files */}
-  <div className="form-group">
-    <label>Upload Floor Plans & CAD Files (PDF, Images)</label>
-    <input
-      type="file"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) => handleFileChange('floorPlans', e)}
-    />
-    {formData.floorPlans && formData.floorPlans.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.floorPlans.map((url, idx) => {
-          const fileName = url.split('/').pop();
-          const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
-
-          return (
-            <li key={idx}>
-              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                <img src={fileUrl} alt={fileName} width="100" />
-              ) : (
-                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
-              )}
-              <button type="button" onClick={() => handleRemoveExistingFile('floorPlans', url)}>Remove</button>
-            </li>
-          );
-        })}
-      </ul>
-    )}
-  </div>
-
-  {/* Other Documents */}
-  <div className="form-group">
-    <label>Upload Other Documents (COI, Permits, etc.) (PDF, Images)</label>
-    <input
-      type="file"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) => handleFileChange('otherDocuments', e)}
-    />
-    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.otherDocuments.map((url, idx) => {
-          const fileName = url.split('/').pop();
-          const fileExt = fileName.split('.').pop();
-          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
-
-          return (
-            <li key={idx}>
-              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
-                <img src={fileUrl} alt={fileName} width="100" />
-              ) : (
-                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
-              )}
-              <button type="button" onClick={() => handleRemoveExistingFile('otherDocuments', url)}>Remove</button>
-            </li>
-          );
-        })}
-      </ul>
-    )}
-  </div>
-</div>
+<div className='form-group-row'>
+<div className="form-group">
+                    <label>Advance Payment</label>
+                    <input
+                      type="number"
+                      name="advancePayment"
+                      value={formData.advancePayment}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter total value"
+                    />
+                  </div>
+                <div className="form-group">
+                    <label>Total Value</label>
+                    <input
+                      type="number"
+                      name="totalValue"
+                      value={formData.totalValue}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter total value"
+                    />
+                  </div>
+                 
+                  </div>
+             
 
 
                 <div className="form-navigation">
-                  <button type="button" onClick={nextStep}>Next</button>
+                  <button className='add-user-btna' type="button" onClick={nextStep}>Next</button>
                 </div>
               </div>
             )}
@@ -561,8 +489,102 @@ otherDocuments: [],
                     </div>
                   ))}
                 </div>
+                <br/>
+                <div className='form-group-row'>
+  {/* Proposals & Presentations */}
+  <div className="form-group">
+    <label>Installation Docs</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('proposals', e)}
+    />
+    {formData.proposals && formData.proposals.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
 
-        
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('proposals', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Floor Plans & CAD Files */}
+  <div className="form-group">
+    <label>Warranty</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('floorPlans', e)}
+    />
+    {formData.floorPlans && formData.floorPlans.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('floorPlans', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+
+  {/* Other Documents */}
+  <div className="form-group">
+    <label>Product Maintenance</label>
+    <input
+      type="file"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('otherDocuments', e)}
+    />
+    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('otherDocuments', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+</div>
+        <br/>
 
                 <div className="form-group-row">
                   <div className="form-group">
@@ -574,36 +596,14 @@ otherDocuments: [],
                     <input type="text" name="deliveryHours" value={formData.deliveryHours} onChange={handleChange} />
                   </div>
                 </div>
-                <div className='form-group-row'>
-                <div className="form-group">
-                    <label>Total Value</label>
-                    <input
-                      type="number"
-                      name="totalValue"
-                      value={formData.totalValue}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter total value"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleChange}>
-                    <option value="Proposal">Proposal</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Delivered to Warehouse">Delivered to Warehouse</option>
-                      <option value="Installed">Installed</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </div>
-                  </div>
+              
                   <div className="form-card">
   <h3>Project Lead Time Matrix</h3>
   <table className="lead-time-table">
     <thead>
       <tr>
-        <th>Item Name</th>
-        <th>Quantity</th>
+        <th>Manufacturer Name</th>
+        <th>Description</th>
         <th>Expected Delivery</th>
         <th>Status</th>
         <th>Actions</th>
@@ -614,19 +614,24 @@ otherDocuments: [],
         <tr key={item.id || index}>
           <td>
             <input
+            className='user-search-inputa'
               value={item.itemName}
               onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
             />
           </td>
           <td>
-            <input
-              type="number"
-              value={item.quantity}
-              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-            />
-          </td>
+  <input
+  className='user-search-inputa'
+    type="text"
+    value={item.quantity}
+    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+    maxLength={50}
+  />
+</td>
+
           <td>
             <input
+            className='user-search-inputa'
               type="date"
               value={item.expectedDeliveryDate?.slice(0, 10) || ''}
               onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
@@ -634,6 +639,7 @@ otherDocuments: [],
           </td>
           <td>
             <select
+            className='user-search-inputa'
               value={item.status}
               onChange={(e) => handleItemChange(index, 'status', e.target.value)}
             >
@@ -646,25 +652,28 @@ otherDocuments: [],
           <td>
             {item.id ? (
               <>
-                <button type="button" onClick={() => updateItem(item)}>Update</button>
-                <button type="button" onClick={() => deleteItem(item.id)}>Delete</button>
+              <div className='btn-up'>
+              <button className='add-user-btna' type="button" onClick={() => updateItem(leadTimeItems[index])}>Update</button>
+              <button  className='add-user-btna' type="button" onClick={() => deleteItem(item.id)}>Delete</button>
+              </div>
+              
               </>
             ) : (
-              <button type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
+              <button  className='add-user-btna'  type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
             )}
           </td>
         </tr>
       ))}
     </tbody>
   </table>
-  <button className="ledbutton" type="button" onClick={handleAddItemRow}>+ Add Row</button>
+  <button className='add-user-btna' type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>
 
 <br/>
 
                 <div className="form-navigation">
-                  <button type="button" onClick={prevStep}>Previous</button>
-                  <button type="button" onClick={nextStep}>Next</button>
+                  <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
+                  <button className='add-user-btna' type="button" onClick={nextStep}>Next</button>
                 </div>
               </div>
             )}
@@ -685,8 +694,8 @@ otherDocuments: [],
                   <input type="checkbox" name="enableNotifications" checked={formData.enableNotifications} onChange={handleCheckboxChange} />
                 </div>
                 <div className="form-navigation">
-                  <button type="button" onClick={prevStep}>Previous</button>
-                  <button type="submit">Submit</button>
+                  <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
+                  <button className='add-user-btna' type="submit">Submit</button>
                 </div>
               </div>
             )}

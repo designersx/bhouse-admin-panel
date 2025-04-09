@@ -9,12 +9,15 @@ import Loader from "../components/Loader";
 import Required from "../components/Required";
 import { toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import BackButton from "../components/BackButton";
 const roleLevels = {
+  "Admin" : 1 , 
   "Super Admin": 1,
   "Account Manager": 2,
   "Sr. Designer": 3,
-  "Designer": 4,
-  "Intern": 5,
+  "Operation": 4,
+  "Junior Designer": 5,
+  "Lead Installer" : 6
 };
 
 const UserForm = () => {
@@ -81,8 +84,8 @@ const UserForm = () => {
         filteredRoles = allRoles.filter(role => role.title !== "Super Admin");
       } else {
         filteredRoles = allRoles.filter((role) => {
-          const isPredefinedAndAbove = role.defaultPermissionLevel < 6 && role.defaultPermissionLevel > userLevel;
-          const isCustomAndCreatedByUser = role.defaultPermissionLevel === 6 && String(role.createdBy) === String(userId);
+          const isPredefinedAndAbove = role.defaultPermissionLevel < 7 && role.defaultPermissionLevel > userLevel;
+          const isCustomAndCreatedByUser = role.defaultPermissionLevel === 7 && String(role.createdBy) === String(userId);
           return isPredefinedAndAbove || isCustomAndCreatedByUser;
         });
       }
@@ -230,7 +233,7 @@ console.log("eerror p " , newErrors?.password)
       <div className="user-form-wrapper">
       <ToastContainer position="top-right" autoClose={3000} />
         <div className="user-form-header">
-          <button className="user-back-btn" onClick={() => navigate(-1)}><IoArrowBack /></button>
+        <BackButton/>
           <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
         </div>
         {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit}>

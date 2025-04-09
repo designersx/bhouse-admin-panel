@@ -10,6 +10,7 @@ const predefinedRoles = [
   "Account Manager",
   "Sr. Designer",
   "Operations",
+  "Junior Designer" , 
   "Lead Installer",
 ];
 
@@ -18,29 +19,35 @@ const rolePermissionLevels = {
   "Account Manager": 2,
   "Sr. Designer": 3,
   "Operations": 4,
-  "Lead Installer": 5,
+  "Junior Designer" : 5 , 
+  "Lead Installer": 6,
 };
 
 const modules = [
   "User Management",
   "Project Management",
-  "Notification Management",
-  "Invoicing and Payment",
-  "Installation & Delivery Scheduling",
-  "Document Management",
-  "Reports & Analytics",
+  "Invoicing",
   "Reviews/Feedback & Comments",
   "Customer",
-  "Roles"
+  "Roles",
 ];
 
 const actions = ["create", "delete", "view", "edit", "fullAccess"];
+const otherModules = [
+  "Customer Comments",
+  "Customer Document",
+  "Comments on Document",
+  "Project Document",
+  "Punch List",
+  "Assigned Team Comments",
+];
+const other_Actions = ["view", "add"];
 
 const EditRole = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [description, setDesc] = useState("");
+  const [description, setDescription] = useState("");
   const [permissions, setPermissions] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -78,6 +85,9 @@ const EditRole = () => {
   const fetchRoleData = async () => {
     const response = await getRoleById(id);
     if (response.success) {
+      setTitle(response.data.title);
+      setDescription(response.data.description);
+
       let parsedPermissions = {};
       if (typeof response.data.permissions === "string") {
         parsedPermissions = JSON.parse(response.data.permissions);
@@ -85,19 +95,7 @@ const EditRole = () => {
         parsedPermissions = response.data.permissions || {};
       }
 
-      const formattedPermissions = {};
-      modules.forEach((module) => {
-        const formattedModule = module.replace(/\s+/g, "");
-        formattedPermissions[formattedModule] = {};
-        actions.forEach((action) => {
-          formattedPermissions[formattedModule][action] =
-            parsedPermissions[formattedModule]?.[action] || false;
-        });
-      });
-
-      setTitle(response.data.title);
-      setDesc(response.data.description || "");
-      setPermissions(formattedPermissions);
+      setPermissions(parsedPermissions);
     }
   };
 
@@ -125,6 +123,9 @@ const EditRole = () => {
   const handleCheckboxChange = (module, action) => {
     const formattedModule = module.replace(/\s+/g, "");
     setPermissions((prev) => {
+      const isStandardModule = modules.includes(module);
+      const relevantActions = isStandardModule ? actions : other_Actions;
+
       let newPermissions = {
         ...prev,
         [formattedModule]: {
@@ -132,47 +133,46 @@ const EditRole = () => {
           [action]: !prev[formattedModule]?.[action],
         },
       };
-      if (action === "edit" && newPermissions[formattedModule][action]) {
-        newPermissions[formattedModule]["view"] = true;
+
+      if (isStandardModule) {
+        if (action === "edit" && newPermissions[formattedModule][action]) {
+          newPermissions[formattedModule]["view"] = true;
+        }
+        if (action === "fullAccess") {
+          const isFullAccess = newPermissions[formattedModule][action];
+          relevantActions.forEach((act) => {
+            newPermissions[formattedModule][act] = isFullAccess;
+          });
+        }
       }
-      if (action === "fullAccess") {
-        const isFullAccess = newPermissions[formattedModule][action];
-        actions.forEach((act) => {
-          newPermissions[formattedModule][act] = isFullAccess;
-        });
-      }
+
       return newPermissions;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const finalPermissions = {};
-    modules.forEach((module) => {
-      const formattedModule = module.replace(/\s+/g, "");
-      finalPermissions[formattedModule] = {};
-      actions.forEach((action) => {
-        finalPermissions[formattedModule][action] =
-          permissions[formattedModule]?.[action] || false;
-      });
-    });
-
-    const roleData = { title, description, permissions: finalPermissions, updatedBy: userData?.user.id };
+    
+    const roleData = {
+      title,
+      description,
+      permissions,
+      updatedBy: userData?.user.id,
+    };
 
     try {
       await updateRole(id, roleData);
-    Swal.fire('Success', 'Role Updated Successfully!', 'success');
-    navigate("/roles");
-  } catch (error) {
-    Swal.fire('Error', '⚠️ Error Updating Role!', 'error');
+      Swal.fire("Success", "Role Updated Successfully!", "success");
+      navigate("/roles");
+    } catch (error) {
+      Swal.fire("Error", "⚠️ Error Updating Role!", "error");
     }
   };
 
   return (
     <Layout>
       <div className="create-role-container">
-        <BackButton/>
+        <BackButton />
         <h2>Edit Role</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -202,9 +202,14 @@ const EditRole = () => {
 
           <div className="input-group">
             <label>Description:</label>
-            <input type="text" value={description} onChange={(e) => setDesc(e.target.value)} />
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
 
+          <h3>Permissions</h3>
           <table className="permissions-table">
             <thead>
               <tr>
@@ -221,6 +226,37 @@ const EditRole = () => {
                   <tr key={module}>
                     <td>{module}</td>
                     {actions.map((action) => (
+                      <td key={action}>
+                        <input
+                          type="checkbox"
+                          checked={permissions[formattedModule]?.[action] || false}
+                          onChange={() => handleCheckboxChange(module, action)}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          <h3>Sub Modules</h3>
+          <table className="permissions-table">
+            <thead>
+              <tr>
+                <th>Module</th>
+                {other_Actions.map((action) => (
+                  <th key={action}>{action.charAt(0).toUpperCase() + action.slice(1)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {otherModules.map((module) => {
+                const formattedModule = module.replace(/\s+/g, "");
+                return (
+                  <tr key={module}>
+                    <td>{module}</td>
+                    {other_Actions.map((action) => (
                       <td key={action}>
                         <input
                           type="checkbox"

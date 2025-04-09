@@ -13,20 +13,22 @@ const AddProject = () => {
   let [clientId , setClientId] = useState()
   const [formData, setFormData] = useState({
     name: '',
-    type: 'Residential',
+    type: 'Corporate Office',
     clientName: '',
     description: '',
     startDate: '',
     estimatedCompletion: '',
     totalValue: '',
+    advancePayment: '', 
     deliveryAddress: '',
     deliveryHours: '',
     assignedTeamRoles: {},
     allowClientView: true,
     allowComments: true,
     enableNotifications: true,
-   clientId : clientId
+    clientId: clientId
   });
+  
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
@@ -47,32 +49,18 @@ const AddProject = () => {
     if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
     if (!type) return "Project Type is required.";
     if (!clientName) return "Customer selection is required.";
-    if (!startDate) return "Start Date is required.";
-  
-    if (estimatedCompletion) {
-      const start = new Date(startDate);
-      const end = new Date(estimatedCompletion);
-      if (end <= start) {
-        return "Estimated Completion date must be after Start Date.";
-      }
+    const { totalValue} = formData;
+    if (!totalValue || totalValue <= 0) return "Total Value must be a positive number.";
+    if (!formData.advancePayment || formData.advancePayment <= 0) {
+      return "Advance Payment must be a positive number.";
     }
-  
+    
     return null;
   };
   
   const validateStep2 = () => {
-    const { totalValue, deliveryAddress, deliveryHours } = formData;
-    if (!totalValue || totalValue <= 0) return "Total Value must be a positive number.";
-    if (!deliveryAddress.trim()) return "Delivery Address is required.";
-    if (!deliveryHours.trim()) return "Delivery Hours is required.";
+   
     if (selectedRoles.length === 0) return "At least one role must be selected.";
-    
-    if (leadTimeMatrix.length === 0) return "At least one item in the Lead Time Matrix is required.";
-    for (const item of leadTimeMatrix) {
-      if (!item.itemName.trim() || !item.quantity || !item.expectedDeliveryDate) {
-        return "All Lead Time Matrix items must be fully filled.";
-      }
-    }
   
     return null;
   };
@@ -248,7 +236,7 @@ const AddProject = () => {
       });
   
       const data = await response.json();
-  
+    console.log(data , "ye le data")
       if (response.status === 201) {
         Swal.fire('Project added successfully!');
         navigate('/projects');
@@ -309,10 +297,11 @@ const AddProject = () => {
                   <div className="form-group">
                     <label>Project Type</label>
                     <select name="type" value={formData.type} onChange={handleChange}>
-                      <option value="Residential">Residential</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Hospitality">Hospitality</option>
-                      <option value="Custom">Custom</option>
+                    <option value="Corporate Office">Corporate Office</option>
+    <option value="Hospitality">Hospitality</option>
+    <option value="Education">Education</option>
+    <option value="Healthcare">Healthcare</option>
+    <option value="Multi-family">Multi-family</option>
                     </select>
                   </div>
                 </div>
@@ -357,19 +346,23 @@ const AddProject = () => {
                   </div>
                 </div>
                 <div className='form-group-row'>
-               <div className="form-group">
-  <label>Start Date</label>
-  <input
-    type="date"
-    name="startDate"
-    value={formData.startDate ? formData.startDate.split('T')[0] : ''}
-    onChange={handleChange}
-    required
-  />
+                <div className="form-group">
+  <label>Status</label>
+  <select name="status" value={formData.status} onChange={handleChange}>
+    <option value="In progress">In progress</option>
+    <option value="Aproved">Aproved</option>
+    <option value="Waiting on Advance">Waiting on Advance</option>
+    <option value="Advance Paid">Advance Paid</option>
+    <option value="Order Processed">Order Processed</option>
+    <option value="Arrived">Arrived</option>
+    <option value="Delivered">Delivered</option>
+    <option value="Installed">Installed</option>
+    <option value="Punch">Punch</option>
+    <option value="Completed">Balance Owed</option>
+  </select>
 </div>
-
 <div className="form-group">
-  <label>Estimated Completion</label>
+  <label>Estimated Occupancy Date</label>
   <input
     type="date"
     name="estimatedCompletion"
@@ -378,79 +371,35 @@ const AddProject = () => {
     onChange={handleChange}
   />
 </div>
+
 </div>
-
-
-                <div className='form-group-row'>
-  <div className="form-group">
-    <label>Upload Proposals & Presentations (PDF, Images)</label>
-    <input
-      type="file"
-      name="proposals"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) =>
-        setFormData((prev) => ({
-          ...prev,
-          proposals: [...(prev.proposals || []), ...Array.from(e.target.files)],
-        }))
-      }
-    />
-    {formData.proposals?.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.proposals.map((file, idx) => (
-          <li key={idx}>{file.name}</li>
-        ))}
-      </ul>
-    )}
-  </div>
-
-  <div className="form-group">
-    <label>Upload Floor Plans, CAD Files</label>
-    <input
-      type="file"
-      name="floorPlans"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) =>
-        setFormData((prev) => ({
-          ...prev,
-          floorPlans: [...(prev.floorPlans || []), ...Array.from(e.target.files)],
-        }))
-      }
-    />
-    {formData.floorPlans?.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.floorPlans.map((file, idx) => (
-          <li key={idx}>{file.name}</li>
-        ))}
-      </ul>
-    )}
-  </div>
-
-  <div className="form-group">
-    <label>Upload Other Documents (COI, Permits, etc.)</label>
-    <input
-      type="file"
-      name="otherDocuments"
-      multiple
-      accept=".jpg,.jpeg,.png,.pdf"
-      onChange={(e) =>
-        setFormData((prev) => ({
-          ...prev,
-          otherDocuments: [...(prev.otherDocuments || []), ...Array.from(e.target.files)],
-        }))
-      }
-    />
-    {formData.otherDocuments?.length > 0 && (
-      <ul className="file-preview-list">
-        {formData.otherDocuments.map((file, idx) => (
-          <li key={idx}>{file.name}</li>
-        ))}
-      </ul>
-    )}
-  </div>
+<div className='form-group-row'>
+<div className="form-group">
+<label>Advance Payment</label>
+<input
+  type="number"
+  name="advancePayment" 
+  value={formData.advancePayment}
+  onChange={handleChange}
+  required
+  placeholder="Enter Advance Amount"
+/>
 </div>
+<div className="form-group">
+                    <label>Total Value</label>
+                    <input
+                      type="number"
+                      name="totalValue"
+                      value={formData.totalValue}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter total value"
+                    />
+                  </div> 
+              
+                
+                </div>
+
 
                 <div className="form-navigation">
                   <button type="button" onClick={nextStep}>Next</button>
@@ -515,6 +464,77 @@ const AddProject = () => {
                   </div>
 
                 </div>
+                <div className='form-group-row'>
+  <div className="form-group">
+    <label>Installation Docs</label>
+    <input
+      type="file"
+      name="proposals"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          proposals: [...(prev.proposals || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.proposals?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.proposals.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Warranty</label>
+    <input
+      type="file"
+      name="floorPlans"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          floorPlans: [...(prev.floorPlans || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.floorPlans?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.floorPlans.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <div className="form-group">
+    <label>Product Maintenance</label>
+    <input
+      type="file"
+      name="otherDocuments"
+      multiple
+      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) =>
+        setFormData((prev) => ({
+          ...prev,
+          otherDocuments: [...(prev.otherDocuments || []), ...Array.from(e.target.files)],
+        }))
+      }
+    />
+    {formData.otherDocuments?.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.otherDocuments.map((file, idx) => (
+          <li key={idx}>{file.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+                
 
                 <div className='form-group-row'>
                   <div className="form-group">
@@ -539,30 +559,7 @@ const AddProject = () => {
                     />
                   </div>
                 </div>
-                <div className='form-group-row'>
-                  <div className="form-group">
-                    <label>Total Value</label>
-                    <input
-                      type="number"
-                      name="totalValue"
-                      value={formData.totalValue}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter total value"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleChange}>
-                      <option value="Proposal">Proposal</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Delivered to Warehouse">Delivered to Warehouse</option>
-                      <option value="nstalled">Installed</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </div>
-
-                </div>
+              
                 <h3>Project Lead Time Matrix</h3>
                 <div className="lead-time-matrix-container">
   {leadTimeMatrix.map((item, index) => (
@@ -570,17 +567,19 @@ const AddProject = () => {
       <input
       className='user-search-input'
         type="text"
-        placeholder="Item Name"
+        placeholder="Manufacturer Name"
         value={item.itemName}
         onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
       />
       <input
-       className='user-search-input'
-        type="number"
-        placeholder="Quantity"
-        value={item.quantity}
-        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-      />
+  className='user-search-input'
+  type="text" 
+  placeholder="Description"
+  value={item.description}
+  onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+  maxLength={50}
+/>
+
       <input
        className='user-search-input'
         type="date"
@@ -596,11 +595,11 @@ const AddProject = () => {
         <option value="Delivered">Delivered</option>
       </select>
       {leadTimeMatrix.length > 1 && (
-        <button type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
+        <button  className='add-user-btn' type="button" onClick={() => handleRemoveItemRow(index)}>Remove</button>
       )}
     </div>
   ))}
-  <button className='ledbutton' type="button" onClick={handleAddItemRow}>+ Add Item</button>
+  <button className='add-user-btn' type="button" onClick={handleAddItemRow}>+ Add Item</button>
 </div>
 
                 <br />

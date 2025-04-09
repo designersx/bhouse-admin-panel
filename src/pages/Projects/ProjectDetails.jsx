@@ -8,11 +8,15 @@ import Loader from '../../components/Loader'
 import Swal from 'sweetalert2';
 import { ToastContainer } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
-import { FaEye, FaComment  ,  FaDownload } from 'react-icons/fa';
+import { FaEye, FaComment  ,  FaDownload, FaCommentAlt } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import BackButton from '../../components/BackButton';
 import { MdEdit } from 'react-icons/md';
 import Offcanvas from '../../components/OffCanvas/OffCanvas';
+import { FaTelegramPlane } from "react-icons/fa"; 
+import { useRef } from 'react'; 
+import useRolePermissions from '../../hooks/useRolePermissions'
+
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -21,6 +25,7 @@ const ProjectDetails = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeTabing, setActiveTabing] = useState('Admin');
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
@@ -30,15 +35,18 @@ const ProjectDetails = () => {
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [selectedInvoiceFiles, setSelectedInvoiceFiles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [offcanvasOpen, setOffcanvasOpen] = useState(false);
   const [userComments, setUserComments] = useState([]);
   const [newCommentText, setNewCommentText] = useState('');
-  
+  const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
+const [groupedComments, setGroupedComments] = useState({});
+const commentsEndRef = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
     otherDocuments: []
   });
+  const roleId = JSON.parse(localStorage.getItem("user"))
+  const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
   
   const [newIssue, setNewIssue] = useState({
     title: '',
@@ -49,17 +57,37 @@ const ProjectDetails = () => {
   const [projectItems, setProjectItems] = useState([]);
   const fetchUserComments = async (toUserId) => {
     try {
-      const res = await axios.get(`${url}/user-comments/${projectId}/${toUserId}`);
+      const res = await axios.get(`${url}/projects/${projectId}/user-comments/${toUserId}`);
       setUserComments(res.data);
+  
+      // Group by date
+      const grouped = res.data.reduce((acc, comment) => {
+        const date = new Date(comment.createdAt).toLocaleDateString();
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(comment);
+        return acc;
+      }, {});
+      setGroupedComments(grouped);
+  
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
   };
   
+  
+  const closeOffcanvas = () => {
+    setIsOffcanvasOpen(false);
+  };
+  const fetchComments = async () => {
+    if (selectedUser) {
+      await fetchUserComments(selectedUser.id); 
+    }
+  };
+    
   const handleOpenComments = async (user) => {
     setSelectedUser(user);
     await fetchUserComments(user.id);
-    setOffcanvasOpen(true);
+    setIsOffcanvasOpen(true); 
   };
   
   const handleAddComment = async () => {
@@ -69,17 +97,30 @@ const ProjectDetails = () => {
     if (!newCommentText.trim()) return;
   
     try {
-      const res = await axios.post(`${url}/user-comments`, {
-        projectId,
+      const res = await axios.post(`${url}/projects/${projectId}/user-comments`, {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
       });
   
-      setUserComments(prev => [res.data, ...prev]);
+      setUserComments(prev => {
+        const updated = [res.data, ...prev];
+        
+        const grouped = updated.reduce((acc, comment) => {
+          const date = new Date(comment.createdAt).toLocaleDateString();
+          if (!acc[date]) acc[date] = [];
+          acc[date].push(comment);
+          return acc;
+        }, {});
+        setGroupedComments(grouped);
+        
+        return updated;
+      });
+      
       setNewCommentText('');
     } catch (err) {
       console.error("Error posting comment:", err);
+      toast.error("Failed to add comment");
     }
   };
   
@@ -119,10 +160,6 @@ const ProjectDetails = () => {
 
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
-  
-    if (field === 'itemName' && !/^[a-zA-Z\s]*$/.test(value)) return; 
-    if (field === 'quantity' && !/^\d*$/.test(value)) return; 
-  
     updated[index][field] = value;
     setItems(updated);
   };
@@ -379,7 +416,15 @@ setLoadingDoc(false)
     }));
   };
 
-  
+  const tabModules = [
+    { key: "overview", label: "Overview", permissionKey: null, alwaysVisible: true },
+    { key: "documents", label: "Documents", permissionKey: "ProjectDocument" },
+    { key: "team", label: "Team", permissionKey: "AssignedTeamComments" },
+    { key: "manufacturer", label: "Manufacturer", permissionKey: null, alwaysVisible: true },
+    { key: "punchlist", label: "Punch List", permissionKey: "PunchList" },
+    { key: "invoice", label: "Invoice", permissionKey: "Invoicing" },
+    { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
+  ];
  
   return (
     <Layout>
@@ -398,17 +443,23 @@ setLoadingDoc(false)
 <div className='doc-loader'><Loader/></div>
  : 
  <>
-  <div className="tabs">
-        {['overview', 'documents', 'team', 'items', 'punchlist','invoice','settings'].map(tab => (
-          <button
-            key={tab}
-            className={activeTab === tab ? 'tab active' : 'tab'}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
+ <div className="tabs">
+    {tabModules.map(({ key, label, permissionKey, alwaysVisible }) => {
+      const hasPermission =
+        alwaysVisible || // Show if marked alwaysVisible
+        (permissionKey && (rolePermissions?.[permissionKey]?.view ));
+      return hasPermission ? (
+        <button
+          key={key}
+          className={activeTab === key ? "tab active" : "tab"}
+          onClick={() => setActiveTab(key)}
+        >
+          {label}
+        </button>
+      ) : null; // Hide tab if not allowed
+    })}
+  </div>
+
   <div className="tab-content">
   {activeTab === 'overview' && (
     <div className="project-details-container">
@@ -416,10 +467,12 @@ setLoadingDoc(false)
         <h2>Project Overview</h2>
         <div className="info-group"><strong>Client:</strong> {project.clientName}</div>
         <div className="info-group"><strong>Status:</strong> {project.status}</div>
+        <div className="info-group"><strong>Type:</strong> {project.type}</div>
         <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
-        <div className="info-group"><strong>Start Date:</strong> {new Date(project.startDate).toLocaleDateString()}</div>
-        <div className="info-group"><strong>Estimated Completion:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+       
+        <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
         <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Advance Payment:</strong> ₹ {project.advancePayment?.toLocaleString() || "N/A"}</div>
       </div>
       <div className="project-info-card">
         <h2>Delivery Details</h2>
@@ -430,23 +483,46 @@ setLoadingDoc(false)
   )}
 {activeTab === 'documents' && (
 <div className="project-info-card">
-<h2>Uploaded Documents</h2>
+  <div className="tabs-container">
+    <div className="tabs-header">
+
+    <button 
+                    className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Admin")}
+                >
+                   Admin
+                </button>
+                <button 
+                    className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Customer")}
+                >
+                    Customer
+                </button>
+    </div>
+  </div>
+  <div className="tab-content">
+  {activeTabing === "Admin" && (
+    <div className="tab-panel">
+      <h2>Uploaded Documents</h2>
 
 {[
-{ title: "Proposals & Presentations", files: project.proposals, category: 'proposals' },
-{ title: "Floor Plans & CAD Files", files: project.floorPlans, category: 'floorPlans' },
-{ title: "Other Documents", files: project.otherDocuments, category: 'otherDocuments' },
+{ title: "Installation Docs", files: project.proposals, category: 'proposals'  },
+{ title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' },
 ]
 
 
 .map((docCategory, idx) => (
 <div key={idx} className="  -section">
   <h3>{docCategory.title}</h3>
-  <input
-type="file"
-multiple
-onChange={(e) => handleFileUpload(e, docCategory.category)}
-/>
+  {rolePermissions?.ProjectDocument?.add ? 
+    <input
+    type="file"
+    multiple
+    onChange={(e) => handleFileUpload(e, docCategory.category)}
+    />
+  : null}
+
 
 {selectedFiles[docCategory.category]?.length > 0 && (
 <div className="file-preview-section">
@@ -549,12 +625,18 @@ return files.length > 0 ? (
 
 </div>
 ))}
+    </div>
+  )}
+</div>
+
+
 </div>
 )}
 
 
 
 {activeTab === 'team' && (
+  // udani hai 
 <div className="project-info-card">
 <h2>Assigned Team</h2>
 {project.assignedTeamRoles.length > 0 ? (
@@ -573,12 +655,11 @@ return files.length > 0 ? (
             />
             <div className="user-info-horizontal">
               <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
-              <span className="user-email-horizontal">{user.email}</span>
               <button
-  className="comment-btn"
+  className="comment-btna"
   onClick={() => handleOpenComments(user)}
 >
-  Comment
+<FaCommentAlt />
 </button>
 
             </div>
@@ -593,48 +674,27 @@ return files.length > 0 ? (
 )}
 </div>
 )}
-<Offcanvas isOpen={offcanvasOpen} closeOffcanvas={() => setOffcanvasOpen(false)}>
-  <h3>Comments for {selectedUser?.firstName}</h3>
-
-  <div className="comment-section">
-    <textarea
-      placeholder="Write a comment..."
-      value={newCommentText}
-      onChange={(e) => setNewCommentText(e.target.value)}
-    ></textarea>
-    <button className="submit-btn" onClick={handleAddComment}>Post</button>
-  </div>
-
-  <div className="comment-list">
-    {userComments.length === 0 ? (
-      <p>No comments yet.</p>
-    ) : (
-      userComments.map((c, i) => (
-        <div key={i} className="comment-item">
-          <strong>{c.fromUser?.firstName}:</strong> {c.comment}
-          <div className="comment-time">{new Date(c.createdAt).toLocaleString()}</div>
-        </div>
-      ))
-    )}
-  </div>
-</Offcanvas>
 
 
 
 
-{activeTab === 'items' && (
+
+
+
+{activeTab === 'manufacturer' && (
 <div className="project-info-card">
 <h2>Project Lead Time Matrix</h2>
 <table className="matrix-table">
 <thead>
   <tr>
-    <th>Item Name</th>
-    <th>Quantity</th>
+    <th>Manufacturer Name</th>
+    <th>Description</th> 
     <th>Expected Delivery</th>
     <th>Status</th>
     <th>Actions</th>
   </tr>
 </thead>
+
 <tbody>
 {items.map((item, index) => {
 const isEditable = editableRows[index] || !item.id; 
@@ -648,9 +708,6 @@ if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
   return toast.error("Item Name must contain only letters.");
 }
 
-if (!/^\d+$/.test(item.quantity)) {
-  return toast.error("Quantity must be a number.");
-}
 
 if (item.id) {
   updateItem(item);
@@ -673,13 +730,17 @@ return (
     />
   </td>
   <td>
-    <input
-      type="text"
-      value={item.quantity}
-      disabled={!isEditable}
-      onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-    />
-  </td>
+  <textarea
+    type="text"
+    value={item.quantity}
+    disabled={!isEditable}
+    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+    className="item-description-input"
+    maxLength={50}
+  />
+</td>
+
+
   <td>
     <input
       type="date"
@@ -1104,6 +1165,61 @@ issue.createdByType === 'user'
 }
     
       </div>
+      <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
+  <div className="right-panel">
+    <div
+      className="comments-list"
+      style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }}
+    >
+      {/* Grouped Comments by Date */}
+      {Object.keys(groupedComments).map((date) => (
+        <div key={date} className="comment-date-group">
+          <p className="comment-date">{date}</p>
+          {groupedComments[date].reverse().map((comment) => (
+            <div key={comment.id}>
+              <div className="whatsapp-comment-box">
+                <div className="whatsapp-comment-user-info">
+                  <img
+                    src={
+                      comment?.fromUser?.profileImage
+                        ? `${url2}/${comment.fromUser.profileImage}`
+                        : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                    }
+                    alt="User"
+                    className="whatsapp-comment-user-avatar"
+                  />
+                  <div>
+                    <p className="whatsapp-comment-author">
+                      {comment?.fromUser?.firstName} {comment?.fromUser?.lastName}
+                    </p>
+                  </div>
+                </div>
+                <p className="whatsapp-comment-text">{comment.comment}</p>
+                <p className="whatsapp-comment-meta">
+                  {new Date(comment.createdAt).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+      {/* Scroll Anchor */}
+      <div ref={commentsEndRef}></div>
+    </div>
+  </div>
+
+  <div className="whatsapp-comment-form">
+    <textarea
+      value={newCommentText}
+      onChange={(e) => setNewCommentText(e.target.value)}
+      className="whatsapp-comment-input"
+      placeholder="Write your comment..."
+    />
+    <button onClick={handleAddComment} className="whatsapp-submit-btn">
+      <FaTelegramPlane />
+    </button>
+  </div>
+</Offcanvas>
     </Layout>
   );
 };
