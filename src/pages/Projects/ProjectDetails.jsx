@@ -23,7 +23,10 @@ const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
+
+  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTabing, setActiveTabing] = useState('Admin');
+
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
@@ -521,15 +524,243 @@ const ProjectDetails = () => {
     },
   ];
 
+ 
   return (
     <Layout>
-      <ToastContainer />
-      <div className="project-details-page">
-        <BackButton />
-        <div className="project-details-header">
-          <h1>{project.name}</h1>
-          <p className="project-subtitle">{project.type} Project</p>
-        </div>
+      <ToastContainer/>
+      <div className='project-details-page'>
+        <BackButton/>
+      <div className="project-details-header">
+        <h1>{project.name}</h1>
+        <p className="project-subtitle">{project.type} Project</p>
+      </div>
+
+     
+
+
+{loadingDoc ? 
+<div className='doc-loader'><Loader/></div>
+ : 
+ <>
+ <div className="tabs">
+    {tabModules.map(({ key, label, permissionKey, alwaysVisible }) => {
+      const hasPermission =
+        alwaysVisible || // Show if marked alwaysVisible
+        (permissionKey && (rolePermissions?.[permissionKey]?.view ));
+      return hasPermission ? (
+        <button
+          key={key}
+          className={activeTab === key ? "tab active" : "tab"}
+          onClick={() => setActiveTab(key)}
+        >
+          {label}
+        </button>
+      ) : null; // Hide tab if not allowed
+    })}
+  </div>
+
+  <div className="tab-content">
+  {activeTab === 'overview' && (
+    <div className="project-details-container">
+      <div className="project-info-card">
+        <h2>Project Overview</h2>
+        <div className="info-group"><strong>Client:</strong> {project.clientName}</div>
+        <div className="info-group"><strong>Status:</strong> {project.status}</div>
+        <div className="info-group"><strong>Type:</strong> {project.type}</div>
+        <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
+       
+        <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+        <div className="info-group"><strong>Total Value:</strong> $ {project.totalValue?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Advance Payment:</strong> $ {project.advancePayment?.toLocaleString() || "N/A"}</div>
+      </div>
+      <div className="project-info-card">
+        <h2>Delivery Details</h2>
+        <div className="info-group"><strong>Address:</strong> {project.deliveryAddress || "N/A"}</div>
+        <div className="info-group"><strong>Hours:</strong> {project.deliveryHours || "N/A"}</div>
+      </div>
+    </div>
+  )}
+{activeTab === 'documents' && (
+<div className="project-info-card">
+  <div className="tabs-container">
+    <div className="tabs-header">
+
+    <button 
+                    className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Admin")}
+                >
+                   Admin
+                </button>
+                <button 
+                    className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Customer")}
+                >
+                    Customer
+                </button>
+    </div>
+  </div>
+  <div className="tab-content">
+  {activeTabing === "Admin" && (
+    <div className="tab-panel">
+      <h2>Uploaded Documents</h2>
+
+{[
+{ title: "Installation Docs", files: project.proposals, category: 'proposals'  },
+{ title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' },
+]
+
+
+.map((docCategory, idx) => (
+<div key={idx} className="  -section">
+  <h3>{docCategory.title}</h3>
+  {rolePermissions?.ProjectDocument?.add ? 
+    <input
+    type="file"
+    multiple
+    onChange={(e) => handleFileUpload(e, docCategory.category)}
+    />
+  : null}
+
+
+{selectedFiles[docCategory.category]?.length > 0 && (
+<div className="file-preview-section">
+<h4>Files to be uploaded:</h4>
+<ul className="preview-list">
+  {selectedFiles[docCategory.category].map((file, i) => (
+    <li key={i} className="preview-item">
+      {file.name}
+      <span className="remove-preview" onClick={() => removeSelectedFile(docCategory.category, i)}>×</span>
+    </li>
+  ))}
+</ul>
+<button className="upload-btn" onClick={() => uploadSelectedFiles(docCategory.category)}>Upload</button>
+</div>
+)}
+{(() => {
+const files = Array.isArray(docCategory.files)
+? docCategory.files
+: typeof docCategory.files === 'string'
+? JSON.parse(docCategory.files)
+: [];
+
+return files.length > 0 ? (
+
+<div className="uploaded-files">
+{files.map((filePath, idx) => {
+  const fileName = filePath.split('/').pop();
+  const fileUrl = filePath.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Download failed", error);
+      alert("Download failed, please try again.");
+    }
+  };
+
+
+  return (
+    <div key={idx} className="file-item-enhanced">
+      <span className="file-name-enhanced">{fileName}</span>
+      <div className="file-actions">
+        <button className="file-action-btn" onClick={() => window.open(fileUrl, '_blank')} title="View">
+          <FaEye />
+        </button>
+        <button className="file-action-btn" onClick={handleDownload} title="Download">
+          <FaDownload />
+        </button>
+        <button
+          className="file-action-btn"
+          title="Delete"
+          onClick={() => {
+            Swal.fire({
+              title: 'Are you sure?',
+              text: "Do you want to remove this file?",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, remove it!',
+              cancelButtonText: 'Cancel',
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                await handleProjectFileUpdate(filePath, docCategory.category);
+              }
+            });
+          }}
+        >
+          <MdDelete />
+        </button>
+        <button 
+          className="file-action-btn"
+          title="Comment"
+          onClick={() => navigate(`/project/${projectId}/file-comments`, {
+            state: {
+              filePath,
+              category: docCategory.category,
+            }
+          })}
+        >
+          <FaComment />
+        </button>
+      </div>
+    </div>
+  );
+})}
+</div>
+) : (
+<p>No documents uploaded.</p>
+);
+})()}
+
+</div>
+))}
+    </div>
+  )}
+</div>
+
+
+</div>
+)}
+
+
+
+{activeTab === 'team' && (
+  // udani hai 
+<div className="project-info-card">
+<h2>Assigned Team</h2>
+{project.assignedTeamRoles.length > 0 ? (
+<div className="team-grid">
+  {project.assignedTeamRoles.map((roleGroup, index) => ( 
+    <div key={index} className="role-card">
+      <h3 className="role-title">{roleGroup.role}</h3>
+      {roleGroup.users.map((userId) => {
+        const user = allUsers.find(u => u.id.toString() === userId.toString());
+        return user ? (
+          <div key={user.id} className="user-card-horizontal">
+            <img 
+              src={user.profileImage ? `${url2}/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+              alt={`${user.firstName} ${user.lastName}`} 
+              className="user-profile-img-horizontal" 
+            />
+            <div className="user-info-horizontal">
+              <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
+              <button
+  className="comment-btna"
+  onClick={() => handleOpenComments(user)}
+>
+<FaCommentAlt />
+</button>
+
 
         {loadingDoc ? (
           <div className="doc-loader">
@@ -1599,61 +1830,61 @@ const ProjectDetails = () => {
             <FaTelegramPlane />
           </button>
         </div>
-      </Offcanvas>
 
-      {/*item comment canvas*/}
-      <Offcanvas
-        isOpen={isItemCanvasOpen}
-        closeOffcanvas={() => setIsItemCanvasOpen(false)}
-        getLatestComment={() => openItemComment(selectedItemId)}
-      >
-        <div className="right-panel">
-          <div
-            className="comments-list"
-            style={{
-              overflowY: "auto",
-              maxHeight: "500px",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {Object.keys(groupedItemComments)
-              .sort((a, b) => new Date(a) - new Date(b))
-              .map((date) => (
-                <div key={date} className="comment-date-group">
-                  <p className="comment-date">{date}</p>
-                  {groupedItemComments[date]
-                    .sort(
-                      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-                    )
-                    .map((comment) => (
-                      <div key={comment.id} className="whatsapp-comment-box">
-                        <div className="whatsapp-comment-user-info">
-                          <img
-                            src={
-                              comment?.creatorUser?.profileImage
-                                ? `${url2}/${comment.creatorUser.profileImage}`
-                                : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-                            }
-                            alt="User"
-                            className="whatsapp-comment-user-avatar"
-                          />
-                          <div>
-                            <p className="whatsapp-comment-author">
-                              {comment?.fromUser?.firstName}{" "}
-                              {comment?.fromUser?.lastName} (
-                              {comment?.fromUser?.userRole || "User"})
-                            </p>
-                          </div>
-                        </div>
-                        <p className="whatsapp-comment-text">
-                          {comment.comment}
-                        </p>
-                        <p className="whatsapp-comment-meta">
-                          {new Date(comment.createdAt).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    ))}
+      ))}
+      <div ref={commentsEndRef}></div>
+    </div>
+  </div>
+
+  <div className="whatsapp-comment-form">
+    <textarea
+      value={newCommentText}
+      onChange={(e) => setNewCommentText(e.target.value)}
+      className="whatsapp-comment-input"
+      placeholder="Write your comment..."
+    />
+    <button onClick={handleAddComment} className="whatsapp-submit-btn">
+      <FaTelegramPlane />
+    </button>
+  </div>
+</Offcanvas>
+
+{/*item comment canvas*/}
+<Offcanvas
+  isOpen={isItemCanvasOpen}
+  closeOffcanvas={() => setIsItemCanvasOpen(false)}
+  getLatestComment={() => openItemComment(selectedItemId)}
+>
+  <div className="right-panel">
+    <div
+      className="comments-list"
+      style={{
+        overflowY: "auto",
+        maxHeight: "500px",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      {Object.keys(groupedItemComments).map(date => (
+        <div key={date} className="comment-date-group">
+          <p className="comment-date">{date}</p>
+          {groupedItemComments[date].map(comment => (
+            <div key={comment.id} className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment?.creatorUser?.profileImage
+                      ? `${url2}/${comment.creatorUser.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                  {comment?.createdByName} ({comment?.userRole})
+                  </p>
+
                 </div>
               ))}
             <div ref={commentsItemEndRef}></div>
