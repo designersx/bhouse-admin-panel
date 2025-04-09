@@ -12,6 +12,7 @@ const FileCommentsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { filePath, category } = location.state;
+ 
 
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
@@ -85,7 +86,7 @@ comments.forEach((comment) => {
         </div>
       </div>
       <button className='view-doc' onClick={openOffcanvas}>View Comments</button>
-      <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} > 
+      <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments} > 
       <div className="right-panel">
   <div className="comments-list">
     {Object.keys(groupedComments).map((date) => (
@@ -101,7 +102,7 @@ comments.forEach((comment) => {
                 className="whatsapp-comment-user-avatar"
               />
               <div>
-                <p className="whatsapp-comment-author">{c.user?.firstName} <span className='comment-user-role'>({c.user.userRole})</span></p>
+                <p className="whatsapp-comment-author">{c.user?.firstName}   {c.customer?.full_name} <span className='comment-user-role'>({c.user?.userRole  ? c.user?.userRole : "Customer" })</span></p>
               </div>
             </div>
 

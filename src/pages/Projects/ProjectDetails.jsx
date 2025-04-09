@@ -25,6 +25,7 @@ const ProjectDetails = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeTabing, setActiveTabing] = useState('Admin');
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
@@ -551,7 +552,27 @@ setLoadingDoc(false)
   )}
 {activeTab === 'documents' && (
 <div className="project-info-card">
-<h2>Uploaded Documents</h2>
+  <div className="tabs-container">
+    <div className="tabs-header">
+
+    <button 
+                    className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Admin")}
+                >
+                   Admin
+                </button>
+                <button 
+                    className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Customer")}
+                >
+                    Customer
+                </button>
+    </div>
+  </div>
+  <div className="tab-content">
+  {activeTabing === "Admin" && (
+    <div className="tab-panel">
+      <h2>Uploaded Documents</h2>
 
 {[
 { title: "Installation Docs", files: project.proposals, category: 'proposals'  },
@@ -673,12 +694,18 @@ return files.length > 0 ? (
 
 </div>
 ))}
+    </div>
+  )}
+</div>
+
+
 </div>
 )}
 
 
 
 {activeTab === 'team' && (
+  // udani hai 
 <div className="project-info-card">
 <h2>Assigned Team</h2>
 {project.assignedTeamRoles.length > 0 ? (

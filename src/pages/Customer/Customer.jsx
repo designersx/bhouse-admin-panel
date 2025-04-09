@@ -185,6 +185,7 @@ const Customer = () => {
           commentsEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
       }, [groupedComments]);
+      console.log({projectCounts})
     return (
         <Layout>
             <div className="roles-container">

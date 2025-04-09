@@ -48,7 +48,8 @@ const [isLoading , setIsLoading] = useState(true)
         "Account Manager": 2,
         "Sr. Designer": 3,
         "Operations": 4,
-        "Lead Installer": 5,
+        "Junior Designer": 5,
+        "Lead Installer" : 6
       };
 
       if (loggedInUser?.user.userRole === "Super Admin" ) {
