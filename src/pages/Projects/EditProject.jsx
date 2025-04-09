@@ -14,11 +14,13 @@ const EditProject = () => {
   const [allRoles, setAllRoles] = useState([]);
   const [usersByRole, setUsersByRole] = useState({});
   const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     type: 'Corporate Office',
     clientName: '',
     description: '',
+    clientId : null, 
     advancePayment: '', 
     estimatedCompletion: '',
     totalValue: '',
@@ -33,6 +35,9 @@ floorPlans: [],
 otherDocuments: [],
 
   });
+  console.log(formData?.clientId , "client id ")
+  
+  
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
   const [removedFiles, setRemovedFiles] = useState([]);
@@ -318,7 +323,7 @@ otherDocuments: [],
   
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-  
+    console.log(formDataToSend)
     Object.entries(files).forEach(([category, fileArray]) => {
       fileArray.forEach((file) => formDataToSend.append(category, file));
     });
@@ -331,6 +336,7 @@ otherDocuments: [],
   
       if (res.status === 200) {
         Swal.fire("Project updated successfully!");
+        
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
@@ -348,6 +354,7 @@ otherDocuments: [],
       clientName,
       totalValue,
       advancePayment,
+      
       
     } = formData;
   
@@ -377,6 +384,7 @@ otherDocuments: [],
   };
   
   const prevStep = () => setStep(step - 1);
+
 
   return (
     <Layout>
@@ -424,22 +432,23 @@ otherDocuments: [],
     setFormData(prev => ({
       ...prev,
       clientName: e.target.value,
-      deliveryAddress: selectedCustomer?.delivery_address|| '',
+      deliveryAddress: selectedCustomer?.delivery_address || '',
+      clientId: selectedCustomer?.id || '', // updating clientId directly
     }));
+
+    setSelectedCustomerId(selectedCustomer?.id || '');
   }}
   required
 >
-
-                      <option value="">Select a customer</option>
-{customers.length?<>
-  {customers?.map((customer) => (
-                        <option key={customer.id} value={customer.full_name}>
-                          {customer.full_name} ({customer.email})
-                        </option>
-                      ))}
-</> : <></>}
-                      
-                    </select>
+  <option value="">Select a customer</option>
+  {customers.length > 0 &&
+    customers.map((customer) => (
+      <option key={customer.id} value={customer.full_name}>
+        {customer.full_name} ({customer.email})
+      </option>
+    ))
+  }
+</select>
                   </div>
                   <div className="form-group">
                     <label>Description</label>

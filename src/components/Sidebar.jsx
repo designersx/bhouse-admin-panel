@@ -37,11 +37,11 @@ const Sidebar = () => {
   // Check only 'view' permissions for visibility
   const canViewUsers = rolePermissions?.UserManagement?.view;
   const canViewRoles = rolePermissions?.Roles?.view;
-  console.log(canViewRoles)
+
   const canViewCustomers = rolePermissions?.Customer?.view;
   const canViewProjects =  rolePermissions?.ProjectManagement.view
 
-console.log({rolePermissions})
+
   return (
     <div className="sidebar">
       {rolePermissions? <>    <div className="logo">Hi, {user?.user?.firstName || 'User'}</div>
