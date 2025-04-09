@@ -230,7 +230,8 @@ const InvoiceManagement = ({ projectId }) => {
               name="totalAmount"
               value={invoiceData.totalAmount}
               onChange={handleInvoiceChange}
-            />
+              maxLength={6}
+              />
 
             <label>Status</label>
             <select
@@ -251,6 +252,7 @@ const InvoiceManagement = ({ projectId }) => {
                   name="advancePaid"
                   value={invoiceData.advancePaid}
                   onChange={handleInvoiceChange}
+                  maxLength={6}
                 />
               </div>
             )}
@@ -282,6 +284,7 @@ const InvoiceManagement = ({ projectId }) => {
               name="totalAmount"
               value={invoiceData.totalAmount}
               onChange={handleInvoiceChange}
+              maxLength={6}
             />
 
 
@@ -304,6 +307,7 @@ const InvoiceManagement = ({ projectId }) => {
                   name="advancePaid"
                   value={invoiceData.advancePaid}
                   onChange={handleInvoiceChange}
+                  maxLength={6}
                 />
               </div>
             )}
