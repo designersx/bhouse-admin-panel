@@ -794,6 +794,12 @@ return (
 <tr key={item.id || index}>
   <td>
     <input
+    style={{
+      height: "30px" ,
+      borderRadius: "5px" ,  
+      border : "1px solid #ccc"
+      
+    }}
       value={item.itemName}
       disabled={!isEditable}
       onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
@@ -807,12 +813,24 @@ return (
     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
     className="item-description-input"
     maxLength={50}
+    style={{
+      height: "30px" ,
+      borderRadius: "5px" ,  
+      border : "1px solid #ccc"
+      
+    }}
   />
 </td>
 
 
 <td>
   <input
+   style={{
+    height: "30px" ,
+    borderRadius: "5px" ,  
+    border : "1px solid #ccc"
+    
+  }}
     type="date"
     value={item.expectedDeliveryDate?.slice(0, 10) || ''}
     min={new Date().toISOString().split("T")[0]} 
@@ -824,6 +842,12 @@ return (
 </td>
 <td>
   <input
+   style={{
+    height: "30px" ,
+    borderRadius: "5px" ,  
+    border : "1px solid #ccc"
+    
+  }}
     type="date"
     value={item.expectedArrivalDate?.slice(0, 10) || ''}
     min={new Date().toISOString().split("T")[0]} 
