@@ -185,3 +185,12 @@
 .badge.default {
   background-color: #999;
 }
+
+.user-sort-input{
+  width: 200px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  outline: none;
+  margin-right: 5px;
+}

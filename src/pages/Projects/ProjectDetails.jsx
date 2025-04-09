@@ -39,7 +39,71 @@ const ProjectDetails = () => {
   const [newCommentText, setNewCommentText] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
 const [groupedComments, setGroupedComments] = useState({});
+const [isItemCanvasOpen, setIsItemCanvasOpen] = useState(false);
+const [selectedItemId, setSelectedItemId] = useState(null);
+const [itemComments, setItemComments] = useState([]);
+const [groupedItemComments, setGroupedItemComments] = useState({});
+const [itemCommentText, setItemCommentText] = useState('');
+
+
+const openItemComment = async (itemId) => {
+  try {
+    setSelectedItemId(itemId);
+    const res = await axios.get(`${url}/items/${itemId}/comments`);
+
+    const grouped = res.data.reduce((acc, comment) => {
+      const date = new Date(comment.createdAt).toLocaleDateString();
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(comment);
+      return acc;
+    }, {});
+    
+    setItemComments(res.data);
+    setGroupedItemComments(grouped);
+    setIsItemCanvasOpen(true);
+  } catch (err) {
+    console.error("Error fetching item comments:", err);
+  }
+};
+
+
+const handleAddItemComment = async () => {
+  const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const customer = JSON.parse(localStorage.getItem("customer"));
+
+  const creatorId = user?.id || customer?.id;
+  const creatorType = user ? "user" : "customer";
+
+  if (!itemCommentText.trim()) return;
+
+  try {
+    await axios.post(`${url}/items/${selectedItemId}/comments`, {
+      comment: itemCommentText,
+      createdById: creatorId,
+      createdByType: creatorType,
+      projectId: projectId, 
+    });
+    
+
+    setItemCommentText('');
+    openItemComment(selectedItemId); 
+  } catch (err) {
+    console.error("Failed to add comment:", err);
+  }
+};
+
+
 const commentsEndRef = useRef(null);
+useEffect(() => {
+  if (isOffcanvasOpen) {
+    setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+}, [userComments, newCommentText]);
+
+
+
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -97,32 +161,24 @@ const commentsEndRef = useRef(null);
     if (!newCommentText.trim()) return;
   
     try {
-      const res = await axios.post(`${url}/projects/${projectId}/user-comments`, {
+      await axios.post(`${url}/projects/${projectId}/user-comments`, {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
       });
   
-      setUserComments(prev => {
-        const updated = [res.data, ...prev];
-        
-        const grouped = updated.reduce((acc, comment) => {
-          const date = new Date(comment.createdAt).toLocaleDateString();
-          if (!acc[date]) acc[date] = [];
-          acc[date].push(comment);
-          return acc;
-        }, {});
-        setGroupedComments(grouped);
-        
-        return updated;
-      });
-      
       setNewCommentText('');
+      await fetchUserComments(selectedUser.id);
+      setTimeout(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+  
     } catch (err) {
       console.error("Error posting comment:", err);
-      toast.error("Failed to add comment");
     }
   };
+  
+  
   
   useEffect(() => {
     axios.get(`${url}/items/${projectId}`)
@@ -206,6 +262,7 @@ const commentsEndRef = useRef(null);
         itemName: '',
         quantity: '',
         expectedDeliveryDate: '',
+        expectedArrivalDate: '',
         status: 'Pending',
         projectId,
       }
@@ -329,8 +386,19 @@ setLoadingDoc(false)
   };
     
   
+  const parseSafeArray = (value) => {
+    if (Array.isArray(value)) return value;
+    try {
+      return JSON.parse(value) || [];
+    } catch {
+      return [];
+    }
+  };
+  
   const handleProjectFileUpdate = async (filePath, category) => {
-    const updatedCategoryFiles = project[category].filter(f => f !== filePath);
+    const existingFiles = parseSafeArray(project[category]);
+  
+    const updatedCategoryFiles = existingFiles.filter(f => f !== filePath);
     const updatedProject = {
       ...project,
       [category]: updatedCategoryFiles
@@ -339,7 +407,7 @@ setLoadingDoc(false)
     const formDataToSend = new FormData();
     formDataToSend.append("removedFiles", JSON.stringify([filePath]));
   
-    // Append basic fields (add more if required)
+    // Append required fields
     ['name', 'type', 'clientName', 'description', 'startDate', 'estimatedCompletion', 'totalValue', 'deliveryAddress', 'deliveryHours'].forEach(key => {
       if (updatedProject[key] !== undefined) {
         formDataToSend.append(key, updatedProject[key]);
@@ -367,6 +435,7 @@ setLoadingDoc(false)
       toast.error("Error while updating project.");
     }
   };
+  
   const toggleEditRow = (index) => {
     setEditableRows(prev => ({
       ...prev,
@@ -471,8 +540,8 @@ setLoadingDoc(false)
         <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
        
         <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
-        <div className="info-group"><strong>Total Value:</strong> ₹ {project.totalValue?.toLocaleString() || "N/A"}</div>
-        <div className="info-group"><strong>Advance Payment:</strong> ₹ {project.advancePayment?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Total Value:</strong> $ {project.totalValue?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Advance Payment:</strong> $ {project.advancePayment?.toLocaleString() || "N/A"}</div>
       </div>
       <div className="project-info-card">
         <h2>Delivery Details</h2>
@@ -690,6 +759,7 @@ return files.length > 0 ? (
     <th>Manufacturer Name</th>
     <th>Description</th> 
     <th>Expected Delivery</th>
+    <th>Expected Arrival</th>
     <th>Status</th>
     <th>Actions</th>
   </tr>
@@ -700,7 +770,7 @@ return files.length > 0 ? (
 const isEditable = editableRows[index] || !item.id; 
 
 const handleSave = () => {
-if (!item.itemName || !item.quantity || !item.expectedDeliveryDate || !item.status) {
+if (!item.itemName || !item.quantity || !item.expectedDeliveryDate || !item.expectedArrivalDate || !item.status) {
   return toast.error("All fields are required.");
 }
 
@@ -741,14 +811,28 @@ return (
 </td>
 
 
-  <td>
-    <input
-      type="date"
-      value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-      disabled={!isEditable}
-      onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
-    />
-  </td>
+<td>
+  <input
+    type="date"
+    value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+    min={new Date().toISOString().split("T")[0]} 
+    disabled={!isEditable}
+    onChange={(e) =>
+      handleItemChange(index, 'expectedDeliveryDate', e.target.value)
+    }
+  />
+</td>
+<td>
+  <input
+    type="date"
+    value={item.expectedArrivalDate?.slice(0, 10) || ''}
+    min={new Date().toISOString().split("T")[0]} 
+    disabled={!isEditable}
+    onChange={(e) =>
+      handleItemChange(index, 'expectedArrivalDate', e.target.value)
+    }
+  />
+</td>
   <td>
     <select
       value={item.status}
@@ -769,6 +853,11 @@ return (
         <>
           <button onClick={() => toggleEditRow(index)}><MdEdit /></button>
           <button onClick={() => deleteItem(item.id)}><MdDelete /></button>
+          <button onClick={() => openItemComment(item.id)} title="Comment">
+  <FaCommentAlt />
+</button>
+
+
         </>
       )
     ) : (
@@ -859,26 +948,25 @@ return (
         const formData = new FormData();
         const stored = JSON.parse(localStorage.getItem('user'));
 
-const storedUser = stored?.user;
-const storedCustomer = JSON.parse(localStorage.getItem('customer'));
+        const storedUser = stored?.user;
+        const storedCustomer = JSON.parse(localStorage.getItem('customer'));
+        
+        let createdById = '';
+        let createdByType = '';
+        
+        if (storedUser?.id) {
+        createdById = storedUser.id;
+        createdByType = 'user';
+        } else if (storedCustomer?.id) {
+        createdById = storedCustomer.id;
+        createdByType = 'customer';
+        } else {
+        toast.error("User not logged in");
+        return;
+        }
 
-let createdById = '';
-let createdByType = '';
-
-if (storedUser?.id) {
-createdById = storedUser.id;
-createdByType = 'user';
-} else if (storedCustomer?.id) {
-createdById = storedCustomer.id;
-createdByType = 'customer';
-} else {
-toast.error("User not logged in");
-return;
-}
-
-formData.append('createdById', createdById);
-formData.append('createdByType', createdByType);
-
+        formData.append('createdById', createdById);
+        formData.append('createdByType', createdByType);
         formData.append('title', newIssue.title);
         formData.append('issueDescription', newIssue.issueDescription);
         formData.append('projectItemId', newIssue.projectItemId);
@@ -1165,45 +1253,62 @@ issue.createdByType === 'user'
 }
     
       </div>
+
+      {/*team comment canvas*/}
       <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
   <div className="right-panel">
-    <div
-      className="comments-list"
-      style={{ overflowY: "auto", maxHeight: "500px", display: "flex", flexDirection: "column" }}
-    >
+  <div
+  className="comments-list"
+  style={{
+    overflowY: "auto",
+    maxHeight: "500px",
+    display: "flex",
+    flexDirection: "column", 
+  }}
+>
+
       {/* Grouped Comments by Date */}
       {Object.keys(groupedComments).map((date) => (
         <div key={date} className="comment-date-group">
           <p className="comment-date">{date}</p>
-          {groupedComments[date].reverse().map((comment) => (
-            <div key={comment.id}>
-              <div className="whatsapp-comment-box">
-                <div className="whatsapp-comment-user-info">
-                  <img
-                    src={
-                      comment?.fromUser?.profileImage
-                        ? `${url2}/${comment.fromUser.profileImage}`
-                        : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-                    }
-                    alt="User"
-                    className="whatsapp-comment-user-avatar"
-                  />
-                  <div>
-                    <p className="whatsapp-comment-author">
-                      {comment?.fromUser?.firstName} {comment?.fromUser?.lastName}
-                    </p>
-                  </div>
+          {Object.keys(groupedComments)
+  .sort((a, b) => new Date(a) - new Date(b)) // sort ascending by date
+  .map((date) => (
+    <div key={date} className="comment-date-group">
+      <p className="comment-date">{date}</p>
+      {groupedComments[date]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map((comment) => (
+          <div key={comment.id}>
+            <div className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment?.fromUser?.profileImage
+                      ? `${url2}/${comment.fromUser.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                    {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                  </p>
                 </div>
-                <p className="whatsapp-comment-text">{comment.comment}</p>
-                <p className="whatsapp-comment-meta">
-                  {new Date(comment.createdAt).toLocaleTimeString()}
-                </p>
               </div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
             </div>
-          ))}
+          </div>
+        ))}
+    </div>
+))}
+
         </div>
       ))}
-      {/* Scroll Anchor */}
       <div ref={commentsEndRef}></div>
     </div>
   </div>
@@ -1220,6 +1325,68 @@ issue.createdByType === 'user'
     </button>
   </div>
 </Offcanvas>
+
+{/*item comment canvas*/}
+<Offcanvas
+  isOpen={isItemCanvasOpen}
+  closeOffcanvas={() => setIsItemCanvasOpen(false)}
+  getLatestComment={() => openItemComment(selectedItemId)}
+>
+  <div className="right-panel">
+    <div
+      className="comments-list"
+      style={{
+        overflowY: "auto",
+        maxHeight: "500px",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      {Object.keys(groupedItemComments).map(date => (
+        <div key={date} className="comment-date-group">
+          <p className="comment-date">{date}</p>
+          {groupedItemComments[date].map(comment => (
+            <div key={comment.id} className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment?.creatorUser?.profileImage
+                      ? `${url2}/${comment.creatorUser.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                  {comment?.createdByName} ({comment?.userRole})
+                  </p>
+                </div>
+              </div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div className="whatsapp-comment-form">
+    <textarea
+      value={itemCommentText}
+      onChange={(e) => setItemCommentText(e.target.value)}
+      className="whatsapp-comment-input"
+      placeholder="Write your comment..."
+    />
+    <button onClick={handleAddItemComment} className="whatsapp-submit-btn">
+      <FaTelegramPlane />
+    </button>
+  </div>
+</Offcanvas>
+
     </Layout>
   );
 };

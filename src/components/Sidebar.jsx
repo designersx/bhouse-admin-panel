@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { AiFillProject } from 'react-icons/ai';
 import { FaUserCircle } from "react-icons/fa";
 import { useSidebarPermissions   } from '../context/RolePermissionsContext';
+import { IoGitPullRequestSharp } from 'react-icons/io5';
 
 
 const Sidebar = () => {
@@ -39,6 +40,7 @@ const Sidebar = () => {
   console.log(canViewRoles)
   const canViewCustomers = rolePermissions?.Customer?.view;
   const canViewProjects =  rolePermissions?.ProjectManagement.view
+
 console.log({rolePermissions})
   return (
     <div className="sidebar">
@@ -75,6 +77,11 @@ console.log({rolePermissions})
             <Link to="/customers"><FaUserCircle /> Customers</Link>
           </li>
         ) : null}
+
+          <li className={location.pathname === '/requested_customer' ? 'active' : ''}>
+            <Link to="/requested_customer"><IoGitPullRequestSharp />Requested Customers</Link>
+          </li>
+    
 
         <li className={location.pathname === '/settings' ? 'active' : ''}>
           <Link to="/settings"><FiSettings /> Settings</Link>

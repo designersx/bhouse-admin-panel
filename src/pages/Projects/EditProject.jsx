@@ -112,6 +112,7 @@ otherDocuments: [],
         itemName: '',
         quantity: '',
         expectedDeliveryDate: '',
+        expectedArrivalDate: '',
         status: 'Pending',
         projectId,
       }
@@ -128,7 +129,7 @@ otherDocuments: [],
       const updated = [...leadTimeItems];
       updated[index] = res.data;
       setLeadTimeItems(updated);
-      alert("Item added!");
+      Swal.fire("Manufacturer added!");
     } catch (err) {
       alert("Failed to add item.");
       console.error(err);
@@ -155,7 +156,7 @@ otherDocuments: [],
   const updateItem = async (item) => {
     try {
       await axios.put(`${url}/items/project-items/${item.id}`, item);
-      Swal.fire("Item updated!");
+      Swal.fire("Manufacturer updated!");
     } catch (err) {
       Swal.fire("Error updating item.");
       console.error(err);
@@ -168,7 +169,7 @@ otherDocuments: [],
     try {
       await axios.delete(`${url}/items/project-items/${id}`);
       setLeadTimeItems((prev) => prev.filter((item) => item.id !== id));
-      alert("Item deleted!");
+      Swal.fire("Manufacturer deleted!");
     } catch (err) {
       alert("Error deleting item.");
       console.error(err);
@@ -186,6 +187,7 @@ otherDocuments: [],
 
   const toggleRole = async (role) => {
     if (selectedRoles.includes(role)) {
+      // Deselect role
       setSelectedRoles(prev => prev.filter(r => r !== role));
       setUsersByRole(prev => {
         const updated = { ...prev };
@@ -198,17 +200,40 @@ otherDocuments: [],
         return { ...prev, assignedTeamRoles: updated };
       });
     } else {
-      setSelectedRoles(prev => [...prev, role]);
-      fetchUsers(role);
-      setFormData(prev => ({
-        ...prev,
-        assignedTeamRoles: {
-          ...prev.assignedTeamRoles,
-          [role]: [],
+      try {
+        const res = await axios.get(`${url}/auth/users-by-role/${encodeURIComponent(role)}`);
+        const users = res.data?.users || [];
+  
+        if (users.length === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'No Users Found',
+            text: `There are no users available for the role "${role}".`,
+          });
+          return; // Stop here, don't assign role
         }
-      }));
+  
+        // Add role
+        setSelectedRoles(prev => [...prev, role]);
+        setUsersByRole(prev => ({ ...prev, [role]: users }));
+        setFormData(prev => ({
+          ...prev,
+          assignedTeamRoles: {
+            ...prev.assignedTeamRoles,
+            [role]: [],
+          }
+        }));
+      } catch (err) {
+        console.error(`Failed to fetch users for role: ${role}`, err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Error',
+          text: `Unable to get users for role "${role}"`,
+        });
+      }
     }
   };
+  
 
   const handleUserCheckbox = (role, userId, checked) => {
     const prevSelected = formData.assignedTeamRoles[role] || [];
@@ -305,19 +330,18 @@ otherDocuments: [],
       name,
       type,
       clientName,
-      startDate,
-      estimatedCompletion,
       totalValue,
-      deliveryAddress,
-      deliveryHours,
+      advancePayment,
+      
     } = formData;
   
     if (step === 1) {
       if (!name.trim()) return "Project Name is required.";
-      if (!/^[A-Za-z\s]+$/.test(name.trim())) return "Project Name must contain only letters and spaces.";
       if (!type) return "Project Type is required.";
       if (!clientName) return "Customer selection is required.";
       if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
+      if (!advancePayment|| isNaN(advancePayment) || advancePayment <= 0) return "Total Value must be a valid positive number.";
+
     }
   
     if (step === 2) {
@@ -355,11 +379,11 @@ otherDocuments: [],
                 <h3>Project Details</h3>
                 <div className='form-group-row'>
                   <div className="form-group">
-                    <label>Project Name</label>
+                    <label>Project Name <span className="required-star">*</span> </label>
                     <input type="text" name="name" value={formData.name} onChange={handleChange} required />
                   </div>
                   <div className="form-group">
-                    <label>Project Type</label>
+                    <label>Project Type <span className="required-star">*</span></label>
                     <select name="type" value={formData.type} onChange={handleChange}>
                     <option value="Corporate Office">Corporate Office</option>
     <option value="Hospitality">Hospitality</option>
@@ -372,8 +396,24 @@ otherDocuments: [],
 
                 <div className='form-group-row'>
                   <div className="form-group">
-                    <label>Select Customer</label>
-                    <select name="clientName" value={formData.clientName} onChange={handleChange} required>
+                    <label>Select Customer <span className="required-star">*</span></label>
+                    <select
+  name="clientName"
+  value={formData.clientName}
+  onChange={(e) => {
+    const selectedCustomer = customers.find(
+      (customer) => customer.full_name === e.target.value
+    );
+
+    setFormData(prev => ({
+      ...prev,
+      clientName: e.target.value,
+      deliveryAddress: selectedCustomer?.delivery_address|| '',
+    }));
+  }}
+  required
+>
+
                       <option value="">Select a customer</option>
 {customers.length?<>
   {customers?.map((customer) => (
@@ -395,7 +435,7 @@ otherDocuments: [],
 
   <div className="form-group">
   
-                    <label>Status</label>
+                    <label>Status <span className="required-star">*</span></label>
                     <select name="status" value={formData.status} onChange={handleChange}>
                     <option value="In progress">In progress</option>
     <option value="Aproved">Aproved</option>
@@ -410,7 +450,7 @@ otherDocuments: [],
                     </select>
                   </div>
                   <div className="form-group">
-    <label>Estimated Occupancy Date</label>
+    <label>Estimated Occupancy Date <span className="required-star">*</span></label>
     <input
       type="date"
       name="estimatedCompletion"
@@ -423,7 +463,7 @@ otherDocuments: [],
 
 <div className='form-group-row'>
 <div className="form-group">
-                    <label>Advance Payment</label>
+                    <label>Advance Payment <span className="required-star">*</span></label>
                     <input
                       type="number"
                       name="advancePayment"
@@ -434,7 +474,7 @@ otherDocuments: [],
                     />
                   </div>
                 <div className="form-group">
-                    <label>Total Value</label>
+                    <label>Total Value <span className="required-star">*</span></label>
                     <input
                       type="number"
                       name="totalValue"
@@ -457,7 +497,7 @@ otherDocuments: [],
 
             {step === 2 && (
               <div className="form-card">
-                <h3>Roles & Permissions</h3>
+                <h3>Roles & Permissions <span className="required-star">*</span></h3>
                 <div className="roles-container-ui">
                   {allRoles.map((role) => (
                     <div key={role} className={`role-card ${selectedRoles.includes(role) ? 'active' : ''}`}>
@@ -605,6 +645,7 @@ otherDocuments: [],
         <th>Manufacturer Name</th>
         <th>Description</th>
         <th>Expected Delivery</th>
+        <th>Expected Arrival</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
@@ -638,6 +679,14 @@ otherDocuments: [],
             />
           </td>
           <td>
+            <input
+            className='user-search-inputa'
+              type="date"
+              value={item.expectedArrivalDate?.slice(0, 10) || ''}
+              onChange={(e) => handleItemChange(index, 'expectedArrivalDate', e.target.value)}
+            />
+          </td>
+          <td>
             <select
             className='user-search-inputa'
               value={item.status}
@@ -666,10 +715,10 @@ otherDocuments: [],
       ))}
     </tbody>
   </table>
+  <br/>
   <button className='add-user-btna' type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>
 
-<br/>
 
                 <div className="form-navigation">
                   <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
