@@ -1332,7 +1332,7 @@ issue.createdByType === 'user'
                 />
                 <div>
                   <p className="whatsapp-comment-author">
-                  {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                  {comment?.createdByName} ({comment?.userRole})
                   </p>
                 </div>
               </div>
