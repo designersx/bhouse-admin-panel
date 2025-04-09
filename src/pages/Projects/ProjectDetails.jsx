@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from "react";
-import Layout from "../../components/Layout";
-import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
-import "../../styles/Projects/ProjectDetails.css";
-import { url, url2 } from "../../lib/api";
-import Loader from "../../components/Loader";
-import Swal from "sweetalert2";
-import { ToastContainer } from "react-toastify";
+import React, { useEffect, useState } from 'react';
+import Layout from '../../components/Layout';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import '../../styles/Projects/ProjectDetails.css';
+import { url, url2} from '../../lib/api';
+import Loader from '../../components/Loader'
+import Swal from 'sweetalert2';
+import { ToastContainer } from 'react-toastify';
 import { MdDelete } from "react-icons/md";
-import { FaEye, FaComment, FaDownload, FaCommentAlt } from "react-icons/fa";
-import { toast } from "react-toastify";
-import BackButton from "../../components/BackButton";
-import { MdEdit } from "react-icons/md";
-import Offcanvas from "../../components/OffCanvas/OffCanvas";
-import { FaTelegramPlane } from "react-icons/fa";
-import { useRef } from "react";
-import useRolePermissions from "../../hooks/useRolePermissions";
+import { FaEye, FaComment  ,  FaDownload, FaCommentAlt } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import BackButton from '../../components/BackButton';
+import { MdEdit } from 'react-icons/md';
+import Offcanvas from '../../components/OffCanvas/OffCanvas';
+import { FaTelegramPlane } from "react-icons/fa"; 
+import { useRef } from 'react'; 
+import useRolePermissions from '../../hooks/useRolePermissions'
+
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -23,114 +24,106 @@ const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
-
   const [activeTab, setActiveTab] = useState('overview');
   const [activeTabing, setActiveTabing] = useState('Admin');
-
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
   const [showPunchModal, setShowPunchModal] = useState(false);
   const [statusMap, setStatusMap] = useState({});
-  const [loadingDoc, setLoadingDoc] = useState(false);
+  const [loadingDoc , setLoadingDoc] = useState(false)
   const [invoiceFiles, setInvoiceFiles] = useState([]);
   const [selectedInvoiceFiles, setSelectedInvoiceFiles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userComments, setUserComments] = useState([]);
-  const [newCommentText, setNewCommentText] = useState("");
+  const [newCommentText, setNewCommentText] = useState('');
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [groupedComments, setGroupedComments] = useState({});
-  const [isItemCanvasOpen, setIsItemCanvasOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState(null);
-  const [itemComments, setItemComments] = useState([]);
-  const [groupedItemComments, setGroupedItemComments] = useState({});
-  const [itemCommentText, setItemCommentText] = useState("");
+const [groupedComments, setGroupedComments] = useState({});
+const [isItemCanvasOpen, setIsItemCanvasOpen] = useState(false);
+const [selectedItemId, setSelectedItemId] = useState(null);
+const [itemComments, setItemComments] = useState([]);
+const [groupedItemComments, setGroupedItemComments] = useState({});
+const [itemCommentText, setItemCommentText] = useState('');
 
-  const openItemComment = async (itemId) => {
-    try {
-      setSelectedItemId(itemId);
-      const res = await axios.get(`${url}/items/${itemId}/comments`);
 
-      const grouped = res.data.reduce((acc, comment) => {
-        const date = new Date(comment.createdAt).toLocaleDateString();
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(comment);
-        return acc;
-      }, {});
+const openItemComment = async (itemId) => {
+  try {
+    setSelectedItemId(itemId);
+    const res = await axios.get(`${url}/items/${itemId}/comments`);
 
-      setItemComments(res.data);
-      setGroupedItemComments(grouped);
-      setIsItemCanvasOpen(true);
-    } catch (err) {
-      console.error("Error fetching item comments:", err);
-    }
-  };
+    const grouped = res.data.reduce((acc, comment) => {
+      const date = new Date(comment.createdAt).toLocaleDateString();
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(comment);
+      return acc;
+    }, {});
+    
+    setItemComments(res.data);
+    setGroupedItemComments(grouped);
+    setIsItemCanvasOpen(true);
+  } catch (err) {
+    console.error("Error fetching item comments:", err);
+  }
+};
 
-  const handleAddItemComment = async () => {
-    const user = JSON.parse(localStorage.getItem("user"))?.user;
-    const customer = JSON.parse(localStorage.getItem("customer"));
 
-    const creatorId = user?.id || customer?.id;
-    const creatorType = user ? "user" : "customer";
+const handleAddItemComment = async () => {
+  const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const customer = JSON.parse(localStorage.getItem("customer"));
 
-    if (!itemCommentText.trim()) return;
+  const creatorId = user?.id || customer?.id;
+  const creatorType = user ? "user" : "customer";
 
-    try {
-      await axios.post(`${url}/items/${selectedItemId}/comments`, {
-        comment: itemCommentText,
-        createdById: creatorId,
-        createdByType: creatorType,
-        projectId: projectId,
-      });
+  if (!itemCommentText.trim()) return;
 
-      setItemCommentText("");
-      openItemComment(selectedItemId);
-    } catch (err) {
-      console.error("Failed to add comment:", err);
-    }
-  };
+  try {
+    await axios.post(`${url}/items/${selectedItemId}/comments`, {
+      comment: itemCommentText,
+      createdById: creatorId,
+      createdByType: creatorType,
+      projectId: projectId, 
+    });
+    
 
-  const commentsEndRef = useRef(null);
-  useEffect(() => {
-    if (isOffcanvasOpen) {
-      setTimeout(() => {
-        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }, [userComments, newCommentText]);
+    setItemCommentText('');
+    openItemComment(selectedItemId); 
+  } catch (err) {
+    console.error("Failed to add comment:", err);
+  }
+};
 
-  const commentsItemEndRef = useRef(null);
 
-  useEffect(() => {
-    if (isItemCanvasOpen) {
-      setTimeout(() => {
-        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    }
-  }, [itemComments, itemCommentText]);
+const commentsEndRef = useRef(null);
+useEffect(() => {
+  if (isOffcanvasOpen) {
+    setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }
+}, [userComments, newCommentText]);
+
+
 
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
-    otherDocuments: [],
+    otherDocuments: []
   });
-  const roleId = JSON.parse(localStorage.getItem("user"));
-  const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
-
+  const roleId = JSON.parse(localStorage.getItem("user"))
+  const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
+  
   const [newIssue, setNewIssue] = useState({
-    title: "",
-    issueDescription: "",
-    projectItemId: "",
+    title: '',
+    issueDescription: '',
+    projectItemId: '',
     productImages: [],
   });
   const [projectItems, setProjectItems] = useState([]);
   const fetchUserComments = async (toUserId) => {
     try {
-      const res = await axios.get(
-        `${url}/projects/${projectId}/user-comments/${toUserId}`
-      );
+      const res = await axios.get(`${url}/projects/${projectId}/user-comments/${toUserId}`);
       setUserComments(res.data);
-
+  
       // Group by date
       const grouped = res.data.reduce((acc, comment) => {
         const date = new Date(comment.createdAt).toLocaleDateString();
@@ -139,89 +132,95 @@ const ProjectDetails = () => {
         return acc;
       }, {});
       setGroupedComments(grouped);
+  
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
   };
-
+  
+  
   const closeOffcanvas = () => {
     setIsOffcanvasOpen(false);
   };
   const fetchComments = async () => {
     if (selectedUser) {
-      await fetchUserComments(selectedUser.id);
+      await fetchUserComments(selectedUser.id); 
     }
   };
-
+    
   const handleOpenComments = async (user) => {
     setSelectedUser(user);
     await fetchUserComments(user.id);
-    setIsOffcanvasOpen(true);
+    setIsOffcanvasOpen(true); 
   };
-
+  
   const handleAddComment = async () => {
-    const stored = JSON.parse(localStorage.getItem("user"));
+    const stored = JSON.parse(localStorage.getItem('user'));
     const fromUserId = stored?.user?.id;
-
+  
     if (!newCommentText.trim()) return;
-
+  
     try {
       await axios.post(`${url}/projects/${projectId}/user-comments`, {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
       });
-
-      setNewCommentText("");
+  
+      setNewCommentText('');
       await fetchUserComments(selectedUser.id);
       setTimeout(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
+  
     } catch (err) {
       console.error("Error posting comment:", err);
     }
   };
-
+  
+  
+  
   useEffect(() => {
-    axios
-      .get(`${url}/items/${projectId}`)
-      .then((res) => setProjectItems(res.data))
-      .catch((err) => console.error("Failed to load items:", err));
+    axios.get(`${url}/items/${projectId}`)
+      .then(res => setProjectItems(res.data))
+      .catch(err => console.error("Failed to load items:", err));
   }, [projectId]);
-
+  
   useEffect(() => {
     const fetchPunchList = async () => {
       try {
         const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
-        const parsed = res.data.map((issue) => ({
+        const parsed = res.data.map(issue => ({
           ...issue,
-          productImages:
-            typeof issue.productImages === "string"
-              ? JSON.parse(issue.productImages)
-              : Array.isArray(issue.productImages)
-              ? issue.productImages
-              : [],
+          productImages: typeof issue.productImages === 'string'
+            ? JSON.parse(issue.productImages)
+            : Array.isArray(issue.productImages)
+            ? issue.productImages
+            : []
         }));
         setPunchList(parsed);
         const initialStatus = {};
-        parsed.forEach((item) => {
-          initialStatus[item.id] = item.status || "Pending";
+        parsed.forEach(item => {
+          initialStatus[item.id] = item.status || 'Pending';
         });
         setStatusMap(initialStatus);
       } catch (err) {
         console.error("Error fetching punch list:", err);
       }
     };
-
+    
+  
     fetchPunchList();
   }, [projectId]);
+  
 
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
     updated[index][field] = value;
     setItems(updated);
   };
-
+  
+  
   const updateItem = async (item) => {
     try {
       await axios.put(`${url}/items/project-items/${item.id}`, item);
@@ -231,18 +230,18 @@ const ProjectDetails = () => {
       console.error(err);
     }
   };
-
+  
   const deleteItem = async (id) => {
     try {
       await axios.delete(`${url}/items/project-items/${id}`);
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      setItems(prev => prev.filter(item => item.id !== id));
       toast.success("Item deleted!");
     } catch (err) {
       toast.error("Error deleting item.");
       console.error(err);
     }
   };
-
+  
   const addNewItemToBackend = async (item, index) => {
     try {
       const res = await axios.post(`${url}/items/project-items`, item);
@@ -255,21 +254,21 @@ const ProjectDetails = () => {
       console.error(err);
     }
   };
-
+  
   const handleAddItemRow = () => {
-    setItems((prev) => [
+    setItems(prev => [
       ...prev,
       {
-        itemName: "",
-        quantity: "",
-        expectedDeliveryDate: "",
-        expectedArrivalDate: "",
-        status: "Pending",
+        itemName: '',
+        quantity: '',
+        expectedDeliveryDate: '',
+        expectedArrivalDate: '',
+        status: 'Pending',
         projectId,
-      },
+      }
     ]);
   };
-
+  
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -288,36 +287,33 @@ const ProjectDetails = () => {
       try {
         const [projectRes, usersRes] = await Promise.all([
           axios.get(`${url}/projects/${projectId}`),
-          axios.get(`${url}/auth/getAllUsers`),
+          axios.get(`${url}/auth/getAllUsers`)
         ]);
 
         const fetchedProject = projectRes.data;
         const fetchedUsers = usersRes.data;
 
-        fetchedProject.assignedTeamRoles = Array.isArray(
-          fetchedProject.assignedTeamRoles
-        )
+        fetchedProject.assignedTeamRoles = Array.isArray(fetchedProject.assignedTeamRoles)
           ? fetchedProject.assignedTeamRoles
-          : JSON.parse(fetchedProject.assignedTeamRoles || "[]");
+          : JSON.parse(fetchedProject.assignedTeamRoles || '[]');
 
-        fetchedProject.proposals = Array.isArray(fetchedProject.proposals)
+          fetchedProject.proposals = Array.isArray(fetchedProject.proposals)
           ? fetchedProject.proposals
-          : JSON.parse(fetchedProject.proposals || "[]");
-
+          : JSON.parse(fetchedProject.proposals || '[]');
+        
         fetchedProject.floorPlans = Array.isArray(fetchedProject.floorPlans)
           ? fetchedProject.floorPlans
-          : JSON.parse(fetchedProject.floorPlans || "[]");
-
-        fetchedProject.otherDocuments = Array.isArray(
-          fetchedProject.otherDocuments
-        )
+          : JSON.parse(fetchedProject.floorPlans || '[]');
+        
+        fetchedProject.otherDocuments = Array.isArray(fetchedProject.otherDocuments)
           ? fetchedProject.otherDocuments
-          : JSON.parse(fetchedProject.otherDocuments || "[]");
-        fetchedProject.invoice = Array.isArray(fetchedProject.invoice)
+          : JSON.parse(fetchedProject.otherDocuments || '[]');
+          fetchedProject.invoice = Array.isArray(fetchedProject.invoice)
           ? fetchedProject.invoice
-          : JSON.parse(fetchedProject.invoice || "[]");
-
+          : JSON.parse(fetchedProject.invoice || '[]');
+        
         setInvoiceFiles(fetchedProject.invoice);
+        
 
         setProject(fetchedProject);
         setAllUsers(fetchedUsers);
@@ -329,10 +325,12 @@ const ProjectDetails = () => {
 
     fetchProjectDetails();
   }, [projectId]);
-  console.log(groupedItemComments, "comments");
+
+
   if (loading) {
     return (
       <Layout>
+        
         <div className="project-details-header">
           <h1>Project Details</h1>
         </div>
@@ -341,45 +339,43 @@ const ProjectDetails = () => {
     );
   }
   const removeRow = (index) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
+    setItems(prev => prev.filter((_, i) => i !== index));
   };
   const handleFileUpload = (e, category) => {
     const files = Array.from(e.target.files);
-    setSelectedFiles((prev) => ({
+    setSelectedFiles(prev => ({
       ...prev,
-      [category]: [...prev[category], ...files],
+      [category]: [...prev[category], ...files]
     }));
   };
   const removeSelectedFile = (category, index) => {
-    setSelectedFiles((prev) => ({
+    setSelectedFiles(prev => ({
       ...prev,
-      [category]: prev[category].filter((_, i) => i !== index),
+      [category]: prev[category].filter((_, i) => i !== index)
     }));
   };
 
+
   const uploadSelectedFiles = async (category) => {
+    
     if (!selectedFiles[category].length) return;
-
+  
     const formData = new FormData();
-    selectedFiles[category].forEach((file) => formData.append("files", file));
-    formData.append("category", category);
-
+    selectedFiles[category].forEach(file => formData.append('files', file));
+    formData.append('category', category);
+  
     try {
-      setLoadingDoc(true);
-      await axios
-        .post(
-          `${url}/projects/${projectId}/upload-files?category=${category}`,
-          formData
-        )
-        .then((res) => {
-          if (res) {
-            setLoadingDoc(false);
-          }
-        });
-
+      setLoadingDoc(true)
+      await axios.post(`${url}/projects/${projectId}/upload-files?category=${category}`, formData).then((res)=>{
+if(res){
+setLoadingDoc(false)
+}
+      })
+     
+  
       // Clear selected files
-      setSelectedFiles((prev) => ({ ...prev, [category]: [] }));
-
+      setSelectedFiles(prev => ({ ...prev, [category]: [] }));
+  
       // Refresh project data
       const res = await axios.get(`${url}/projects/${projectId}`);
       setProject(res.data);
@@ -388,7 +384,8 @@ const ProjectDetails = () => {
       toast.error("Upload failed.");
     }
   };
-
+    
+  
   const parseSafeArray = (value) => {
     if (Array.isArray(value)) return value;
     try {
@@ -397,46 +394,36 @@ const ProjectDetails = () => {
       return [];
     }
   };
-
+  
   const handleProjectFileUpdate = async (filePath, category) => {
     const existingFiles = parseSafeArray(project[category]);
-
-    const updatedCategoryFiles = existingFiles.filter((f) => f !== filePath);
+  
+    const updatedCategoryFiles = existingFiles.filter(f => f !== filePath);
     const updatedProject = {
       ...project,
-      [category]: updatedCategoryFiles,
+      [category]: updatedCategoryFiles
     };
-
+  
     const formDataToSend = new FormData();
     formDataToSend.append("removedFiles", JSON.stringify([filePath]));
-
+  
     // Append required fields
-    [
-      "name",
-      "type",
-      "clientName",
-      "description",
-      "startDate",
-      "estimatedCompletion",
-      "totalValue",
-      "deliveryAddress",
-      "deliveryHours",
-    ].forEach((key) => {
+    ['name', 'type', 'clientName', 'description', 'startDate', 'estimatedCompletion', 'totalValue', 'deliveryAddress', 'deliveryHours'].forEach(key => {
       if (updatedProject[key] !== undefined) {
         formDataToSend.append(key, updatedProject[key]);
       }
     });
-
+  
     try {
       const res = await fetch(`${url}/projects/${projectId}`, {
-        method: "PUT",
-        body: formDataToSend,
+        method: 'PUT',
+        body: formDataToSend
       });
-
+  
       if (res.status === 200) {
-        setProject((prev) => ({
+        setProject(prev => ({
           ...prev,
-          [category]: updatedCategoryFiles,
+          [category]: updatedCategoryFiles
         }));
         toast.success("File removed and project updated!");
       } else {
@@ -448,29 +435,28 @@ const ProjectDetails = () => {
       toast.error("Error while updating project.");
     }
   };
-
+  
   const toggleEditRow = (index) => {
-    setEditableRows((prev) => ({
+    setEditableRows(prev => ({
       ...prev,
-      [index]: !prev[index],
+      [index]: !prev[index]
     }));
   };
-
+  
   const handlePunchStatusUpdate = async (id, status) => {
     try {
       await axios.put(`${url}/punch-list/${id}/status`, { status });
       toast.success("Punch List status updated!");
-
+  
       // Refresh punch list after update
       const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
-      const parsed = res.data.map((issue) => ({
+      const parsed = res.data.map(issue => ({
         ...issue,
-        productImages:
-          typeof issue.productImages === "string"
-            ? JSON.parse(issue.productImages)
-            : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : [],
+        productImages: typeof issue.productImages === 'string'
+          ? JSON.parse(issue.productImages)
+          : Array.isArray(issue.productImages)
+          ? issue.productImages
+          : []
       }));
       setPunchList(parsed);
     } catch (err) {
@@ -481,12 +467,12 @@ const ProjectDetails = () => {
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
     const totalFiles = [...newIssue.productImages, ...files];
-
+  
     if (totalFiles.length > 5) {
       toast.error("You can only upload up to 5 images.");
       return;
     }
-
+  
     setNewIssue((prev) => ({
       ...prev,
       productImages: totalFiles,
@@ -495,35 +481,19 @@ const ProjectDetails = () => {
   const removeImage = (index) => {
     setNewIssue((prev) => ({
       ...prev,
-      productImages: prev.productImages.filter((_, i) => i !== index),
+      productImages: prev.productImages.filter((_, i) => i !== index)
     }));
   };
 
   const tabModules = [
-    {
-      key: "overview",
-      label: "Overview",
-      permissionKey: null,
-      alwaysVisible: true,
-    },
+    { key: "overview", label: "Overview", permissionKey: null, alwaysVisible: true },
     { key: "documents", label: "Documents", permissionKey: "ProjectDocument" },
     { key: "team", label: "Team", permissionKey: "AssignedTeamComments" },
-    {
-      key: "manufacturer",
-      label: "Manufacturer",
-      permissionKey: null,
-      alwaysVisible: true,
-    },
+    { key: "manufacturer", label: "Manufacturer", permissionKey: null, alwaysVisible: true },
     { key: "punchlist", label: "Punch List", permissionKey: "PunchList" },
     { key: "invoice", label: "Invoice", permissionKey: "Invoicing" },
-    {
-      key: "settings",
-      label: "Settings",
-      permissionKey: null,
-      alwaysVisible: true,
-    },
+    { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
   ];
-
  
   return (
     <Layout>
@@ -761,1076 +731,583 @@ return files.length > 0 ? (
 <FaCommentAlt />
 </button>
 
-
-        {loadingDoc ? (
-          <div className="doc-loader">
-            <Loader />
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="tabs">
-              {tabModules.map(
-                ({ key, label, permissionKey, alwaysVisible }) => {
-                  const hasPermission =
-                    alwaysVisible || // Show if marked alwaysVisible
-                    (permissionKey && rolePermissions?.[permissionKey]?.view);
-                  return hasPermission ? (
-                    <button
-                      key={key}
-                      className={activeTab === key ? "tab active" : "tab"}
-                      onClick={() => setActiveTab(key)}
-                    >
-                      {label}
-                    </button>
-                  ) : null; // Hide tab if not allowed
-                }
-              )}
-            </div>
+        ) : null;
+      })}
+    </div>
+  ))}
+</div>
+) : (
+<p>No team assigned.</p>
+)}
+</div>
+)}
 
-            <div className="tab-content">
-              {activeTab === "overview" && (
-                <div className="project-details-container">
-                  <div className="project-info-card">
-                    <h2>Project Overview</h2>
-                    <div className="info-group">
-                      <strong>Client:</strong> {project.clientName}
-                    </div>
-                    <div className="info-group">
-                      <strong>Status:</strong> {project.status}
-                    </div>
-                    <div className="info-group">
-                      <strong>Type:</strong> {project.type}
-                    </div>
-                    <div className="info-group">
-                      <strong>Description:</strong>{" "}
-                      {project.description || "N/A"}
-                    </div>
 
-                    <div className="info-group">
-                      <strong>Estimated Occupancy Date:</strong>{" "}
-                      {new Date(
-                        project.estimatedCompletion
-                      ).toLocaleDateString()}
-                    </div>
-                    <div className="info-group">
-                      <strong>Total Value:</strong> ${" "}
-                      {project.totalValue?.toLocaleString() || "N/A"}
-                    </div>
-                    <div className="info-group">
-                      <strong>Advance Payment:</strong> ${" "}
-                      {project.advancePayment?.toLocaleString() || "N/A"}
-                    </div>
-                  </div>
-                  <div className="project-info-card">
-                    <h2>Delivery Details</h2>
-                    <div className="info-group">
-                      <strong>Address:</strong>{" "}
-                      {project.deliveryAddress || "N/A"}
-                    </div>
-                    <div className="info-group">
-                      <strong>Hours:</strong> {project.deliveryHours || "N/A"}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === "documents" && (
-                <div className="project-info-card">
-                  <h2>Uploaded Documents</h2>
 
-                  {[
-                    {
-                      title: "Installation Docs",
-                      files: project.proposals,
-                      category: "proposals",
-                    },
-                    {
-                      title: "Warranty",
-                      files: project.floorPlans,
-                      category: "floorPlans",
-                    },
-                    {
-                      title: "Product Maintenance",
-                      files: project.otherDocuments,
-                      category: "otherDocuments",
-                    },
-                  ].map((docCategory, idx) => (
-                    <div key={idx} className="  -section">
-                      <h3>{docCategory.title}</h3>
-                      {rolePermissions?.ProjectDocument?.add ? (
-                        <input
-                          type="file"
-                          multiple
-                          onChange={(e) =>
-                            handleFileUpload(e, docCategory.category)
-                          }
-                        />
-                      ) : null}
 
-                      {selectedFiles[docCategory.category]?.length > 0 && (
-                        <div className="file-preview-section">
-                          <h4>Files to be uploaded:</h4>
-                          <ul className="preview-list">
-                            {selectedFiles[docCategory.category].map(
-                              (file, i) => (
-                                <li key={i} className="preview-item">
-                                  {file.name}
-                                  <span
-                                    className="remove-preview"
-                                    onClick={() =>
-                                      removeSelectedFile(
-                                        docCategory.category,
-                                        i
-                                      )
-                                    }
-                                  >
-                                    ×
-                                  </span>
-                                </li>
-                              )
-                            )}
-                          </ul>
-                          <button
-                            className="upload-btn"
-                            onClick={() =>
-                              uploadSelectedFiles(docCategory.category)
-                            }
-                          >
-                            Upload
-                          </button>
-                        </div>
-                      )}
-                      {(() => {
-                        const files = Array.isArray(docCategory.files)
-                          ? docCategory.files
-                          : typeof docCategory.files === "string"
-                          ? JSON.parse(docCategory.files)
-                          : [];
 
-                        return files.length > 0 ? (
-                          <div className="uploaded-files">
-                            {files.map((filePath, idx) => {
-                              const fileName = filePath.split("/").pop();
-                              const fileUrl = filePath.startsWith("uploads")
-                                ? `${url2}/${filePath}`
-                                : filePath;
 
-                              const handleDownload = async () => {
-                                try {
-                                  const response = await fetch(fileUrl);
-                                  const blob = await response.blob();
-                                  const downloadUrl =
-                                    window.URL.createObjectURL(blob);
-                                  const link = document.createElement("a");
-                                  link.href = downloadUrl;
-                                  link.download = fileName;
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  link.remove();
-                                  window.URL.revokeObjectURL(downloadUrl);
-                                } catch (error) {
-                                  console.error("Download failed", error);
-                                  alert("Download failed, please try again.");
-                                }
-                              };
 
-                              return (
-                                <div key={idx} className="file-item-enhanced">
-                                  <span className="file-name-enhanced">
-                                    {fileName}
-                                  </span>
-                                  <div className="file-actions">
-                                    <button
-                                      className="file-action-btn"
-                                      onClick={() =>
-                                        window.open(fileUrl, "_blank")
-                                      }
-                                      title="View"
-                                    >
-                                      <FaEye />
-                                    </button>
-                                    <button
-                                      className="file-action-btn"
-                                      onClick={handleDownload}
-                                      title="Download"
-                                    >
-                                      <FaDownload />
-                                    </button>
-                                    <button
-                                      className="file-action-btn"
-                                      title="Delete"
-                                      onClick={() => {
-                                        Swal.fire({
-                                          title: "Are you sure?",
-                                          text: "Do you want to remove this file?",
-                                          icon: "warning",
-                                          showCancelButton: true,
-                                          confirmButtonText: "Yes, remove it!",
-                                          cancelButtonText: "Cancel",
-                                        }).then(async (result) => {
-                                          if (result.isConfirmed) {
-                                            await handleProjectFileUpdate(
-                                              filePath,
-                                              docCategory.category
-                                            );
-                                          }
-                                        });
-                                      }}
-                                    >
-                                      <MdDelete />
-                                    </button>
-                                    <button
-                                      className="file-action-btn"
-                                      title="Comment"
-                                      onClick={() =>
-                                        navigate(
-                                          `/project/${projectId}/file-comments`,
-                                          {
-                                            state: {
-                                              filePath,
-                                              category: docCategory.category,
-                                            },
-                                          }
-                                        )
-                                      }
-                                    >
-                                      <FaComment />
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p>No documents uploaded.</p>
-                        );
-                      })()}
-                    </div>
-                  ))}
-                </div>
-              )}
+{activeTab === 'manufacturer' && (
+<div className="project-info-card">
+<h2>Project Lead Time Matrix</h2>
+<table className="matrix-table">
+<thead>
+  <tr>
+    <th>Manufacturer Name</th>
+    <th>Description</th> 
+    <th>Expected Delivery</th>
+    <th>Expected Arrival</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+</thead>
 
-              {activeTab === "team" && (
-                <div className="project-info-card">
-                  <h2>Assigned Team</h2>
-                  {project.assignedTeamRoles.length > 0 ? (
-                    <div className="team-grid">
-                      {project.assignedTeamRoles.map((roleGroup, index) => (
-                        <div key={index} className="role-card">
-                          <h3 className="role-title">{roleGroup.role}</h3>
-                          {roleGroup.users.map((userId) => {
-                            const user = allUsers.find(
-                              (u) => u.id.toString() === userId.toString()
-                            );
-                            return user ? (
-                              <div
-                                key={user.id}
-                                className="user-card-horizontal"
-                              >
-                                <img
-                                  src={
-                                    user.profileImage
-                                      ? `${url2}/${user.profileImage}`
-                                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-                                  }
-                                  alt={`${user.firstName} ${user.lastName}`}
-                                  className="user-profile-img-horizontal"
-                                />
-                                <div className="user-info-horizontal">
-                                  <span className="user-name-horizontal">
-                                    {user.firstName} {user.lastName}
-                                  </span>
-                                  <button
-                                    className="comment-btna"
-                                    onClick={() => handleOpenComments(user)}
-                                  >
-                                    <FaCommentAlt />
-                                  </button>
-                                </div>
-                              </div>
-                            ) : null;
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p>No team assigned.</p>
-                  )}
-                </div>
-              )}
+<tbody>
+{items.map((item, index) => {
+const isEditable = editableRows[index] || !item.id; 
 
-              {activeTab === "manufacturer" && (
-                <div className="project-info-card">
-                  <h2>Project Lead Time Matrix</h2>
-                  <table className="matrix-table">
-                    <thead>
-                      <tr>
-                        <th>Manufacturer Name</th>
-                        <th>Description</th>
-                        <th>Expected Delivery</th>
-                        <th>Expected Arrival</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
+const handleSave = () => {
+if (!item.itemName || !item.quantity || !item.expectedDeliveryDate || !item.expectedArrivalDate || !item.status) {
+  return toast.error("All fields are required.");
+}
 
-                    <tbody>
-                      {items.map((item, index) => {
-                        const isEditable = editableRows[index] || !item.id;
+if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
+  return toast.error("Item Name must contain only letters.");
+}
 
-                        const handleSave = () => {
-                          if (
-                            !item.itemName ||
-                            !item.quantity ||
-                            !item.expectedDeliveryDate ||
-                            !item.expectedArrivalDate ||
-                            !item.status
-                          ) {
-                            return toast.error("All fields are required.");
-                          }
 
-                          if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
-                            return toast.error(
-                              "Item Name must contain only letters."
-                            );
-                          }
+if (item.id) {
+  updateItem(item);
+} else {
+  addNewItemToBackend(item, index);
+}
 
-                          if (item.id) {
-                            updateItem(item);
-                          } else {
-                            addNewItemToBackend(item, index);
-                          }
+// ✅ After saving, disable the row
+setEditableRows(prev => ({ ...prev, [index]: false }));
+};
 
-                          // ✅ After saving, disable the row
-                          setEditableRows((prev) => ({
-                            ...prev,
-                            [index]: false,
-                          }));
-                        };
 
-                        return (
-                          <tr key={item.id || index}>
-                            <td>
-                              <input
-                                value={item.itemName}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "itemName",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <textarea
-                                type="text"
-                                value={item.quantity}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "quantity",
-                                    e.target.value
-                                  )
-                                }
-                                className="item-description-input"
-                                maxLength={50}
-                              />
-                            </td>
+return (
+<tr key={item.id || index}>
+  <td>
+    <input
+      value={item.itemName}
+      disabled={!isEditable}
+      onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
+    />
+  </td>
+  <td>
+  <textarea
+    type="text"
+    value={item.quantity}
+    disabled={!isEditable}
+    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+    className="item-description-input"
+    maxLength={50}
+  />
+</td>
 
-                            <td>
-                              <input
-                                type="date"
-                                value={
-                                  item.expectedDeliveryDate?.slice(0, 10) || ""
-                                }
-                                min={new Date().toISOString().split("T")[0]}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "expectedDeliveryDate",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="date"
-                                value={
-                                  item.expectedArrivalDate?.slice(0, 10) || ""
-                                }
-                                min={new Date().toISOString().split("T")[0]}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "expectedArrivalDate",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <select
-                                value={item.status}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "status",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="In Transit">In Transit</option>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Installed">Installed</option>
-                              </select>
-                            </td>
-                            <td>
-                              {item.id ? (
-                                isEditable ? (
-                                  <button onClick={handleSave}>Save</button>
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={() => toggleEditRow(index)}
-                                    >
-                                      <MdEdit />
-                                    </button>
-                                    <button onClick={() => deleteItem(item.id)}>
-                                      <MdDelete />
-                                    </button>
-                                    <button
-                                      onClick={() => openItemComment(item.id)}
-                                      title="Comment"
-                                    >
-                                      <FaCommentAlt />
-                                    </button>
-                                  </>
-                                )
-                              ) : (
-                                <>
-                                  <button onClick={handleSave}>Save</button>
-                                  <button onClick={() => removeRow(index)}>
-                                    Remove
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  <div
-                    className="button1"
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <button className="ledbutton" onClick={handleAddItemRow}>
-                      + Add Row
-                    </button>
-                  </div>
-                </div>
-              )}
-              {activeTab === "punchlist" && (
-                <div className="project-info-card">
-                  <div style={{ textAlign: "right", marginBottom: "1rem" }}>
-                    <button
-                      className="ledbutton"
-                      onClick={() => setShowPunchModal(true)}
-                    >
-                      + Add
-                    </button>
-                  </div>
-                  {showPunchModal && (
-                    <div className="modal-overlay">
-                      <div className="modal-content">
-                        <h3>Add Punch List Issue</h3>
-                        <label>Title</label>
-                        <input
-                          value={newIssue.title}
-                          onChange={(e) =>
-                            setNewIssue({ ...newIssue, title: e.target.value })
-                          }
-                          maxLength={30}
-                        />
 
-                        <label>Description</label>
-                        <textarea
-                          value={newIssue.issueDescription}
-                          onChange={(e) =>
-                            setNewIssue({
-                              ...newIssue,
-                              issueDescription: e.target.value,
-                            })
-                          }
-                          minLength={50}
-                          maxLength={200}
-                        />
+<td>
+  <input
+    type="date"
+    value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+    min={new Date().toISOString().split("T")[0]} 
+    disabled={!isEditable}
+    onChange={(e) =>
+      handleItemChange(index, 'expectedDeliveryDate', e.target.value)
+    }
+  />
+</td>
+<td>
+  <input
+    type="date"
+    value={item.expectedArrivalDate?.slice(0, 10) || ''}
+    min={new Date().toISOString().split("T")[0]} 
+    disabled={!isEditable}
+    onChange={(e) =>
+      handleItemChange(index, 'expectedArrivalDate', e.target.value)
+    }
+  />
+</td>
+  <td>
+    <select
+      value={item.status}
+      disabled={!isEditable}
+      onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+    >
+      <option value="Pending">Pending</option>
+      <option value="In Transit">In Transit</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Installed">Installed</option>
+    </select>
+  </td>
+  <td>
+    {item.id ? (
+      isEditable ? (
+        <button onClick={handleSave}>Save</button>
+      ) : (
+        <>
+          <button onClick={() => toggleEditRow(index)}><MdEdit /></button>
+          <button onClick={() => deleteItem(item.id)}><MdDelete /></button>
+          <button onClick={() => openItemComment(item.id)} title="Comment">
+  <FaCommentAlt />
+</button>
 
-                        <label>Item (Category)</label>
-                        <select
-                          value={newIssue.projectItemId}
-                          onChange={(e) =>
-                            setNewIssue({
-                              ...newIssue,
-                              projectItemId: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select</option>
-                          {projectItems.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.itemName}
-                            </option>
-                          ))}
-                        </select>
 
-                        <label>Upload Files</label>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                        />
-                        {newIssue.productImages.length > 0 && (
-                          <div className="image-preview-grid">
-                            {newIssue.productImages.map((img, index) => {
-                              const imageUrl =
-                                typeof img === "string"
-                                  ? img
-                                  : URL.createObjectURL(img);
+        </>
+      )
+    ) : (
+      <>
+        <button onClick={handleSave}>Save</button>
+        <button onClick={() => removeRow(index)}>Remove</button>
+      </>
+    )}
+  </td>
+</tr>
+);
+})}
+</tbody>
 
-                              return (
-                                <div key={index} className="preview-wrapper">
-                                  <img
-                                    src={imageUrl}
-                                    alt={`preview-${index}`}
-                                    className="preview-img"
-                                  />
-                                  <span
-                                    className="remove-btn"
-                                    onClick={() => removeImage(index)}
-                                  >
-                                    ×
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+</table>
+<div className='button1' style={{ display: 'flex', justifyContent: 'space-between' }}>
+<button className="ledbutton" onClick={handleAddItemRow}>+ Add Row</button>
+</div>
 
-                        <div className="modal-actions">
-                          <button
-                            className="submit-btn"
-                            onClick={async () => {
-                              try {
-                                const formData = new FormData();
-                                const stored = JSON.parse(
-                                  localStorage.getItem("user")
-                                );
 
-                                const storedUser = stored?.user;
-                                const storedCustomer = JSON.parse(
-                                  localStorage.getItem("customer")
-                                );
+</div>
+)}
+{activeTab === 'punchlist' && (
+<div className="project-info-card">
+<div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+<button className="ledbutton" onClick={() => setShowPunchModal(true)}>
++ Add
+</button>
+</div>
+{showPunchModal && (
+<div className="modal-overlay">
+<div className="modal-content">
+<h3>Add Punch List Issue</h3>
+<label>Title</label>
+<input
+  value={newIssue.title}
+  onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+  maxLength={30}
+/>
 
-                                let createdById = "";
-                                let createdByType = "";
+<label>Description</label>
+<textarea
+  value={newIssue.issueDescription}
+  onChange={(e) => setNewIssue({ ...newIssue, issueDescription: e.target.value })}
+  minLength={50}
+  maxLength={200}
+/>
 
-                                if (storedUser?.id) {
-                                  createdById = storedUser.id;
-                                  createdByType = "user";
-                                } else if (storedCustomer?.id) {
-                                  createdById = storedCustomer.id;
-                                  createdByType = "customer";
-                                } else {
-                                  toast.error("User not logged in");
-                                  return;
-                                }
+<label>Item (Category)</label>
+<select
+  value={newIssue.projectItemId}
+  onChange={(e) => setNewIssue({ ...newIssue, projectItemId: e.target.value })}
+>
+  <option value="">Select</option>
+  {projectItems.map(item => (
+    <option key={item.id} value={item.id}>{item.itemName}</option>
+  ))}
+</select>
 
-                                formData.append("createdById", createdById);
-                                formData.append("createdByType", createdByType);
-                                formData.append("title", newIssue.title);
-                                formData.append(
-                                  "issueDescription",
-                                  newIssue.issueDescription
-                                );
-                                formData.append(
-                                  "projectItemId",
-                                  newIssue.projectItemId
-                                );
-                                formData.append("projectId", projectId);
-                                formData.append(
-                                  "category",
-                                  projectItems.find(
-                                    (p) => p.id == newIssue.projectItemId
-                                  )?.itemName || ""
-                                );
-                                for (let file of newIssue.productImages) {
-                                  formData.append("productImages", file);
-                                }
+<label>Upload Files</label>
+<input
+type="file"
+multiple
+accept="image/*"
+onChange={handleImageSelect}
+/>
+{newIssue.productImages.length > 0 && (
+<div className="image-preview-grid">
+{newIssue.productImages.map((img, index) => {
+const imageUrl = typeof img === 'string' ? img : URL.createObjectURL(img);
 
-                                await axios.post(
-                                  `${url}/projects/${projectId}/punch-list`,
-                                  formData
-                                );
-                                toast.success("Issue added!");
-                                setShowPunchModal(false);
-                                setNewIssue({
-                                  title: "",
-                                  issueDescription: "",
-                                  projectItemId: "",
-                                  productImages: [],
-                                });
-                                const res = await axios.get(
-                                  `${url}/projects/${projectId}/punch-list`
-                                );
-                                setPunchList(
-                                  res.data.map((issue) => ({
-                                    ...issue,
-                                    productImages:
-                                      typeof issue.productImages === "string"
-                                        ? JSON.parse(issue.productImages)
-                                        : issue.productImages,
-                                  }))
-                                );
-                              } catch (err) {
-                                console.error("Failed to add issue", err);
-                                toast.error("Error adding issue");
-                              }
-                            }}
-                          >
-                            Submit
-                          </button>
-                          <button
-                            className="cancel-btn"
-                            onClick={() => setShowPunchModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+return (
+  <div key={index} className="preview-wrapper">
+    <img src={imageUrl} alt={`preview-${index}`} className="preview-img" />
+    <span className="remove-btn" onClick={() => removeImage(index)}>×</span>
+  </div>
+);
+})}
+</div>
+)}
 
-                  <h2>Punch List</h2>
 
-                  {punchList.length === 0 ? (
-                    <p>No punch list issues found.</p>
-                  ) : (
-                    <div className="punch-list-grid compact-style">
-                      {punchList.map((issue, idx) => {
-                        const files = Array.isArray(issue.productImages)
-                          ? issue.productImages
-                          : [];
-                        const currentStatus = statusMap[issue.id] || "Pending";
+<div className="modal-actions">
+  <button
+    className="submit-btn"
+    onClick={async () => {
+      try {
+        const formData = new FormData();
+        const stored = JSON.parse(localStorage.getItem('user'));
 
-                        return (
-                          <div
-                            className="punch-card-small"
-                            key={issue.id || idx}
-                          >
-                            <div className="punch-card-top">
-                              <h4>{issue.title}</h4>
-                              <span
-                                className={`status-badge ${
-                                  issue.status?.toLowerCase() || "pending"
-                                }`}
-                              >
-                                {issue.status || "Pending"}
-                              </span>
-                            </div>
+        const storedUser = stored?.user;
+        const storedCustomer = JSON.parse(localStorage.getItem('customer'));
+        
+        let createdById = '';
+        let createdByType = '';
+        
+        if (storedUser?.id) {
+        createdById = storedUser.id;
+        createdByType = 'user';
+        } else if (storedCustomer?.id) {
+        createdById = storedCustomer.id;
+        createdByType = 'customer';
+        } else {
+        toast.error("User not logged in");
+        return;
+        }
 
-                            <div className="punch-mini-info">
-                              <p>
-                                <strong>Item:</strong>{" "}
-                                {issue.item?.itemName || "N/A"}
-                              </p>
-                              <p>
-                                <strong>Description:</strong>{" "}
-                                {issue.issueDescription}
-                              </p>
-                            </div>
+        formData.append('createdById', createdById);
+        formData.append('createdByType', createdByType);
+        formData.append('title', newIssue.title);
+        formData.append('issueDescription', newIssue.issueDescription);
+        formData.append('projectItemId', newIssue.projectItemId);
+        formData.append('projectId', projectId);
+        formData.append('category', projectItems.find(p => p.id == newIssue.projectItemId)?.itemName || '');
+        for (let file of newIssue.productImages) {
+          formData.append('productImages', file);
+        }
 
-                            {/* Status Dropdown + Update Button */}
-                            <div className="status-control">
-                              <select
-                                className="status-dropdown"
-                                value={currentStatus}
-                                onChange={(e) =>
-                                  setStatusMap((prev) => ({
-                                    ...prev,
-                                    [issue.id]: e.target.value,
-                                  }))
-                                }
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="Resolved">Resolved</option>
-                                <option value="Rejected">Rejected</option>
-                              </select>
-                              <button
-                                className="update-status-btn"
-                                onClick={() =>
-                                  handlePunchStatusUpdate(
-                                    issue.id,
-                                    currentStatus
-                                  )
-                                }
-                              >
-                                Save
-                              </button>
-                            </div>
+        await axios.post(`${url}/projects/${projectId}/punch-list`, formData);
+        toast.success("Issue added!");
+        setShowPunchModal(false);
+        setNewIssue({ title: '', issueDescription: '', projectItemId: '', productImages: [] });
+        const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
+        setPunchList(res.data.map(issue => ({
+          ...issue,
+          productImages: typeof issue.productImages === 'string'
+            ? JSON.parse(issue.productImages)
+            : issue.productImages
+        })));
+      } catch (err) {
+        console.error("Failed to add issue", err);
+        toast.error("Error adding issue");
+      }
+    }}
+  >
+    Submit
+  </button>
+  <button className="cancel-btn" onClick={() => setShowPunchModal(false)}>Cancel</button>
+</div>
+</div>
+</div>
+)}
 
-                            {/* Attachments */}
-                            {files.length > 0 && (
-                              <div className="punch-attachments">
-                                {files.map((file, i) => {
-                                  const isPDF = file
-                                    .toLowerCase()
-                                    .endsWith(".pdf");
-                                  const fileUrl = `${url2}/${file}`;
-                                  return (
-                                    <div
-                                      key={i}
-                                      className="punch-attachment-preview"
-                                    >
-                                      {isPDF ? (
-                                        <iframe
-                                          src={fileUrl}
-                                          title={`PDF-${i}`}
-                                          className="file-mini-pdf"
-                                        />
-                                      ) : (
-                                        <a
-                                          href={fileUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          <img
-                                            src={fileUrl}
-                                            alt={`Img-${i}`}
-                                            className="file-mini-img"
-                                          />
-                                        </a>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            <p>
-                              <strong>Created At:</strong>{" "}
-                              {new Date(issue.createdAt).toLocaleString()}
-                            </p>
+<h2>Punch List</h2>
 
-                            <p>
-                              <strong>Created By:</strong>{" "}
-                              {issue.createdByType === "user"
-                                ? `${issue.creatorUser?.firstName || ""} ${
-                                    issue.creatorUser?.lastName || ""
-                                  }`
-                                : issue.creatorCustomer?.full_name || "N/A"}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-              {activeTab === "invoice" && (
-                <div className="project-info-card">
-                  <h2>Invoices</h2>
+{punchList.length === 0 ? (
+<p>No punch list issues found.</p>
+) : (
+<div className="punch-list-grid compact-style">
+{punchList.map((issue, idx) => {
+  const files = Array.isArray(issue.productImages) ? issue.productImages : [];
+  const currentStatus = statusMap[issue.id] || 'Pending';
 
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf"
-                    onChange={(e) =>
-                      setSelectedInvoiceFiles(Array.from(e.target.files))
-                    }
+  return (
+    <div className="punch-card-small" key={issue.id || idx}>
+      <div className="punch-card-top">
+        <h4>{issue.title}</h4>
+        <span className={`status-badge ${issue.status?.toLowerCase() || 'pending'}`}>
+{issue.status || 'Pending'}
+</span>
+
+      </div>
+
+      <div className="punch-mini-info">
+        <p><strong>Item:</strong> {issue.item?.itemName || 'N/A'}</p>
+        <p><strong>Description:</strong> {issue.issueDescription}</p>
+      </div>
+
+      {/* Status Dropdown + Update Button */}
+      <div className="status-control">
+        <select
+          className="status-dropdown"
+          value={currentStatus}
+          onChange={(e) =>
+            setStatusMap((prev) => ({ ...prev, [issue.id]: e.target.value }))
+          }
+        >
+          <option value="Pending">Pending</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <button
+          className="update-status-btn"
+          onClick={() => handlePunchStatusUpdate(issue.id, currentStatus)}
+        >
+          Save
+        </button>
+      </div>
+
+      {/* Attachments */}
+      {files.length > 0 && (
+        <div className="punch-attachments">
+          {files.map((file, i) => {
+            const isPDF = file.toLowerCase().endsWith('.pdf');
+            const fileUrl = `${url2}/${file}`;
+            return (
+              <div key={i} className="punch-attachment-preview">
+                {isPDF ? (
+                  <iframe src={fileUrl} title={`PDF-${i}`} className="file-mini-pdf" />
+                ) : (
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={fileUrl}
+                    alt={`Img-${i}`}
+                    className="file-mini-img"
                   />
+                </a>
+                
+                )}
+              </div>                  
+            );
+          })}
+        </div>  
+      )}
+       <p><strong>Created At:</strong> {new Date(issue.createdAt).toLocaleString()}</p>
 
-                  {selectedInvoiceFiles.length > 0 && (
-                    <div className="file-preview-section">
-                      <ul className="preview-list">
-                        {selectedInvoiceFiles.map((file, index) => (
-                          <li className="preview-item" key={index}>
-                            {file.name}
-                            <button
-                              type="button"
-                              className="remove-preview"
-                              onClick={() =>
-                                setSelectedInvoiceFiles((prev) =>
-                                  prev.filter((_, i) => i !== index)
-                                )
-                              }
-                            >
-                              ×
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        className="upload-btn"
-                        onClick={async () => {
-                          const formData = new FormData();
-                          selectedInvoiceFiles.forEach((file) =>
-                            formData.append("invoice", file)
-                          );
+<p><strong>Created By:</strong> {
+issue.createdByType === 'user'
+? `${issue.creatorUser?.firstName || ''} ${issue.creatorUser?.lastName || ''}`
+: issue.creatorCustomer?.full_name || 'N/A'
+}</p>
+    </div>
+  );
+})}
+</div>
+)}
+</div>
+)}
+{activeTab === 'invoice' && (
+  <div className="project-info-card">
+    <h2>Invoices</h2>
 
-                          try {
-                            const res = await fetch(
-                              `${url}/projects/${projectId}`,
-                              {
-                                method: "PUT",
-                                body: formData,
-                              }
-                            );
+    <input
+      type="file"
+      multiple
+      accept=".pdf"
+      onChange={(e) =>
+        setSelectedInvoiceFiles(Array.from(e.target.files))
+      }
+    />
 
-                            if (res.status === 200) {
-                              toast.success("Invoices uploaded!");
-                              const updated = await axios.get(
-                                `${url}/projects/${projectId}`
-                              );
-                              const parsed = Array.isArray(updated.data.invoice)
-                                ? updated.data.invoice
-                                : typeof updated.data.invoice === "string"
-                                ? JSON.parse(updated.data.invoice)
-                                : [];
-                              setProject(updated.data);
-                              setInvoiceFiles(parsed);
-                              setSelectedInvoiceFiles([]);
-                            } else {
-                              toast.error("Failed to upload.");
-                            }
-                          } catch (err) {
-                            console.error("Upload error:", err);
-                            toast.error("Upload failed.");
-                          }
-                        }}
-                      >
-                        Upload Invoices
-                      </button>
-                    </div>
-                  )}
+    {selectedInvoiceFiles.length > 0 && (
+      <div  className="file-preview-section">
+        <ul className="preview-list">
+          {selectedInvoiceFiles.map((file, index) => (
+            <li className="preview-item" key={index}>
+              {file.name}
+              <button
+                type="button"
+                className="remove-preview"
+                onClick={() =>
+                  setSelectedInvoiceFiles((prev) =>
+                    prev.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="upload-btn"
+          onClick={async () => {
+            const formData = new FormData();
+            selectedInvoiceFiles.forEach((file) =>
+              formData.append("invoice", file)
+            );
 
-                  <h3>Uploaded Invoices</h3>
-                  {Array.isArray(invoiceFiles) && invoiceFiles.length > 0 ? (
-                    <ul className="uploaded-files">
-                      {invoiceFiles.map((file, idx) => {
-                        const fileName = file.split("/").pop();
-                        const fileUrl = file.startsWith("uploads")
-                          ? `${url2}/${file}`
-                          : file;
+            try {
+              const res = await fetch(`${url}/projects/${projectId}`, {
+                method: "PUT",
+                body: formData,
+              });
 
-                        return (
-                          <li key={idx} className="file-item-enhanced">
-                            <span className="file-name-enhanced">
-                              {fileName}
-                            </span>
-                            <div className="file-actions">
-                              <button
-                                className="add-user-btn"
-                                onClick={() => window.open(fileUrl, "_blank")}
-                              >
-                                <FaEye />
-                              </button>
-                              <button
-                                className="add-user-btn"
-                                onClick={async () => {
-                                  try {
-                                    const response = await fetch(fileUrl);
-                                    const blob = await response.blob();
-                                    const downloadUrl =
-                                      window.URL.createObjectURL(blob);
-                                    const link = document.createElement("a");
-                                    link.href = downloadUrl;
-                                    link.download = fileName;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    link.remove();
-                                    window.URL.revokeObjectURL(downloadUrl);
-                                  } catch (err) {
-                                    toast.error("Download failed");
-                                  }
-                                }}
-                              >
-                                <FaDownload />
-                              </button>
-                              <button
-                                className="add-user-btn"
-                                onClick={async () => {
-                                  const result = await Swal.fire({
-                                    title: "Are you sure?",
-                                    text: "Do you want to remove this invoice file?",
-                                    icon: "warning",
-                                    showCancelButton: true,
-                                    confirmButtonText: "Yes, delete it!",
-                                    cancelButtonText: "Cancel",
-                                  });
+              if (res.status === 200) {
+                toast.success("Invoices uploaded!");
+                const updated = await axios.get(`${url}/projects/${projectId}`);
+                const parsed = Array.isArray(updated.data.invoice)
+                  ? updated.data.invoice
+                  : typeof updated.data.invoice === "string"
+                  ? JSON.parse(updated.data.invoice)
+                  : [];
+                setProject(updated.data);
+                setInvoiceFiles(parsed);
+                setSelectedInvoiceFiles([]);
+              } else {
+                toast.error("Failed to upload.");
+              }
+            } catch (err) {
+              console.error("Upload error:", err);
+              toast.error("Upload failed.");
+            }
+          }}
+        >
+          Upload Invoices
+        </button>
+      </div>
+    )}
 
-                                  if (result.isConfirmed) {
-                                    try {
-                                      const formData = new FormData();
-                                      formData.append(
-                                        "removedFiles",
-                                        JSON.stringify([file])
-                                      );
-                                      formData.append(
-                                        "invoice",
-                                        JSON.stringify(
-                                          invoiceFiles.filter((f) => f !== file)
-                                        )
-                                      );
+    <h3>Uploaded Invoices</h3>
+    {Array.isArray(invoiceFiles) && invoiceFiles.length > 0 ? (
+      <ul className="uploaded-files">
+        {invoiceFiles.map((file, idx) => {
+          const fileName = file.split("/").pop();
+          const fileUrl = file.startsWith("uploads") ? `${url2}/${file}` : file;
 
-                                      const res = await fetch(
-                                        `${url}/projects/${projectId}`,
-                                        {
-                                          method: "PUT",
-                                          body: formData,
-                                        }
-                                      );
+          return (
+            <li key={idx} className="file-item-enhanced">
+              <span className="file-name-enhanced">{fileName}</span>
+              <div className="file-actions">
+                <button className="add-user-btn" onClick={() => window.open(fileUrl, "_blank")}>
+                  <FaEye />
+                </button>
+                <button
+                  className="add-user-btn"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(fileUrl);
+                      const blob = await response.blob();
+                      const downloadUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = downloadUrl;
+                      link.download = fileName;
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(downloadUrl);
+                    } catch (err) {
+                      toast.error("Download failed");
+                    }
+                  }}
+                >
+                  <FaDownload />
+                </button>
+                <button
+                  className="add-user-btn"
+                  onClick={async () => {
+                    const result = await Swal.fire({
+                      title: "Are you sure?",
+                      text: "Do you want to remove this invoice file?",
+                      icon: "warning",
+                      showCancelButton: true,
+                      confirmButtonText: "Yes, delete it!",
+                      cancelButtonText: "Cancel",
+                    });
 
-                                      if (res.status === 200) {
-                                        toast.success("Invoice deleted!");
-                                        setInvoiceFiles((prev) =>
-                                          prev.filter((f) => f !== file)
-                                        );
-                                      } else {
-                                        toast.error(
-                                          "Failed to delete invoice."
-                                        );
-                                      }
-                                    } catch (error) {
-                                      toast.error("Delete request failed.");
-                                      console.error(error);
-                                    }
-                                  }
-                                }}
-                              >
-                                <MdDelete />
-                              </button>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p>No invoice files uploaded yet.</p>
-                  )}
-                </div>
-              )}
-              {activeTab === "settings" && (
-                <div className="project-info-card">
-                  <h2>Settings</h2>
-                  <div className="info-group">
-                    <strong>Client View:</strong>{" "}
-                    {project.allowClientView ? "Allowed" : "Disabled"}
-                  </div>
-                  <div className="info-group">
-                    <strong>Comments:</strong>{" "}
-                    {project.allowComments ? "Allowed" : "Disabled"}
-                  </div>
-                  <div className="info-group">
-                    <strong>Email Notifications:</strong>{" "}
-                    {project.enableNotifications ? "Allowed" : "Disabled"}
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+                    if (result.isConfirmed) {
+                      try {
+                        const formData = new FormData();
+                        formData.append("removedFiles", JSON.stringify([file]));
+                        formData.append("invoice", JSON.stringify(invoiceFiles.filter(f => f !== file)));
+
+                        const res = await fetch(`${url}/projects/${projectId}`, {
+                          method: "PUT",
+                          body: formData,
+                        });
+
+                        if (res.status === 200) {
+                          toast.success("Invoice deleted!");
+                          setInvoiceFiles(prev => prev.filter(f => f !== file));
+                        } else {
+                          toast.error("Failed to delete invoice.");
+                        }
+                      } catch (error) {
+                        toast.error("Delete request failed.");
+                        console.error(error);
+                      }
+                    }
+                  }}
+                >
+                  <MdDelete />
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    ) : (
+      <p>No invoice files uploaded yet.</p>
+    )}
+  </div>
+)}
+  {activeTab === 'settings' && (
+    <div className="project-info-card">
+      <h2>Settings</h2>
+      <div className="info-group"><strong>Client View:</strong> {project.allowClientView ? "Allowed" : "Disabled"}</div>
+      <div className="info-group"><strong>Comments:</strong> {project.allowComments ? "Allowed" : "Disabled"}</div>
+      <div className="info-group"><strong>Email Notifications:</strong> {project.enableNotifications ? "Allowed" : "Disabled"}</div>
+    </div>
+  )}
+</div></>
+}
+    
       </div>
 
       {/*team comment canvas*/}
-      <Offcanvas
-        isOpen={isOffcanvasOpen}
-        closeOffcanvas={closeOffcanvas}
-        getLatestComment={fetchComments}
-      >
-        <div className="right-panel">
-          <div
-            className="comments-list"
-            style={{
-              overflowY: "auto",
-              maxHeight: "500px",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            {/* Grouped Comments by Date */}
-            {Object.keys(groupedComments).map((date) => (
-              <div key={date} className="comment-date-group">
-                <p className="comment-date">{date}</p>
-                {Object.keys(groupedComments)
-                  .sort((a, b) => new Date(a) - new Date(b)) // sort ascending by date
-                  .map((date) => (
-                    <div key={date} className="comment-date-group">
-                      <p className="comment-date">{date}</p>
-                      {groupedComments[date]
-                        .sort(
-                          (a, b) =>
-                            new Date(a.createdAt) - new Date(b.createdAt)
-                        )
-                        .map((comment) => (
-                          <div key={comment.id}>
-                            <div className="whatsapp-comment-box">
-                              <div className="whatsapp-comment-user-info">
-                                <img
-                                  src={
-                                    comment?.fromUser?.profileImage
-                                      ? `${url2}/${comment.fromUser.profileImage}`
-                                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
-                                  }
-                                  alt="User"
-                                  className="whatsapp-comment-user-avatar"
-                                />
-                                <div>
-                                  <p className="whatsapp-comment-author">
-                                    {comment?.fromUser?.firstName}{" "}
-                                    {comment?.fromUser?.lastName} (
-                                    {comment?.fromUser?.userRole})
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="whatsapp-comment-text">
-                                {comment.comment}
-                              </p>
-                              <p className="whatsapp-comment-meta">
-                                {new Date(
-                                  comment.createdAt
-                                ).toLocaleTimeString()}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ))}
+      <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
+  <div className="right-panel">
+  <div
+  className="comments-list"
+  style={{
+    overflowY: "auto",
+    maxHeight: "500px",
+    display: "flex",
+    flexDirection: "column", 
+  }}
+>
+
+      {/* Grouped Comments by Date */}
+      {Object.keys(groupedComments).map((date) => (
+        <div key={date} className="comment-date-group">
+          <p className="comment-date">{date}</p>
+          {Object.keys(groupedComments)
+  .sort((a, b) => new Date(a) - new Date(b)) // sort ascending by date
+  .map((date) => (
+    <div key={date} className="comment-date-group">
+      <p className="comment-date">{date}</p>
+      {groupedComments[date]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .map((comment) => (
+          <div key={comment.id}>
+            <div className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment?.fromUser?.profileImage
+                      ? `${url2}/${comment.fromUser.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                    {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                  </p>
+                </div>
               </div>
-            ))}
-            <div ref={commentsEndRef}></div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
           </div>
-        </div>
+        ))}
+    </div>
+))}
 
-        <div className="whatsapp-comment-form">
-          <textarea
-            value={newCommentText}
-            onChange={(e) => setNewCommentText(e.target.value)}
-            className="whatsapp-comment-input"
-            placeholder="Write your comment..."
-          />
-          <button onClick={handleAddComment} className="whatsapp-submit-btn">
-            <FaTelegramPlane />
-          </button>
         </div>
-
       ))}
       <div ref={commentsEndRef}></div>
     </div>
@@ -1884,30 +1361,34 @@ return files.length > 0 ? (
                   <p className="whatsapp-comment-author">
                   {comment?.createdByName} ({comment?.userRole})
                   </p>
-
                 </div>
-              ))}
-            <div ref={commentsItemEndRef}></div>
-          </div>
+              </div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+          ))}
         </div>
+      ))}
+    </div>
+  </div>
 
-        <div className="whatsapp-comment-form">
-          <textarea
-            value={itemCommentText}
-            onChange={(e) => setItemCommentText(e.target.value)}
-            className="whatsapp-comment-input"
-            placeholder="Write your comment..."
-          />
-          <button
-            onClick={handleAddItemComment}
-            className="whatsapp-submit-btn"
-          >
-            <FaTelegramPlane />
-          </button>
-        </div>
-      </Offcanvas>
+  <div className="whatsapp-comment-form">
+    <textarea
+      value={itemCommentText}
+      onChange={(e) => setItemCommentText(e.target.value)}
+      className="whatsapp-comment-input"
+      placeholder="Write your comment..."
+    />
+    <button onClick={handleAddItemComment} className="whatsapp-submit-btn">
+      <FaTelegramPlane />
+    </button>
+  </div>
+</Offcanvas>
+
     </Layout>
   );
 };
 
-export default ProjectDetails;
+export default ProjectDetails;    
