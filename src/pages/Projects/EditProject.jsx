@@ -38,7 +38,23 @@ otherDocuments: [],
   const [removedFiles, setRemovedFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [leadTimeItems, setLeadTimeItems] = useState([]);
+  const predefinedOptions = ["Regular Hours", "Before 9 AM", "After 6 PM"];
+  const [deliveryHourOption, setDeliveryHourOption] = useState("Regular Hours");
+  const [customDeliveryHour, setCustomDeliveryHour] = useState("");
   
+  // Prefill when formData loads from DB
+  useEffect(() => {
+    const existing = formData.deliveryHours;
+    if (predefinedOptions.includes(existing)) {
+      setDeliveryHourOption(existing);
+      setCustomDeliveryHour("");
+    } else {
+      setDeliveryHourOption("Other");
+      setCustomDeliveryHour(existing || "");
+    }
+  }, [formData.deliveryHours]);
+  
+
   const fetchLeadTimeItems = async (projectId) => {
     try {
       const res = await axios.get(`${url}/items/${projectId}`);
@@ -632,9 +648,37 @@ otherDocuments: [],
                     <input type="text" name="deliveryAddress" value={formData.deliveryAddress} onChange={handleChange} />
                   </div>
                   <div className="form-group">
-                    <label>Delivery Hours</label>
-                    <input type="text" name="deliveryHours" value={formData.deliveryHours} onChange={handleChange} />
-                  </div>
+  <label>Delivery Hours</label>
+  <select
+    value={deliveryHourOption}
+    onChange={(e) => {
+      const selected = e.target.value;
+      setDeliveryHourOption(selected);
+
+      const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+      handleChange({ target: { name: "deliveryHours", value: valueToSave } });
+    }}
+  >
+    {predefinedOptions.map((opt) => (
+      <option key={opt} value={opt}>{opt}</option>
+    ))}
+    <option value="Other">Other</option>
+  </select>
+
+  {deliveryHourOption === "Other" && (
+    <input
+      type="text"
+      placeholder="Enter custom delivery hours"
+      value={customDeliveryHour}
+      onChange={(e) => {
+        setCustomDeliveryHour(e.target.value);
+        handleChange({ target: { name: "deliveryHours", value: e.target.value } });
+      }}
+      style={{ marginTop: "8px" }}
+    />
+  )}
+</div>
+
                 </div>
               
                   <div className="form-card">

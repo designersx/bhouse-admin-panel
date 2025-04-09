@@ -39,6 +39,13 @@ const AddProject = () => {
     { itemName: "", quantity: "", expectedDeliveryDate: "",expectedArrivalDate:"", status: "Pending" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [deliveryHourOption, setDeliveryHourOption] = useState(formData.deliveryHours || "Regular Hours");
+const [customDeliveryHour, setCustomDeliveryHour] = useState(
+  ["Regular Hours", "Before 9 AM", "After 6 PM"].includes(formData.deliveryHours)
+    ? ""
+    : formData.deliveryHours || ""
+);
+
   const navigate = useNavigate();
 
   const validateStep1 = () => {
@@ -627,15 +634,41 @@ const AddProject = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Delivery Hours</label>
-                    <input
-                      type="text"
-                      name="deliveryHours"
-                      value={formData.deliveryHours}
-                      onChange={handleChange}
-                      placeholder="Enter delivery hours"
-                    />
-                  </div>
+  <label>Delivery Hours</label>
+  <select
+    value={deliveryHourOption}
+    onChange={(e) => {
+      const selected = e.target.value;
+      setDeliveryHourOption(selected);
+      const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+
+      // Update formData
+      handleChange({
+        target: { name: "deliveryHours", value: valueToSave }
+      });
+    }}
+  >
+    <option value="Regular Hours">Regular Hours</option>
+    <option value="Before 9 AM">Before 9 AM</option>
+    <option value="After 6 PM">After 6 PM</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {deliveryHourOption === "Other" && (
+    <input
+      type="text"
+      placeholder="Enter custom delivery hours"
+      value={customDeliveryHour}
+      onChange={(e) => {
+        setCustomDeliveryHour(e.target.value);
+        handleChange({
+          target: { name: "deliveryHours", value: e.target.value }
+        });
+      }}
+    />
+  )}
+</div>
+
                 </div>
 
                 <h3>Project Lead Time Matrix</h3>
