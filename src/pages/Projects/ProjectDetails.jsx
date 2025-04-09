@@ -16,6 +16,7 @@ import Offcanvas from '../../components/OffCanvas/OffCanvas';
 import { FaTelegramPlane } from "react-icons/fa"; 
 import { useRef } from 'react'; 
 import useRolePermissions from '../../hooks/useRolePermissions'
+import InvoiceManagement from './InvoiceManagment';
 
 
 const ProjectDetails = () => {
@@ -33,7 +34,6 @@ const ProjectDetails = () => {
   const [statusMap, setStatusMap] = useState({});
   const [loadingDoc , setLoadingDoc] = useState(false)
   const [invoiceFiles, setInvoiceFiles] = useState([]);
-  const [selectedInvoiceFiles, setSelectedInvoiceFiles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userComments, setUserComments] = useState([]);
   const [newCommentText, setNewCommentText] = useState('');
@@ -494,7 +494,7 @@ setLoadingDoc(false)
     { key: "invoice", label: "Invoice", permissionKey: "Invoicing" },
     { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
   ];
- 
+
   return (
     <Layout>
       <ToastContainer/>
@@ -1110,161 +1110,8 @@ issue.createdByType === 'user'
 )}
 </div>
 )}
-{activeTab === 'invoice' && (
-  <div className="project-info-card">
-    <h2>Invoices</h2>
+{activeTab === 'invoice' && <InvoiceManagement projectId={projectId} />}
 
-    <input
-      type="file"
-      multiple
-      accept=".pdf"
-      onChange={(e) =>
-        setSelectedInvoiceFiles(Array.from(e.target.files))
-      }
-    />
-
-    {selectedInvoiceFiles.length > 0 && (
-      <div  className="file-preview-section">
-        <ul className="preview-list">
-          {selectedInvoiceFiles.map((file, index) => (
-            <li className="preview-item" key={index}>
-              {file.name}
-              <button
-                type="button"
-                className="remove-preview"
-                onClick={() =>
-                  setSelectedInvoiceFiles((prev) =>
-                    prev.filter((_, i) => i !== index)
-                  )
-                }
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-        <button
-          className="upload-btn"
-          onClick={async () => {
-            const formData = new FormData();
-            selectedInvoiceFiles.forEach((file) =>
-              formData.append("invoice", file)
-            );
-
-            try {
-              const res = await fetch(`${url}/projects/${projectId}`, {
-                method: "PUT",
-                body: formData,
-              });
-
-              if (res.status === 200) {
-                toast.success("Invoices uploaded!");
-                const updated = await axios.get(`${url}/projects/${projectId}`);
-                const parsed = Array.isArray(updated.data.invoice)
-                  ? updated.data.invoice
-                  : typeof updated.data.invoice === "string"
-                  ? JSON.parse(updated.data.invoice)
-                  : [];
-                setProject(updated.data);
-                setInvoiceFiles(parsed);
-                setSelectedInvoiceFiles([]);
-              } else {
-                toast.error("Failed to upload.");
-              }
-            } catch (err) {
-              console.error("Upload error:", err);
-              toast.error("Upload failed.");
-            }
-          }}
-        >
-          Upload Invoices
-        </button>
-      </div>
-    )}
-
-    <h3>Uploaded Invoices</h3>
-    {Array.isArray(invoiceFiles) && invoiceFiles.length > 0 ? (
-      <ul className="uploaded-files">
-        {invoiceFiles.map((file, idx) => {
-          const fileName = file.split("/").pop();
-          const fileUrl = file.startsWith("uploads") ? `${url2}/${file}` : file;
-
-          return (
-            <li key={idx} className="file-item-enhanced">
-              <span className="file-name-enhanced">{fileName}</span>
-              <div className="file-actions">
-                <button className="add-user-btn" onClick={() => window.open(fileUrl, "_blank")}>
-                  <FaEye />
-                </button>
-                <button
-                  className="add-user-btn"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(fileUrl);
-                      const blob = await response.blob();
-                      const downloadUrl = window.URL.createObjectURL(blob);
-                      const link = document.createElement("a");
-                      link.href = downloadUrl;
-                      link.download = fileName;
-                      document.body.appendChild(link);
-                      link.click();
-                      link.remove();
-                      window.URL.revokeObjectURL(downloadUrl);
-                    } catch (err) {
-                      toast.error("Download failed");
-                    }
-                  }}
-                >
-                  <FaDownload />
-                </button>
-                <button
-                  className="add-user-btn"
-                  onClick={async () => {
-                    const result = await Swal.fire({
-                      title: "Are you sure?",
-                      text: "Do you want to remove this invoice file?",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonText: "Yes, delete it!",
-                      cancelButtonText: "Cancel",
-                    });
-
-                    if (result.isConfirmed) {
-                      try {
-                        const formData = new FormData();
-                        formData.append("removedFiles", JSON.stringify([file]));
-                        formData.append("invoice", JSON.stringify(invoiceFiles.filter(f => f !== file)));
-
-                        const res = await fetch(`${url}/projects/${projectId}`, {
-                          method: "PUT",
-                          body: formData,
-                        });
-
-                        if (res.status === 200) {
-                          toast.success("Invoice deleted!");
-                          setInvoiceFiles(prev => prev.filter(f => f !== file));
-                        } else {
-                          toast.error("Failed to delete invoice.");
-                        }
-                      } catch (error) {
-                        toast.error("Delete request failed.");
-                        console.error(error);
-                      }
-                    }
-                  }}
-                >
-                  <MdDelete />
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    ) : (
-      <p>No invoice files uploaded yet.</p>
-    )}
-  </div>
-)}
   {activeTab === 'settings' && (
     <div className="project-info-card">
       <h2>Settings</h2>
