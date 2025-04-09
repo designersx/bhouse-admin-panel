@@ -11,11 +11,13 @@ import { toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BackButton from "../components/BackButton";
 const roleLevels = {
+  "Admin" : 1 , 
   "Super Admin": 1,
   "Account Manager": 2,
   "Sr. Designer": 3,
-  "Designer": 4,
-  "Intern": 5,
+  "Operation": 4,
+  "Junior Designer": 5,
+  "Lead Installer" : 6
 };
 
 const UserForm = () => {
@@ -82,8 +84,8 @@ const UserForm = () => {
         filteredRoles = allRoles.filter(role => role.title !== "Super Admin");
       } else {
         filteredRoles = allRoles.filter((role) => {
-          const isPredefinedAndAbove = role.defaultPermissionLevel < 6 && role.defaultPermissionLevel > userLevel;
-          const isCustomAndCreatedByUser = role.defaultPermissionLevel === 6 && String(role.createdBy) === String(userId);
+          const isPredefinedAndAbove = role.defaultPermissionLevel < 7 && role.defaultPermissionLevel > userLevel;
+          const isCustomAndCreatedByUser = role.defaultPermissionLevel === 7 && String(role.createdBy) === String(userId);
           return isPredefinedAndAbove || isCustomAndCreatedByUser;
         });
       }

@@ -14,11 +14,13 @@ const EditProject = () => {
   const [allRoles, setAllRoles] = useState([]);
   const [usersByRole, setUsersByRole] = useState({});
   const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     type: 'Corporate Office',
     clientName: '',
     description: '',
+    clientId : null, 
     advancePayment: '', 
     estimatedCompletion: '',
     totalValue: '',
@@ -33,12 +35,31 @@ floorPlans: [],
 otherDocuments: [],
 
   });
+  console.log(formData?.clientId , "client id ")
+  
+  
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
   const [removedFiles, setRemovedFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [leadTimeItems, setLeadTimeItems] = useState([]);
+  const predefinedOptions = ["Regular Hours", "Before 9 AM", "After 6 PM"];
+  const [deliveryHourOption, setDeliveryHourOption] = useState("Regular Hours");
+  const [customDeliveryHour, setCustomDeliveryHour] = useState("");
   
+  // Prefill when formData loads from DB
+  useEffect(() => {
+    const existing = formData.deliveryHours;
+    if (predefinedOptions.includes(existing)) {
+      setDeliveryHourOption(existing);
+      setCustomDeliveryHour("");
+    } else {
+      setDeliveryHourOption("Other");
+      setCustomDeliveryHour(existing || "");
+    }
+  }, [formData.deliveryHours]);
+  
+
   const fetchLeadTimeItems = async (projectId) => {
     try {
       const res = await axios.get(`${url}/items/${projectId}`);
@@ -302,7 +323,7 @@ otherDocuments: [],
   
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-  
+    console.log(formDataToSend)
     Object.entries(files).forEach(([category, fileArray]) => {
       fileArray.forEach((file) => formDataToSend.append(category, file));
     });
@@ -315,6 +336,7 @@ otherDocuments: [],
   
       if (res.status === 200) {
         Swal.fire("Project updated successfully!");
+        
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
@@ -332,6 +354,7 @@ otherDocuments: [],
       clientName,
       totalValue,
       advancePayment,
+      
       
     } = formData;
   
@@ -361,6 +384,7 @@ otherDocuments: [],
   };
   
   const prevStep = () => setStep(step - 1);
+
 
   return (
     <Layout>
@@ -408,22 +432,23 @@ otherDocuments: [],
     setFormData(prev => ({
       ...prev,
       clientName: e.target.value,
-      deliveryAddress: selectedCustomer?.delivery_address|| '',
+      deliveryAddress: selectedCustomer?.delivery_address || '',
+      clientId: selectedCustomer?.id || '', // updating clientId directly
     }));
+
+    setSelectedCustomerId(selectedCustomer?.id || '');
   }}
   required
 >
-
-                      <option value="">Select a customer</option>
-{customers.length?<>
-  {customers?.map((customer) => (
-                        <option key={customer.id} value={customer.full_name}>
-                          {customer.full_name} ({customer.email})
-                        </option>
-                      ))}
-</> : <></>}
-                      
-                    </select>
+  <option value="">Select a customer</option>
+  {customers.length > 0 &&
+    customers.map((customer) => (
+      <option key={customer.id} value={customer.full_name}>
+        {customer.full_name} ({customer.email})
+      </option>
+    ))
+  }
+</select>
                   </div>
                   <div className="form-group">
                     <label>Description</label>
@@ -632,9 +657,37 @@ otherDocuments: [],
                     <input type="text" name="deliveryAddress" value={formData.deliveryAddress} onChange={handleChange} />
                   </div>
                   <div className="form-group">
-                    <label>Delivery Hours</label>
-                    <input type="text" name="deliveryHours" value={formData.deliveryHours} onChange={handleChange} />
-                  </div>
+  <label>Delivery Hours</label>
+  <select
+    value={deliveryHourOption}
+    onChange={(e) => {
+      const selected = e.target.value;
+      setDeliveryHourOption(selected);
+
+      const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+      handleChange({ target: { name: "deliveryHours", value: valueToSave } });
+    }}
+  >
+    {predefinedOptions.map((opt) => (
+      <option key={opt} value={opt}>{opt}</option>
+    ))}
+    <option value="Other">Other</option>
+  </select>
+
+  {deliveryHourOption === "Other" && (
+    <input
+      type="text"
+      placeholder="Enter custom delivery hours"
+      value={customDeliveryHour}
+      onChange={(e) => {
+        setCustomDeliveryHour(e.target.value);
+        handleChange({ target: { name: "deliveryHours", value: e.target.value } });
+      }}
+      style={{ marginTop: "8px" }}
+    />
+  )}
+</div>
+
                 </div>
               
                   <div className="form-card">

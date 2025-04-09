@@ -25,6 +25,7 @@ const ProjectDetails = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeTabing, setActiveTabing] = useState('Admin');
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
@@ -551,7 +552,27 @@ setLoadingDoc(false)
   )}
 {activeTab === 'documents' && (
 <div className="project-info-card">
-<h2>Uploaded Documents</h2>
+  <div className="tabs-container">
+    <div className="tabs-header">
+
+    <button 
+                    className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Admin")}
+                >
+                   Admin
+                </button>
+                <button 
+                    className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Customer")}
+                >
+                    Customer
+                </button>
+    </div>
+  </div>
+  <div className="tab-content">
+  {activeTabing === "Admin" && (
+    <div className="tab-panel">
+      <h2>Uploaded Documents</h2>
 
 {[
 { title: "Installation Docs", files: project.proposals, category: 'proposals'  },
@@ -673,12 +694,18 @@ return files.length > 0 ? (
 
 </div>
 ))}
+    </div>
+  )}
+</div>
+
+
 </div>
 )}
 
 
 
 {activeTab === 'team' && (
+  // udani hai 
 <div className="project-info-card">
 <h2>Assigned Team</h2>
 {project.assignedTeamRoles.length > 0 ? (
@@ -767,6 +794,12 @@ return (
 <tr key={item.id || index}>
   <td>
     <input
+    style={{
+      height: "30px" ,
+      borderRadius: "5px" ,  
+      border : "1px solid #ccc"
+      
+    }}
       value={item.itemName}
       disabled={!isEditable}
       onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
@@ -780,12 +813,24 @@ return (
     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
     className="item-description-input"
     maxLength={50}
+    style={{
+      height: "30px" ,
+      borderRadius: "5px" ,  
+      border : "1px solid #ccc"
+      
+    }}
   />
 </td>
 
 
 <td>
   <input
+   style={{
+    height: "30px" ,
+    borderRadius: "5px" ,  
+    border : "1px solid #ccc"
+    
+  }}
     type="date"
     value={item.expectedDeliveryDate?.slice(0, 10) || ''}
     min={new Date().toISOString().split("T")[0]} 
@@ -797,6 +842,12 @@ return (
 </td>
 <td>
   <input
+   style={{
+    height: "30px" ,
+    borderRadius: "5px" ,  
+    border : "1px solid #ccc"
+    
+  }}
     type="date"
     value={item.expectedArrivalDate?.slice(0, 10) || ''}
     min={new Date().toISOString().split("T")[0]} 
@@ -1332,7 +1383,7 @@ issue.createdByType === 'user'
                 />
                 <div>
                   <p className="whatsapp-comment-author">
-                  {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                  {comment?.createdByName} ({comment?.userRole})
                   </p>
                 </div>
               </div>

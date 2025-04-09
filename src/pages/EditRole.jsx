@@ -10,6 +10,7 @@ const predefinedRoles = [
   "Account Manager",
   "Sr. Designer",
   "Operations",
+  "Junior Designer" , 
   "Lead Installer",
 ];
 
@@ -18,7 +19,8 @@ const rolePermissionLevels = {
   "Account Manager": 2,
   "Sr. Designer": 3,
   "Operations": 4,
-  "Lead Installer": 5,
+  "Junior Designer" : 5 , 
+  "Lead Installer": 6,
 };
 
 const modules = [
