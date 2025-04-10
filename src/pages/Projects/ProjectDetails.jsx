@@ -44,11 +44,39 @@ const [selectedItemId, setSelectedItemId] = useState(null);
 const [itemComments, setItemComments] = useState([]);
 const [groupedItemComments, setGroupedItemComments] = useState({});
 const [itemCommentText, setItemCommentText] = useState('');
+
 const [isPunchCanvasOpen, setIsPunchCanvasOpen] = useState(false);
 const [selectedPunchItemId, setSelectedPunchItemId] = useState(null);
 const [punchComments, setPunchComments] = useState([]);
 const [groupedPunchComments, setGroupedPunchComments] = useState({});
 const [punchCommentText, setPunchCommentText] = useState('');
+
+const [docsData, setDocsData] = useState({});
+const docMap = {
+  "Sample COI": "Sample COI",
+  "COI (Certificate)": "COI (Certificate)",
+  "Pro Forma Invoice": "Pro Forma Invoice",
+  "Final Invoice": "Final Invoice",
+  "Sales Agreement": "Sales Agreement"
+};
+const normalize = (str) => str.trim().toLowerCase();
+
+const fetchDocuments = async () => {
+  try {
+    const res = await axios.get(`${url}/customerDoc/document/${projectId}`);
+    const docsArray = res.data || [];
+  console.log(docsArray , "docArray")
+    const docMapData = {};
+    docsArray.forEach(doc => {
+      docMapData[doc.documentType] = doc.filePath;
+    });
+console.log(docMapData , "docMapData")
+    setDocsData(docMapData);
+  } catch (error) {
+    console.error("Failed to fetch documents", error);
+  }
+};
+
 
 const openPunchComment = async (punchId) => {
   try {
@@ -91,6 +119,10 @@ const handleAddPunchComment = async () => {
     console.error("Failed to add punch comment:", err);
   }
 };
+
+useEffect(() => {
+  fetchDocuments();
+}, [projectId]);
 
 const openItemComment = async (itemId) => {
   try {
@@ -605,7 +637,7 @@ setLoadingDoc(false)
                     className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
                     onClick={() => setActiveTabing("Admin")}
                 >
-                   Admin
+                   BHOUSE
                 </button>
                 <button 
                     className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
@@ -619,6 +651,7 @@ setLoadingDoc(false)
   {activeTabing === "Admin" && (
     <div className="tab-panel">
       <h2>Uploaded Documents</h2>
+      
 
 {[
 { title: "Installation Docs", files: project.proposals, category: 'proposals'  },
@@ -644,8 +677,10 @@ setLoadingDoc(false)
 <h4>Files to be uploaded:</h4>
 <ul className="preview-list">
   {selectedFiles[docCategory.category].map((file, i) => (
+            
     <li key={i} className="preview-item">
       {file.name}
+     
       <span className="remove-preview" onClick={() => removeSelectedFile(docCategory.category, i)}>×</span>
     </li>
   ))}
@@ -742,7 +777,44 @@ return files.length > 0 ? (
 ))}
     </div>
   )}
+  {activeTabing === "Customer" && (
+    <div className="tab-panel">
+    <h2>Uploaded Documents</h2>
+   
+{Object.keys(docMap).map((key, idx) => {
+  const normalizedKey = normalize(key);
+  const fileEntry = Object.entries(docsData).find(([docType]) => normalize(docType) === normalizedKey);
+  const filePath = fileEntry?.[1];
+  const fileName = filePath?.split('/').pop();
+  const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
+  return (
+    <div key={idx} className="doc-view-section">
+      <h4>{docMap[key]}</h4>
+      {filePath ? (
+        <div className="file-item-enhanced">
+          <span className="file-name-enhanced">{fileName}</span>
+          <button
+            className="file-action-btn"
+            onClick={() => window.open(`${fileUrl}`, '_blank')}
+            title="View"
+          >
+            <FaEye />
+          </button>
+        </div>
+      ) : (
+        <p>No document uploaded.</p>
+      )}
+    </div>
+  );
+})}
+  </div>
+  
+  )}
 </div>
+
+
+
 
 
 </div>

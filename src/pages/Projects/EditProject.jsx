@@ -20,7 +20,7 @@ const EditProject = () => {
     type: 'Corporate Office',
     clientName: '',
     description: '',
-    clientId : null, 
+    clientId : '', 
     advancePayment: '', 
     estimatedCompletion: '',
     totalValue: '',
