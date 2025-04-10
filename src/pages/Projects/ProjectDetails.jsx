@@ -44,6 +44,13 @@ const [selectedItemId, setSelectedItemId] = useState(null);
 const [itemComments, setItemComments] = useState([]);
 const [groupedItemComments, setGroupedItemComments] = useState({});
 const [itemCommentText, setItemCommentText] = useState('');
+
+const [isPunchCanvasOpen, setIsPunchCanvasOpen] = useState(false);
+const [selectedPunchItemId, setSelectedPunchItemId] = useState(null);
+const [punchComments, setPunchComments] = useState([]);
+const [groupedPunchComments, setGroupedPunchComments] = useState({});
+const [punchCommentText, setPunchCommentText] = useState('');
+
 const [docsData, setDocsData] = useState({});
 const docMap = {
   "Sample COI": "Sample COI",
@@ -70,6 +77,48 @@ console.log(docMapData , "docMapData")
   }
 };
 
+
+const openPunchComment = async (punchId) => {
+  try {
+    setSelectedPunchItemId(punchId);
+    const res = await axios.get(`${url}/punchlist/${punchId}/comments`);
+    setPunchComments(res.data);
+
+    const grouped = res.data.reduce((acc, comment) => {
+      const date = new Date(comment.createdAt).toLocaleDateString();
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(comment);
+      return acc;
+    }, {});
+    
+    setGroupedPunchComments(grouped);
+    setIsPunchCanvasOpen(true);
+  } catch (err) {
+    console.error("Error fetching punch list comments:", err);
+  }
+};
+const handleAddPunchComment = async () => {
+  const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const customer = JSON.parse(localStorage.getItem("customer"));
+
+  const createdById = user?.id || customer?.id;
+  const createdByType = user ? "user" : "customer";
+
+  if (!punchCommentText.trim()) return;
+
+  try {
+    await axios.post(`${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`, {
+      comment: punchCommentText,
+      userId: createdByType === 'user' ? createdById : null,
+      clientId: createdByType === 'customer' ? createdById : null
+    });
+
+    setPunchCommentText('');
+    openPunchComment(selectedPunchItemId); // refresh
+  } catch (err) {
+    console.error("Failed to add punch comment:", err);
+  }
+};
 
 useEffect(() => {
   fetchDocuments();
@@ -1116,7 +1165,7 @@ return (
       </div>
 
       <div className="punch-mini-info">
-        <p><strong>Item:</strong> {issue.item?.itemName || 'N/A'}</p>
+        <p><strong>Manufacturer:</strong> {issue.item?.itemName || 'N/A'}</p>
         <p><strong>Description:</strong> {issue.issueDescription}</p>
       </div>
 
@@ -1173,6 +1222,14 @@ issue.createdByType === 'user'
 ? `${issue.creatorUser?.firstName || ''} ${issue.creatorUser?.lastName || ''}`
 : issue.creatorCustomer?.full_name || 'N/A'
 }</p>
+<button 
+  className="comment-btna"
+  onClick={() => openPunchComment(issue.id)}
+  title="Comment"
+>
+  <FaCommentAlt />
+</button>
+
     </div>
   );
 })}
@@ -1195,8 +1252,8 @@ issue.createdByType === 'user'
     
       </div>
 
-      {/*team comment canvas*/}
-      <Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
+{/*team comment canvas*/}
+<Offcanvas isOpen={isOffcanvasOpen} closeOffcanvas={closeOffcanvas} getLatestComment={fetchComments}>
   <div className="right-panel">
   <div
   className="comments-list"
@@ -1213,7 +1270,7 @@ issue.createdByType === 'user'
         <div key={date} className="comment-date-group">
           <p className="comment-date">{date}</p>
           {Object.keys(groupedComments)
-  .sort((a, b) => new Date(a) - new Date(b)) // sort ascending by date
+  .sort((a, b) => new Date(a) - new Date(b)) 
   .map((date) => (
     <div key={date} className="comment-date-group">
       <p className="comment-date">{date}</p>
@@ -1266,7 +1323,6 @@ issue.createdByType === 'user'
     </button>
   </div>
 </Offcanvas>
-
 {/*item comment canvas*/}
 <Offcanvas
   isOpen={isItemCanvasOpen}
@@ -1327,8 +1383,76 @@ issue.createdByType === 'user'
     </button>
   </div>
 </Offcanvas>
+{/*punch comment canvas*/}
+<Offcanvas
+  isOpen={isPunchCanvasOpen}
+  closeOffcanvas={() => setIsPunchCanvasOpen(false)}
+  getLatestComment={() => openPunchComment(selectedPunchItemId)}
+>
+  <div className="right-panel">
+    <div
+      className="comments-list"
+      style={{
+        overflowY: "auto",
+        maxHeight: "500px",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      {Object.keys(groupedPunchComments).map(date => (
+        <div key={date} className="comment-date-group">
+          <p className="comment-date">{date}</p>
+          {groupedPunchComments[date].map(comment => {
+            const isUser = !!comment.user;
+            const creator = isUser ? comment.user : comment.customer;
 
-    </Layout>
+            return (
+              <div key={comment.id} className="whatsapp-comment-box">
+              <div className="whatsapp-comment-user-info">
+                <img
+                  src={
+                    comment.profileImage
+                      ? `${url2}/${comment.profileImage}`
+                      : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+                  }
+                  alt="User"
+                  className="whatsapp-comment-user-avatar"
+                />
+                <div>
+                  <p className="whatsapp-comment-author">
+                    {comment.createdByType === 'user'
+                      ? `${comment.name} (${comment.userRole})`
+                      : `Customer`}
+                  </p>
+                </div>
+              </div>
+              <p className="whatsapp-comment-text">{comment.comment}</p>
+              <p className="whatsapp-comment-meta">
+                {new Date(comment.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
+            
+            );
+          })}
+          
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div className="whatsapp-comment-form">
+    <textarea
+      value={punchCommentText}
+      onChange={(e) => setPunchCommentText(e.target.value)}
+      className="whatsapp-comment-input"
+      placeholder="Write your comment..."
+    />
+    <button onClick={handleAddPunchComment} className="whatsapp-submit-btn">
+      <FaTelegramPlane />
+    </button>
+  </div>
+</Offcanvas>
+</Layout>
   );
 };
 
