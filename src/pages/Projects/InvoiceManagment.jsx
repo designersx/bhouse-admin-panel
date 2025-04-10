@@ -31,7 +31,7 @@ const InvoiceManagement = ({ projectId }) => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching invoices:', err);
-        toast.error('Error fetching invoices.');
+        // toast.error('Error fetching invoices.');
         setLoading(false);
       }
     };
