@@ -52,9 +52,9 @@ const Navbar = ({ isLogin }) => {
           <>
             <li><IoNotificationsOutline /></li>
             <li> <CgProfile onClick={()=>navigate('/profile')} /></li>
-            <Link to="/settings"><FiSettings className='setting' /></Link>
+            {/* <Link to="/settings"><FiSettings className='setting' /></Link> */}
             <li onClick={handleLogout}>
-              <Link><CiLogout className='logout' /></Link>
+              {/* <Link><CiLogout className='logout' /></Link> */}
             </li>
           </>
         )}

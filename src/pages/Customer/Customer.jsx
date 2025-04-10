@@ -84,7 +84,7 @@ const Customer = () => {
 
     const indexOfLastCustomer = currentPage * customersPerPage;
     const indexOfFirstCustomer = indexOfLastCustomer - customersPerPage;
-    const currentCustomers = filteredCustomers.slice(indexOfFirstCustomer, indexOfLastCustomer);
+    const currentCustomers = filteredCustomers?.slice(indexOfFirstCustomer, indexOfLastCustomer);
     const totalPages = Math.ceil(filteredCustomers.length / customersPerPage);
 
     // 🗑️ Delete Customer
