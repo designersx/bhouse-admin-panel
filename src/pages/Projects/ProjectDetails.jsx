@@ -915,6 +915,16 @@ return (
 <div className="modal-overlay">
 <div className="modal-content">
 <h3>Add Punch List Issue</h3>
+<label>Manufacturer</label>
+<select
+  value={newIssue.projectItemId}
+  onChange={(e) => setNewIssue({ ...newIssue, projectItemId: e.target.value })}
+>
+  <option value="">Select</option>
+  {projectItems.map(item => (
+    <option key={item.id} value={item.id}>{item.itemName}</option>
+  ))}
+</select>
 <label>Title</label>
 <input
   value={newIssue.title}
@@ -930,16 +940,7 @@ return (
   maxLength={200}
 />
 
-<label>Item (Category)</label>
-<select
-  value={newIssue.projectItemId}
-  onChange={(e) => setNewIssue({ ...newIssue, projectItemId: e.target.value })}
->
-  <option value="">Select</option>
-  {projectItems.map(item => (
-    <option key={item.id} value={item.id}>{item.itemName}</option>
-  ))}
-</select>
+
 
 <label>Upload Files</label>
 <input
