@@ -45,6 +45,24 @@ const InvoiceManagement = ({ projectId }) => {
   
     fetchInvoices();
   }, [projectId]);
+  const getPaidAmount = () => {
+    const paidFromInvoices = invoices.reduce((sum, invoice) => {
+      if (invoice.status === 'Paid') {
+        return sum + Number(invoice.totalAmount || 0);
+      } else {
+        return sum + Number(invoice.advancePaid || 0);
+      }
+    }, 0);
+  
+    return Number(projectDetails.advancePayment || 0) + paidFromInvoices;
+  };
+  
+  const getBalance = () => {
+    const invoiceTotal = invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
+    const totalProjectCost = Math.max(Number(projectDetails.totalValue || 0), invoiceTotal);
+    const paid = getPaidAmount();
+    return totalProjectCost - paid;
+  };
   
 
   // Open modal for adding a new invoice
@@ -169,6 +187,23 @@ const InvoiceManagement = ({ projectId }) => {
           + Add Invoice
         </button>
       </div>
+      <div className="project-finance-summary">
+  <div className="summary-card">
+    <div className="summary-item">
+      <p className="label">Total Cost</p>
+      <p className="value">${(projectDetails.totalValue || 0).toLocaleString()}</p>
+    </div>
+    <div className="summary-item">
+      <p className="label">Paid Amount</p>
+      <p className="value">${getPaidAmount().toLocaleString()}</p>
+    </div>
+    <div className="summary-item">
+      <p className="label">{getBalance() >= 0 ? 'Balance Due' : 'Overpaid'}</p>
+      <p className="value">${Math.abs(getBalance()).toLocaleString()}</p>
+    </div>
+  </div>
+</div>
+
 
       {invoices.length === 0 ? (
         <p>No invoices available.</p>
