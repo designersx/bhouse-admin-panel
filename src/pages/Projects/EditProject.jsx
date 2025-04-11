@@ -697,7 +697,7 @@ otherDocuments: [],
       <tr>
         <th>Manufacturer Name</th>
         <th>Description</th>
-        <th>Expected Delivery</th>
+        <th>Expected Departure</th>
         <th>Expected Arrival</th>
         <th>Status</th>
         <th>Actions</th>
