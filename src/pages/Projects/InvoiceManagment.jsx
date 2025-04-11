@@ -20,24 +20,32 @@ const InvoiceManagement = ({ projectId }) => {
     invoiceFile: null,
   });
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [projectDetails, setProjectDetails] = useState({ totalValue: 0, advancePayment: 0 });
+
 
   // Fetch invoices for the project
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
+        const projectRes = await axios.get(`${url}/projects/${projectId}`);
+        setProjectDetails({
+          totalValue: Number(projectRes.data.totalValue || 0),
+          advancePayment: Number(projectRes.data.advancePayment || 0)
+        });
+  
         const response = await axios.get(`${url}/projects/${projectId}/invoice`);
         const invoicesData = Array.isArray(response.data) ? response.data : [response.data];
-        setInvoices(invoicesData); // Set invoices as an array
+        setInvoices(invoicesData); 
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching invoices:', err);
-        // toast.error('Error fetching invoices.');
+        console.error('Error fetching invoices or project:', err);
         setLoading(false);
       }
     };
-
+  
     fetchInvoices();
   }, [projectId]);
+  
 
   // Open modal for adding a new invoice
   const handleAddInvoice = () => {
@@ -79,6 +87,20 @@ const InvoiceManagement = ({ projectId }) => {
   // Save the new invoice
   const handleSaveNewInvoice = async () => {
     try {
+      const projectLimit = projectDetails.totalValue - projectDetails.advancePayment;
+      const currentInvoiceTotal = invoices.reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
+      const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
+      const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
+  
+      if (updatedTotal > projectLimit) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invoice limit exceeded!',
+          text: 'Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.'
+        });
+        return;
+      }
+  
       const formData = new FormData();
       formData.append('totalAmount', invoiceData.totalAmount);
       formData.append('advancePaid', invoiceData.advancePaid);
@@ -86,16 +108,17 @@ const InvoiceManagement = ({ projectId }) => {
       if (invoiceData.invoiceFile) {
         formData.append('invoice', invoiceData.invoiceFile);
       }
-
+  
       const response = await axios.post(`${url}/projects/${projectId}/invoice`, formData);
       toast.success('Invoice added!');
-      setInvoices((prevInvoices) => [...prevInvoices, response.data]); // Add new invoice to the list
-      setShowAddInvoiceModal(false); // Close the modal
+      setInvoices((prevInvoices) => [...prevInvoices, response.data]);
+      setShowAddInvoiceModal(false);
     } catch (err) {
       console.error('Error adding invoice:', err);
       toast.error('Error adding invoice.');
     }
   };
+  
 
   // Save the updated invoice
   const handleSaveUpdatedInvoice = async () => {
@@ -246,7 +269,7 @@ const InvoiceManagement = ({ projectId }) => {
 
             {invoiceData.status === 'Partly Paid' && (
               <div>
-                <label>Advance Payment</label>
+                <label>Paid Ammount</label>
                 <input
                   type="number"
                   name="advancePaid"
