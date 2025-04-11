@@ -182,12 +182,7 @@ const InvoiceManagement = ({ projectId }) => {
 
   return (
     <div className="invoice-management-container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <button className="ledbutton" onClick={handleAddInvoice}>
-          + Add Invoice
-        </button>
-      </div>
-      <div className="project-finance-summary">
+        <div className="project-finance-summary">
   <div className="summary-card">
     <div className="summary-item">
       <p className="label">Total Cost</p>
@@ -203,6 +198,12 @@ const InvoiceManagement = ({ projectId }) => {
     </div>
   </div>
 </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <button className="ledbutton" onClick={handleAddInvoice}>
+          + Add Invoice
+        </button>
+      </div>
+    
 
 
       {invoices.length === 0 ? (
