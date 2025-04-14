@@ -15,7 +15,7 @@ const InvoiceManagement = ({ projectId }) => {
   const [showUpdateInvoiceModal, setShowUpdateInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
     totalAmount: '',
-    advancePaid: null,
+    advancePaid: 0,
     status: 'Pending',
     invoiceFile: null,
   });
