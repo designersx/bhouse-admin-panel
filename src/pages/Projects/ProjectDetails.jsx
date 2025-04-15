@@ -570,7 +570,7 @@ setLoadingDoc(false)
     { key: "manufacturer", label: "Manufacturer", permissionKey: null, alwaysVisible: true },
     { key: "punchlist", label: "Punch List", permissionKey: "PunchList" },
     { key: "invoice", label: "Invoice", permissionKey: "Invoicing" },
-    { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
+    // { key: "settings", label: "Settings", permissionKey: null, alwaysVisible: true  },
   ];
 
   return (
@@ -876,7 +876,7 @@ return files.length > 0 ? (
   <tr>
     <th>Manufacturer Name</th>
     <th>Description</th> 
-    <th>Expected Delivery</th>
+    <th>Expected Departure </th>
     <th>Expected Arrival</th>
     <th>Status</th>
     <th>Actions</th>

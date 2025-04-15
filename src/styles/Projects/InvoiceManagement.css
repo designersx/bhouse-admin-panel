@@ -207,5 +207,41 @@
 .invoice-btn{
   display: flex;
   justify-content: space-between
+}
+.project-finance-summary {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
 
+.summary-card {
+  display: flex;
+  background: #004680;
+  border-radius: 12px;
+  padding: 20px 40px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+.summary-item {
+  text-align: center;
+  min-width: 160px;
+}
+
+.summary-item .label {
+  font-size: 14px;
+  color: #cde5f5; 
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.summary-item .value {
+  font-size: 24px;
+  color: #ffffff; 
+  font-weight: bold;
 }
