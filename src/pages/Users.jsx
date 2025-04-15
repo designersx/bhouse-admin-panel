@@ -169,6 +169,7 @@ const [isLoading , setIsLoading] = useState(true)
               <th>Email</th>
               <th className="pass">Password</th>
               <th>Role</th>
+              <th>Created By:</th>
               <th>Status</th>
               {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
                 <th>Actions</th>
@@ -203,6 +204,8 @@ const [isLoading , setIsLoading] = useState(true)
 </td>
 
                   <td>{user.userRole || "N/A"}</td>
+                  <td>{user.creator ? `${user.creator.firstName}` : "N/A"}</td>
+
                   <td className={user.status === "active" ? "status_active" : "status_inactive"}>
                     {user.status === "active" ? " Active" : " Inactive"}
                   </td>

@@ -15,15 +15,16 @@ const Projects = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState([]);
   const localData = JSON.parse(localStorage.getItem('user'));
-  const userRole = localData?.user?.userRole;
   const roleId = localData?.user?.roleId;
   const [sortOrder, setSortOrder] = useState("default");
-
   const { rolePermissions } = useRolePermissions(roleId);
   const canCreate = rolePermissions?.ProjectManagement?.create;
   const canEdit = rolePermissions?.ProjectManagement?.edit;
   const canDelete = rolePermissions?.ProjectManagement?.delete;
   const canView = rolePermissions?.ProjectManagement?.view;
+  const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 8;
+
   const getStatusClass = (status) => {
     switch (status) {
       case "In Progress": return "badge in-progress";
@@ -217,6 +218,21 @@ setFilteredProjects(visibleProjects);
       Swal.fire("Failed to update status");
     }
   };
+  const generatePageNumbers = (currentPage, totalPages) => {
+    const pages = [];
+    if (totalPages <= 4) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
   
   return (
     <Layout>
@@ -230,10 +246,6 @@ setFilteredProjects(visibleProjects);
           </button>
         )}
         </div>
-      
-      
-       
-      
       <div className="user-roles-header">
         {canCreate && (
           <button className="add-user-btn" onClick={handleNewProjectClick}>
@@ -279,81 +291,97 @@ setFilteredProjects(visibleProjects);
             </thead>
             <tbody>
               {filteredProjects.length ? <>
-                { filteredProjects.map((project , index) => (
-                <tr key={project.id}>
-                  <td>{index+1}</td>
-                  <td>{project.name}</td>
-                  <td>{project.clientName}</td>
-                  <td>
-  <select
-    className={getStatusClass(project.status)}
-    value={project.status}
-    onChange={(e) => handleStatusChange(project.id, e.target.value)}
-  >
-    <option value="In progress">In progress</option>
-    <option value="Aproved">Aproved</option>
-    <option value="Waiting on Advance">Waiting on Advance</option>
-    <option value="Advance Paid">Advance Paid</option>
-    <option value="Order Processed">Order Processed</option>
-    <option value="Arrived">Arrived</option>
-    <option value="Delivered">Delivered</option>
-    <option value="Installed">Installed</option>
-    <option value="Punch">Punch</option>
-    <option value="Completed">Balance Owed</option>
-  </select>
-</td>
+                {filteredProjects
+  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  .map((project, index) => (
+    <tr key={project.id}>
+      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+      <td>{project.name}</td>
+      <td>{project.clientName}</td>
+      <td>
+        <select
+          className={getStatusClass(project.status)}
+          value={project.status}
+          onChange={(e) => handleStatusChange(project.id, e.target.value)}
+        >
+          <option value="In progress">In progress</option>
+          <option value="Aproved">Aproved</option>
+          <option value="Waiting on Advance">Waiting on Advance</option>
+          <option value="Advance Paid">Advance Paid</option>
+          <option value="Order Processed">Order Processed</option>
+          <option value="Arrived">Arrived</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Installed">Installed</option>
+          <option value="Punch">Punch</option>
+          <option value="Completed">Balance Owed</option>
+        </select>
+      </td>
+      <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
+      <td>{project.type}</td>
+      <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
+      <td className="actions">
+        {canEdit && (
+          <FaEdit
+            style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
+            title="Edit"
+            onClick={() => handleEditProject(project.id)}
+          />
+        )}
+        {canView && (
+          <FaEye
+            style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
+            title="View"
+            onClick={() => handleViewProject(project.id)}
+          />
+        )}
+        {canDelete && (
+          <FaTrash
+            style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+            title="Delete"
+            onClick={() => handleArchiveProject(project.id)}
+          />
+        )}
+      </td>
+    </tr>
+))}
 
-                  <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
-                  <td>{project.type}</td>
-                  <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
-                  <td className="actions">
-                    {canEdit && (
-                    
-                      <FaEdit  
-                      style={{
-                        color: "#004680" , 
-                        fontSize : "22px" , 
-                         cursor: "pointer"
-                      }}
-                        title="Edit"
-                        onClick={() => handleEditProject(project.id)}
-                      />
-                    )}
-
-                    {canView && (
-                     
-                      <FaEye
-                      style={{
-                        color: "#004680" , 
-                        fontSize : "22px" , 
-                         cursor: "pointer"
-                      }}
-                        title="View"
-                        onClick={() => handleViewProject(project.id)}
-                      />
-                    )}
-
-                    {canDelete && (
-                    <FaTrash 
-                    style={{
-                      color: "#004680" , 
-                      fontSize : "20px",
-                      cursor: "pointer"
-                    }}
-                      title="Delete"
-                      onClick={() => handleArchiveProject(project.id)}
-                    />
-                    
-                    )}
-                  </td>
-
-                </tr>
-              ))}
               </> :  <td colSpan="7" style={{ textAlign: "center" }}>No Project found</td> }
               
             </tbody>
           </table>
         )}
+        {filteredProjects.length > itemsPerPage && (
+  <div className="pagination">
+    <button
+      className="icon-btn"
+      onClick={() => setCurrentPage((prev) => prev - 1)}
+      disabled={currentPage === 1}
+    >
+      ◀
+    </button>
+
+    {generatePageNumbers(currentPage, Math.ceil(filteredProjects.length / itemsPerPage)).map(
+      (page, index) => (
+        <div
+          key={index}
+          className={`page-btn ${currentPage === page ? "active" : ""}`}
+          onClick={() => typeof page === "number" && setCurrentPage(page)}
+        >
+          {page}
+        </div>
+      )
+    )}
+
+    <button
+      className="icon-btn"
+      onClick={() => setCurrentPage((prev) => prev + 1)}
+      disabled={currentPage === Math.ceil(filteredProjects.length / itemsPerPage)}
+    >
+      ▶
+    </button>
+  </div>
+)}
+
       </div>
       </div>
     </Layout>
