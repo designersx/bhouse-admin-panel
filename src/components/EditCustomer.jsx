@@ -118,49 +118,43 @@ const EditCustomer = () => {
                 <form onSubmit={handleSubmit} className="customer-form">
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} maxLength={25} />
+                        <input type="text" placeholder="Full Name" name="full_name" value={formData.full_name} onChange={handleChange} maxLength={25} />
                     
                     </div>
 
                     <div className="form-group">
                         <label>Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} maxLength={50} />
+                        <input type="email" placeholder="Email" name="email" value={formData.email} onChange={handleChange} maxLength={50} />
                    
                     </div>
 
                     <div className="form-group">
                         <label>Phone</label>
-                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} maxLength={15} />
+                        <input type="text" placeholder="Enter your phone no." name="phone" value={formData.phone} onChange={handleChange} maxLength={15} />
                       
                     </div>
 
                     <div className="form-group">
                         <label>Company Name</label>
-                        <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} maxLength={25} />
+                        <input type="text" placeholder="Cpompany name" name="company_name" value={formData.company_name} onChange={handleChange} maxLength={25} />
                     </div>
 
                     <div className="full-width">
                         <label>Address</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleChange} maxLength={55} />
+                        <input type="text" placeholder="Address" name="address" value={formData.address} onChange={handleChange} maxLength={55} />
                        
                     </div>
 
                     <div className="checkbox-group">
                         <label className="checkbox-label">
-                            <input type="checkbox" name="sameAsAddress" checked={sameAsAddress} onChange={handleChange} />
+                            <input type="checkbox"  name="sameAsAddress" checked={sameAsAddress} onChange={handleChange} />
                             Same as Company Address
                         </label>
                     </div>
 
                     <div className="full-width">
                         <label>Delivery Address</label>
-                        <input type="text" name="delivery_address" value={formData.delivery_address} onChange={handleChange} disabled={sameAsAddress} maxLength={55} />
-                    </div>
-
-                    <div className="full-width">
-                        <label>Password</label>
-                        <input type="password" name="password" value={formData.password} onChange={handleChange} maxLength={15} />
-                       
+                        <input type="text" placeholder="Delivery Address" name="delivery_address" value={formData.delivery_address} onChange={handleChange} disabled={sameAsAddress} maxLength={55} />
                     </div>
 
                     <div className="checkbox-group">

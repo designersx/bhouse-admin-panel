@@ -85,7 +85,7 @@ const ForgotPassword = () => {
 
   const handleGenerateOtp = async () => {
     if (!email || errors.email) {
-      Swal.fire('Error', '⚠️ Please enter a valid email address.', 'error');
+      Swal.fire('Error', ' Please enter a valid email address.', 'error');
       return;
     }
     setIsLoading(true);
@@ -95,17 +95,17 @@ const ForgotPassword = () => {
         setOtpSent(true);
         Swal.fire('Success', 'OTP sent successfully!', 'success');
       } else {
-        Swal.fire('Error', '❌ Failed to send OTP.', 'error');
+        Swal.fire('Error', ' Failed to send OTP.', 'error');
       }
     } catch {
-      Swal.fire('Error', '❌ Error generating OTP.', 'error');
+      Swal.fire('Error', ' Error generating OTP.', 'error');
     }
     setIsLoading(false);
   };
 
   const handleVerifyOtp = async () => {
     if (!otp || errors.otp) {
-      Swal.fire('Error', '⚠️ Please enter a valid OTP.', 'error');
+      Swal.fire('Error', ' Please enter a valid OTP.', 'error');
       return;
     }
     setIsLoading(true);
@@ -115,17 +115,17 @@ const ForgotPassword = () => {
         setOtpVerified(true);
         Swal.fire('Success', 'OTP Verified successfully!', 'success');
       } else {
-        Swal.fire('Error', '❌ Invalid OTP.', 'error');
+        Swal.fire('Error', ' Invalid OTP.', 'error');
       }
     } catch {
-      Swal.fire('Error', '❌ Error verifying OTP.', 'error');
+      Swal.fire('Error', ' Error verifying OTP.', 'error');
     }
     setIsLoading(false);
   };
 
   const handleResetPassword = async () => {
     if (!newPassword || !confirmPassword || errors.newPassword || errors.confirmPassword) {
-      Swal.fire('Error', '⚠️ Please fix all password errors.', 'error');
+      Swal.fire('Error', 'New Password and Confirm Password must be same.', 'error');
       return;
     }
     setIsLoading(true);

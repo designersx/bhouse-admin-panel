@@ -159,9 +159,11 @@ function ViewCustomer() {
 {customer && (
     <div className="customer-details-box">
         <h3 className="customer-name">{customer.full_name}</h3>
-        <p className="customer-info">{customer.email}</p>
-        <p className="customer-info">{customer.phone}</p>
-        <p className="customer-info">{customer.company_name}</p>
+        <p className="customer-info"><strong>Email: </strong>{customer.email}</p>
+        <p className="customer-info"><strong>Phone No. :</strong>{customer.phone}</p>
+        <p className="customer-info"><strong>Company Name: </strong>{customer.company_name}</p>
+        <p className="customer-info"><strong>Address: </strong>{customer.address}</p>
+        <p className="customer-info"><strong>Delivery Address: </strong>{customer.delivery_address}</p>
     </div>
 )}</div>}
                 {activeTab === "documents" && <div className="tab-panel"> <CustomerProjects customerId = {customer?.id} customerName = {customer?.full_name}/></div>}

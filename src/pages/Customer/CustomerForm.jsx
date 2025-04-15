@@ -8,6 +8,7 @@ import BackButton from "../../components/BackButton";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const CustomerForm = () => {
     const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const CustomerForm = () => {
         require_coi: false,
         createdBy: "admin",
     });
-
+    const [showPassword, setShowPassword] = useState(false);
     const [sameAsAddress, setSameAsAddress] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -38,17 +39,21 @@ const CustomerForm = () => {
         phone: /^[0-9]{10,15}$/, // Only numbers, 10-15 digits
         password: /^.{6,}$/, // Minimum 6 characters
     };
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
+    const companyNameRegex = /^[A-Za-z0-9\s]+$/; 
 
     const validateField = (name, value) => {
         if (!value) {
             return `${name.replace("_", " ")} is required`;
         }
-
+    
         switch (name) {
             case "full_name":
-                return patterns.full_name.test(value)
-                    ? ""
-                    : "Full Name must be at least 3 characters long and contain only letters.";
+                return !patterns.full_name.test(value)
+                    ? "Full Name must be at least 3 characters long and contain only letters."
+                    : !/^[A-Z]/.test(value.trim())
+                    ? "Full Name must start with a capital letter."
+                    : "";
             case "email":
                 return patterns.email.test(value)
                     ? ""
@@ -61,11 +66,30 @@ const CustomerForm = () => {
                 return value.length < 6
                     ? "Password must be at least 6 characters long."
                     : "";
+            case "company_name":
+                if (!value.trim()) return "Company Name is required.";
+                if (!/^[A-Za-z0-9\s]+$/.test(value))
+                    return "Company Name should not contain special characters or emojis.";
+                if (/^\d+$/.test(value.trim()))
+                    return "Company Name cannot contain only numbers.";
+                return "";
+                case "address":
+                    if (value.trim() === "") return "Address cannot be empty or just spaces.";
+                    if (!/^[A-Za-z0-9\s,.-]+$/.test(value)) return "Address cannot contain special characters or emojis.";
+                    if (/^\d+$/.test(value.trim())) return "Address cannot contain only numbers.";
+                    return "";
+                
+                case "delivery_address":
+                    if (value.trim() === "") return "Delivery Address cannot be empty or just spaces.";
+                    if (!/^[A-Za-z0-9\s,.-]+$/.test(value)) return "Delivery Address cannot contain special characters or emojis.";
+                    if (/^\d+$/.test(value.trim())) return "Delivery Address cannot contain only numbers.";
+                    return "";
+                
             default:
                 return "";
         }
     };
-
+    
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
@@ -93,31 +117,96 @@ const CustomerForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
+    
         for (const key in patterns) {
             const error = validateField(key, formData[key]);
-
+    
             if (error) {
-                toast.dismiss()
+                toast.dismiss();
                 toast.error(error);
                 setLoading(false);
                 return;
             }
         }
-
-        const response = await createCustomer(formData);
-        if (response?.error) {
-            toast.error(`Error: ${response?.error?.errors[0].message}`);
-        } else {
-           Swal.fire({
-            title :"Customer Added Successfully" , 
-            icon : "success"
-           })
-            navigate("/customers");
+        if (!/^[A-Z]/.test(formData.full_name.trim())) {
+            toast.error("Full Name must start with a capital letter.", { toastId: "fullNameCapital" });
+            setLoading(false);
+            return;
         }
+        
+        // ✅ Strong password alert handling
+        if (!formData.password) {
+            setLoading(false);
+            return Swal.fire({
+                icon: "warning",
+                title: "Password Required",
+                text: "Please enter a password to continue.",
+            });
+        }
+    
+        if (!strongPasswordRegex.test(formData.password)) {
+            setLoading(false);
+            return Swal.fire({
+                icon: "error",
+                title: "Weak Password",
+                html: `
+                    <div style="text-align: left;">
+                        Your password must meet the following requirements:
+                        <ul style="margin-top: 8px;">
+                            <li>✅ 6–20 characters</li>
+                            <li>✅ At least one uppercase letter</li>
+                            <li>✅ At least one lowercase letter</li>
+                            <li>✅ At least one number</li>
+                            <li>✅ At least one special character (@$!%*?&)</li>
+                        </ul>
+                    </div>
+                `,
+            });
+        }
+        const requiredFields = [...Object.keys(patterns), "company_name"];
 
-        setLoading(false);
+for (const key of requiredFields) {
+  const error = validateField(key, formData[key]);
+  if (error) {
+    toast.dismiss();
+    toast.error(error);
+    setLoading(false);
+    return;
+  }
+}
+const addressError = validateField("address", formData.address);
+const deliveryError = validateField("delivery_address", formData.delivery_address);
+
+if (addressError) {
+    toast.error(addressError);
+    setLoading(false);
+    return;
+}
+if (deliveryError) {
+    toast.error(deliveryError);
+    setLoading(false);
+    return;
+}
+
+    
+        try {
+            const response = await createCustomer(formData);
+            if (response?.error) {
+                toast.error(`Error: ${response?.error?.errors[0].message}`);
+            } else {
+                await Swal.fire({
+                    title: "Customer Added Successfully",
+                    icon: "success"
+                });
+                navigate("/customers");
+            }
+        } catch (error) {
+            toast.error("Something went wrong!");
+        } finally {
+            setLoading(false);
+        }
     };
+    
 
     return (
         <Layout>
@@ -140,6 +229,10 @@ const CustomerForm = () => {
                                 maxLength={25}
                                 onChange={handleChange}
                             />
+                            <small style={{ fontSize: "0.8rem", color: "#777" }}>
+  Must start with a capital letter and contain only letters.
+</small>
+
                         </div>
 
                         <div className="form-group">
@@ -206,16 +299,31 @@ const CustomerForm = () => {
                             />
                         </div>
 
-                        <div className="full-width">
-                            <label>Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                maxLength={15}
-                                onChange={handleChange}
-                            />
-                        </div>
+                        <div className="full-width" style={{ position: "relative" }}>
+  <label>Password</label>
+  <input
+    type={showPassword ? "text" : "password"}
+    name="password"
+    value={formData.password}
+    maxLength={20}
+    onChange={handleChange}
+  />
+  <span
+    onClick={() => setShowPassword(!showPassword)}
+    style={{
+      position: "absolute",
+      top: "70%",
+      right: "28px",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: "1.1rem",
+      color: "#666",
+    }}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </span>
+</div>
+
 
                         <div className="checkbox-group">
                             <label className="checkbox-label">

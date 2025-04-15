@@ -13,28 +13,37 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLockedOut, setIsLockedOut] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
-    const savedPassword = localStorage.getItem("rememberedPassword"); 
+    const savedPassword = localStorage.getItem("rememberedPassword");
 
     if (savedEmail && savedPassword) {
       setEmail(savedEmail);
       setPassword(savedPassword);
       setRememberMe(true);
     }
+
+    // Check lockout status on mount
+    const lockoutTime = localStorage.getItem("loginLockoutTime");
+    if (lockoutTime && Date.now() < Number(lockoutTime)) {
+      setIsLockedOut(true);
+      const remaining = Number(lockoutTime) - Date.now();
+      setTimeout(() => setIsLockedOut(false), remaining);
+    }
   }, []);
 
   const validateForm = () => {
-    toast.dismiss(); // Clear previous toasts
+    toast.dismiss();
     let isValid = true;
 
     if (!email) {
       toast.error("⚠ Email is required.");
       isValid = false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error(" Invalid email format.");
+      toast.error("Invalid email format.");
       isValid = false;
     }
 
@@ -42,7 +51,7 @@ const Login = () => {
       toast.error("⚠ Password is required.");
       isValid = false;
     } else if (password.length < 6) {
-      toast.error(" Password must be at least 6 characters long.");
+      toast.error("Password must be at least 6 characters long.");
       isValid = false;
     }
 
@@ -51,6 +60,12 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (isLockedOut) {
+      toast.error("Too many failed attempts. Try again after 1 minute.");
+      return;
+    }
+
     setIsLoading(true);
 
     if (!validateForm()) {
@@ -60,7 +75,7 @@ const Login = () => {
 
     try {
       const res = await login(email, password);
-      toast.success("✅ Login Successful!");
+      toast.success("Login Successful!");
 
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
@@ -71,13 +86,30 @@ const Login = () => {
       }
 
       localStorage.setItem("user", JSON.stringify(res));
+      localStorage.removeItem("failedLoginAttempts");
       window.location.href = "/dashboard";
     } catch (err) {
-      toast.error(err.message || "❌ Login failed.");
+      // Increment failed login count
+      const attempts = Number(localStorage.getItem("failedLoginAttempts")) || 0;
+      const newAttempts = attempts + 1;
+
+      localStorage.setItem("failedLoginAttempts", newAttempts);
+
+      if (newAttempts >= 10) {
+        const lockoutDuration = 60 * 1000; // 1 minute
+        const lockoutUntil = Date.now() + lockoutDuration;
+        localStorage.setItem("loginLockoutTime", lockoutUntil);
+        setIsLockedOut(true);
+        toast.error(" You've exceeded the login limit. Try again in 1 minute.");
+        setTimeout(() => setIsLockedOut(false), lockoutDuration);
+      } else {
+        toast.error(err.message || " Login failed.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <>
@@ -120,15 +152,16 @@ const Login = () => {
             </div>
 
             <div className="login-options">
-              <button className="forgot-password" onClick={() => navigate("/forgot-password")}>
+              <div className="forgot-password" onClick={() => navigate("/forgot-password")}>
                 Forgot Password?
-              </button>
+              </div>
             </div>
           </div>
 
-          <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? <div className="login-spinner"></div> : "Login"}
-          </button>
+          <button type="submit" className="login-btn" disabled={isLoading || isLockedOut}>
+  {isLoading ? <div className="login-spinner"></div> : "Login"}
+</button>
+
         </form>
       </div>
     </>
