@@ -844,45 +844,7 @@ return files.length > 0 ? (
 
 
 
-{activeTab === 'team' && (
-  // udani hai 
-<div className="project-info-card">
-<h2>Assigned Team</h2>
-{project.assignedTeamRoles.length > 0 ? (
-<div className="team-grid">
-  {project.assignedTeamRoles.map((roleGroup, index) => ( 
-    <div key={index} className="role-card">
-      <h3 className="role-title">{roleGroup.role}</h3>
-      {roleGroup.users.map((userId) => {
-        const user = allUsers.find(u => u.id.toString() === userId.toString());
-        return user ? (
-          <div key={user.id} className="user-card-horizontal">
-            <img 
-              src={user.profileImage ? `${url2}/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
-              alt={`${user.firstName} ${user.lastName}`} 
-              className="user-profile-img-horizontal" 
-            />
-            <div className="user-info-horizontal">
-              <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
-              <button
-  className="comment-btna"
-  onClick={() => handleOpenComments(user)}
->
-<FaCommentAlt />
-</button>
 
-            </div>
-          </div>
-        ) : null;
-      })}
-    </div>
-  ))}
-</div>
-) : (
-<p>No team assigned.</p>
-)}
-</div>
-)}
 
 
 
