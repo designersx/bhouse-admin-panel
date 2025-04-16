@@ -138,6 +138,13 @@ const EditCustomer = () => {
                         <label>Company Name</label>
                         <input type="text" placeholder="Cpompany name" name="company_name" value={formData.company_name} onChange={handleChange} maxLength={25} />
                     </div>
+                    <div className="form-group">
+                        <label>Status</label>
+                        <select name="status" value={formData.status} onChange={handleChange}>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
 
                     <div className="full-width">
                         <label>Address</label>

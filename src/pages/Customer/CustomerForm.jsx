@@ -299,7 +299,7 @@ if (deliveryError) {
                             />
                         </div>
 
-                        <div className="full-width" style={{ position: "relative" }}>
+                        <div className="form-group" style={{ position: "relative" }}>
   <label>Password</label>
   <input
     type={showPassword ? "text" : "password"}
@@ -312,7 +312,7 @@ if (deliveryError) {
     onClick={() => setShowPassword(!showPassword)}
     style={{
       position: "absolute",
-      top: "70%",
+      top: "72%",
       right: "28px",
       transform: "translateY(-50%)",
       cursor: "pointer",
@@ -322,6 +322,17 @@ if (deliveryError) {
   >
     {showPassword ? <FaEyeSlash /> : <FaEye />}
   </span>
+</div>
+<div className="form-group">
+                            <label>Status</label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                            >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
 </div>
 
 
