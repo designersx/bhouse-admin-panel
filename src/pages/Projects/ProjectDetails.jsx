@@ -44,7 +44,7 @@ const [selectedItemId, setSelectedItemId] = useState(null);
 const [itemComments, setItemComments] = useState([]);
 const [groupedItemComments, setGroupedItemComments] = useState({});
 const [itemCommentText, setItemCommentText] = useState('');
-
+const [dataDoc , setDataDoc] = useState()
 const [isPunchCanvasOpen, setIsPunchCanvasOpen] = useState(false);
 const [selectedPunchItemId, setSelectedPunchItemId] = useState(null);
 const [punchComments, setPunchComments] = useState([]);
@@ -67,6 +67,7 @@ const fetchDocuments = async () => {
     const docsArray = res.data || [];
   console.log(docsArray , "docArray")
     const docMapData = {};
+    setDataDoc(docsArray)
     docsArray.forEach(doc => {
       docMapData[doc.documentType] = doc.filePath;
     });
@@ -404,7 +405,7 @@ useEffect(() => {
     fetchProjectDetails();
   }, [projectId]);
 
-
+  console.log({project})
   if (loading) {
     return (
       <Layout>
@@ -656,7 +657,13 @@ setLoadingDoc(false)
 {[
 { title: "Installation Docs", files: project.proposals, category: 'proposals'  },
 { title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
-{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } 
+// { title: "Cad Files", files: project.cad, category: 'cad' },
+// { title: "Options Presentation", files: project.presentation, category: 'presentation' },
+// { title: "Sales Aggrement" , files: project.salesAggrement, category: 'salesAggrement' }
+
+
+
 ]
 
 
@@ -689,7 +696,7 @@ setLoadingDoc(false)
 </div>
 )}
 {(() => {
-const files = Array.isArray(docCategory.files)
+const files = Array.isArray(docCategory?.files)
 ? docCategory.files
 : typeof docCategory.files === 'string'
 ? JSON.parse(docCategory.files)
@@ -781,25 +788,40 @@ return files.length > 0 ? (
     <div className="tab-panel">
     <h2>Uploaded Documents</h2>
    
-{Object.keys(docMap).map((key, idx) => {
-  const normalizedKey = normalize(key);
-  const fileEntry = Object.entries(docsData).find(([docType]) => normalize(docType) === normalizedKey);
-  const filePath = fileEntry?.[1];
-  const fileName = filePath?.split('/').pop();
-  const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
-
+    {Object.keys(docMap).map((key, idx) => {
+   const normalizedKey = normalize(key);
+   const fileEntry = Object.entries(docsData).find(
+     ([docType]) => normalize(docType) === normalizedKey
+   );
+   const filePath = fileEntry?.[1];
+   const fileName = filePath?.split('/').pop();
+   const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+   const matchedDoc = dataDoc?.find(doc => normalize(doc.documentType) === normalizedKey);
+   const documentId = matchedDoc?.id; // ✅ You now have documentId
   return (
     <div key={idx} className="doc-view-section">
       <h4>{docMap[key]}</h4>
       {filePath ? (
         <div className="file-item-enhanced">
           <span className="file-name-enhanced">{fileName}</span>
-          <button
+        < button
             className="file-action-btn"
             onClick={() => window.open(`${fileUrl}`, '_blank')}
             title="View"
           >
             <FaEye />
+          </button>
+          <button
+            className="file-action-btn"
+            onClick={() => navigate(`/customerDoc/comment/${fileEntry[0]}/${documentId}`  , {
+              state : {
+                data : dataDoc , 
+               fileName : fileEntry[0]
+              }
+            })}
+            title="View"
+          >
+            <FaComment />
           </button>
         </div>
       ) : (
