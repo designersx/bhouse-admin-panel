@@ -317,6 +317,15 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
     for (let file of formData.otherDocuments || []) {
       formDataToSend.append("otherDocuments", file);
     }
+    for (let file of formData.presentation || []) {
+      formDataToSend.append("presentation", file);
+    }
+    for (let file of formData.cad || []) {
+      formDataToSend.append("cad", file);
+    }
+    for (let file of formData.salesAggrement || []) {
+      formDataToSend.append("salesAggrement", file);
+    }
 
     try {
       setIsLoading(true);
@@ -698,6 +707,7 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                         ))}
                       </ul>
                     )}
+
                   </div>
                 </div>
 
@@ -748,6 +758,64 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
     />
   )}
 </div>
+<div className="form-group">
+                    <label>Presentation</label>
+                    <input
+  type="file"
+  name="presentation"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "presentation")}
+/>
+
+                    {formData.presentation?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.presentation.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>CAD Files</label>
+                    <input
+  type="file"
+  name="cad"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "cad")}
+/>
+
+                    {formData.cad?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Installation Docs</label>
+                    <input
+  type="file"
+  name="salesAggrement"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "salesAggrement")}
+/>
+
+                    {formData.salesAggrement?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+
+
 
                 </div>
 
