@@ -142,9 +142,21 @@ useEffect(() => {
 
   const handleItemChange = (index, field, value) => {
     const updated = [...leadTimeMatrix];
-    updated[index][field] = value;
+  
+    if (field === "tbd") {
+      updated[index][field] = value;
+      if (value) {
+        // If TBD is true, clear both dates
+        updated[index].expectedDeliveryDate = "";
+        updated[index].expectedArrivalDate = "";
+      }
+    } else {
+      updated[index][field] = value;
+    }
+  
     setLeadTimeMatrix(updated);
   };
+  ;
 
   const handleAddItemRow = () => {
     setLeadTimeMatrix([
@@ -256,15 +268,15 @@ useEffect(() => {
       return null; // No required fields in Step 3
     };
 
-const errorMsg = step3validation() || validateLeadTimeMatrix();
-    if (errorMsg) {
-      Swal.fire({
-        icon: "error",
-        title: "Validation Error",
-        text: errorMsg,
-      });
-      return;
-    }
+// const errorMsg = step3validation() || validateLeadTimeMatrix();
+//     if (errorMsg) {
+//       Swal.fire({
+//         icon: "error",
+//         title: "Validation Error",
+//         text: errorMsg,
+//       });
+//       return;
+//     }
     
 
     const formDataToSend = new FormData();
@@ -375,28 +387,27 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
       [fieldName]: [...existingFiles, ...files],
     }));
   };
-  const validateLeadTimeMatrix = () => {
-    const today = new Date().toISOString().split("T")[0];
+  // const validateLeadTimeMatrix = () => {
+  //   const today = new Date().toISOString().split("T")[0];
   
-    for (let i = 0; i < leadTimeMatrix.length; i++) {
-      const item = leadTimeMatrix[i];
+  //   for (let i = 0; i < leadTimeMatrix.length; i++) {
+  //     const item = leadTimeMatrix[i];
   
-      if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
-      if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
+  //     if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
+  //     if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
   
-      if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
-      // Optional: Add alphanumeric validation if needed
-      // if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
+  //     if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
+  //     if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
   
-      if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
-      if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
+  //     if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
+  //     if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
   
-      if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
-      if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
-    }
+  //     if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
+  //     if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
+  //   }
   
-    return null;
-  };
+  //   return null;
+  // };
   
   return (
     <Layout>
@@ -821,84 +832,113 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
 
                 <h3>Project Lead Time Matrix</h3>
                 <div className="lead-time-matrix-container">
+  {leadTimeMatrix.map((item, index) => (
+    <div key={index} className="item-row">
+      <div className="form-group1">
+        <label>Manufacturer Name</label>
+        <input
+          className="user-search-input1"
+          type="text"
+          placeholder="Manufacturer Name"
+          value={item.itemName}
+          onChange={(e) => handleItemChange(index, "itemName", e.target.value)}
+        />
+      </div>
 
-                {leadTimeMatrix.map((item, index) => (
-  <div key={index} className="item-row">
-    <div className="form-group1">
-      <label>Manufacturer Name </label>
-      <input
-        className="user-search-input1"
-        type="text"
-        placeholder="Manufacturer Name"
-        value={item.itemName}
-        onChange={(e) => handleItemChange(index, "itemName", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Description </label>
-      <input
-        className="user-search-input1"
-        type="text"
-        placeholder="Description"
-        value={item.quantity}
-        onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
-        maxLength={50}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Expected Delivery Date</label>
-      <input
-        className="user-search-input1"
-        type="date"
-        value={item.expectedDeliveryDate}
-        min={new Date().toISOString().split("T")[0]}
-        onChange={(e) => handleItemChange(index, "expectedDeliveryDate", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Expected Arrival Date</label>
-      <input
-        className="user-search-input1"
-        type="date"
-        value={item.expectedArrivalDate}
-        min={item.expectedDeliveryDate || new Date().toISOString().split("T")[0]}
-        onChange={(e) => handleItemChange(index, "expectedArrivalDate", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Status</label>
-      <select
-        className="user-search-input1"
-        value={item.status}
-        onChange={(e) => handleItemChange(index, "status", e.target.value)}
-      >
-        <option value="Pending">Pending</option>
-        <option value="In Transit">In Transit</option>
-        <option value="Delivered">Delivered</option>
-        <option value="Installed">Installed</option>
-      </select>
-    </div>
-    {leadTimeMatrix.length > 1 && (
-      <button
-        className="add-user-btn"
-        type="button"
-        onClick={() => handleRemoveItemRow(index)}
-      >
-        Remove
-      </button>
-    )}
-  </div>
-))}
+      <div className="form-group1">
+        <label>Description</label>
+        <input
+          className="user-search-input1"
+          type="text"
+          placeholder="Description"
+          value={item.quantity}
+          onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+          maxLength={50}
+        />
+      </div>
 
-                  <button
-                    className="add-user-btn"
-                    type="button"
-                    onClick={handleAddItemRow}
-                  >
-                    Add Row
-                  </button>
-                </div>
+      {/* ✅ TBD Checkbox */}
+      <div className="form-group1">
+        <label>TBD</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <input
+            type="checkbox"
+            checked={item.tbd || false}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              handleItemChange(index, "tbd", checked);
+              if (checked) {
+                handleItemChange(index, "expectedDeliveryDate", "");
+                handleItemChange(index, "expectedArrivalDate", "");
+              }
+            }}
+          />
+          <span>To Be Determined</span>
+        </div>
+      </div>
 
+      <div className="form-group1">
+        <label>Expected Delivery Date</label>
+        <input
+          className="user-search-input1"
+          type="date"
+          value={item.expectedDeliveryDate}
+          min={new Date().toISOString().split("T")[0]}
+          disabled={item.tbd}
+          onChange={(e) =>
+            handleItemChange(index, "expectedDeliveryDate", e.target.value)
+          }
+        />
+      </div>
+
+      <div className="form-group1">
+        <label>Expected Arrival Date</label>
+        <input
+          className="user-search-input1"
+          type="date"
+          value={item.expectedArrivalDate}
+          min={item.expectedDeliveryDate || new Date().toISOString().split("T")[0]}
+          disabled={item.tbd}
+          onChange={(e) =>
+            handleItemChange(index, "expectedArrivalDate", e.target.value)
+          }
+        />
+      </div>
+
+      <div className="form-group1">
+        <label>Status</label>
+        <select
+          className="user-search-input1"
+          value={item.status}
+          onChange={(e) => handleItemChange(index, "status", e.target.value)}
+        >
+          <option value="Pending">Pending</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Installed">Installed</option>
+        </select>
+      </div>
+
+      {leadTimeMatrix.length > 1 && (
+        <button
+          className="add-user-btn"
+          type="button"
+          onClick={() => handleRemoveItemRow(index)}
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  ))}
+
+  <button
+    className="add-user-btn"
+    type="button"
+    onClick={handleAddItemRow}
+  >
+    Add Row
+  </button>
+</div>
                 <br />
 
                 <div className="form-navigation">
