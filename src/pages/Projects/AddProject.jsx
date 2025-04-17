@@ -8,36 +8,57 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { url } from "../../lib/api";
 import BackButton from "../../components/BackButton";
-import Loader from "../../components/Loader";
 const AddProject = () => {
-  const [step, setStep] = useState(1);
-  let [clientId, setClientId] = useState();
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "Corporate Office",
-    clientName: "",
-    description: "",
-    startDate: "",
-    estimatedCompletion: "",
-    totalValue: "",
-    advancePayment: "",
-    deliveryAddress: "",
-    deliveryHours: "",
-    assignedTeamRoles: {},
-    allowClientView: true,
-    allowComments: true,
-    enableNotifications: true,
-    clientId: clientId,
+  const [step, setStep] = useState(() => {
+    const savedStep = localStorage.getItem("addProjectStep");
+    return savedStep ? Number(savedStep) : 1;
   });
+  
+  let [clientId, setClientId] = useState();
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem("addProjectFormData");
+    return savedData
+      ? JSON.parse(savedData)
+      : {
+          name: "",
+          type: "Corporate Office",
+          clientName: "",
+          description: "",
+          startDate: "",
+          estimatedCompletion: "",
+          totalValue: "",
+          advancePayment: "",
+          deliveryAddress: "",
+          deliveryHours: "",
+          assignedTeamRoles: {},
+          allowClientView: true,
+          allowComments: true,
+          enableNotifications: true,
+          clientId: "",
+        };
+  });
+  
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
   const [allRoles, setAllRoles] = useState([]);
   const [files, setFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [leadTimeMatrix, setLeadTimeMatrix] = useState([
-    { itemName: "", quantity: "", expectedDeliveryDate: "",expectedArrivalDate:"", status: "Pending" },
-  ]);
+  const [leadTimeMatrix, setLeadTimeMatrix] = useState(() => {
+    const savedMatrix = localStorage.getItem("addProjectLeadMatrix");
+    return savedMatrix
+      ? JSON.parse(savedMatrix)
+      : [
+          {
+            itemName: "",
+            quantity: "",
+            expectedDeliveryDate: "",
+            expectedArrivalDate: "",
+            status: "Pending",
+          },
+        ];
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [deliveryHourOption, setDeliveryHourOption] = useState(formData.deliveryHours || "Regular Hours");
 const [customDeliveryHour, setCustomDeliveryHour] = useState(
@@ -45,25 +66,58 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
     ? ""
     : formData.deliveryHours || ""
 );
+useEffect(() => {
+  localStorage.setItem("addProjectStep", step);
+}, [step]);
+
+useEffect(() => {
+  localStorage.setItem("addProjectFormData", JSON.stringify(formData));
+}, [formData]);
+
+useEffect(() => {
+  localStorage.setItem("addProjectLeadMatrix", JSON.stringify(leadTimeMatrix));
+}, [leadTimeMatrix]);
 
   const navigate = useNavigate();
 
   const validateStep1 = () => {
-    const { name, type, clientName, startDate, estimatedCompletion } = formData;
-
+    const {
+      name,
+      type,
+      clientName,
+      startDate,
+      estimatedCompletion,
+      totalValue,
+      advancePayment,
+    } = formData;
+  
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+  
     if (!name.trim()) return "Project Name is required.";
+    if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
     if (!clientName) return "Customer selection is required.";
-    const { totalValue } = formData;
+  
+
+  
+    if (!estimatedCompletion) return "Estimated Occupancy Date is required.";
+    if (estimatedCompletion < today)
+      return "Estimated Occupancy Date cannot be in the past.";
+  
     if (!totalValue || totalValue <= 0)
       return "Total Value must be a positive number.";
-    if (!formData.advancePayment || formData.advancePayment <= 0) {
+  
+    if (!advancePayment || advancePayment <= 0) {
       return "Advance Payment must be a positive number.";
     }
-
+  
+    if (parseFloat(advancePayment) > parseFloat(totalValue)) {
+      return "Advance Payment cannot be more than Total Value.";
+    }
+  
     return null;
   };
-
+  
   const validateStep2 = () => {
     if (selectedRoles.length === 0)
       return "At least one role must be selected.";
@@ -202,7 +256,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
       return null; // No required fields in Step 3
     };
 
-    const errorMsg = step3validation();
+const errorMsg = step3validation() || validateLeadTimeMatrix();
     if (errorMsg) {
       Swal.fire({
         icon: "error",
@@ -211,6 +265,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
       });
       return;
     }
+    
 
     const formDataToSend = new FormData();
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
@@ -262,6 +317,15 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
     for (let file of formData.otherDocuments || []) {
       formDataToSend.append("otherDocuments", file);
     }
+    for (let file of formData.presentation || []) {
+      formDataToSend.append("presentation", file);
+    }
+    for (let file of formData.cad || []) {
+      formDataToSend.append("cad", file);
+    }
+    for (let file of formData.salesAggrement || []) {
+      formDataToSend.append("salesAggrement", file);
+    }
 
     try {
       setIsLoading(true);
@@ -272,7 +336,11 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
 
       const data = await response.json();
 
+      
       if (response.status === 201) {
+        localStorage.removeItem("addProjectStep");
+        localStorage.removeItem("addProjectFormData");
+        localStorage.removeItem("addProjectLeadMatrix");
         Swal.fire("Project added successfully!");
         navigate("/projects");
       } else {
@@ -306,6 +374,28 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
       ...prev,
       [fieldName]: [...existingFiles, ...files],
     }));
+  };
+  const validateLeadTimeMatrix = () => {
+    const today = new Date().toISOString().split("T")[0];
+  
+    for (let i = 0; i < leadTimeMatrix.length; i++) {
+      const item = leadTimeMatrix[i];
+  
+      if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
+      if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
+  
+      if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
+      // Optional: Add alphanumeric validation if needed
+      // if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
+  
+      if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
+      if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
+  
+      if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
+      if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
+    }
+  
+    return null;
   };
   
   return (
@@ -440,18 +530,14 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
   Estimated Occupancy Date <span className="required-star">*</span>
 </label>
 
-                    <input
-                      type="date"
-                      name="estimatedCompletion"
-                      value={
-                        formData.estimatedCompletion
-                          ? formData.estimatedCompletion.split("T")[0]
-                          : ""
-                      }
-                      min={formData.startDate || ""}
-                      onChange={handleChange}
-                      required
-                    />
+<input
+  type="date"
+  name="estimatedCompletion"
+  value={formData.estimatedCompletion}
+  min={formData.startDate || new Date().toISOString().split("T")[0]}
+  onChange={handleChange}
+  required
+/>
                   </div>
                 </div>
                 <div className="form-group-row">
@@ -571,6 +657,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
   multiple
   accept=".jpg,.jpeg,.png,.pdf"
   onChange={(e) => handleFileInputChange(e, "proposals")}
+  disabled={(formData.proposals?.length || 0) >= 5}
 />
 
                     {formData.proposals?.length > 0 && (
@@ -590,6 +677,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
   multiple
   accept=".jpg,.jpeg,.png,.pdf"
   onChange={(e) => handleFileInputChange(e, "floorPlans")}
+  disabled={(formData.floorPlans?.length || 0) >= 5}
 />
 
                     {formData.floorPlans?.length > 0 && (
@@ -609,6 +697,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
   multiple
   accept=".jpg,.jpeg,.png,.pdf"
   onChange={(e) => handleFileInputChange(e, "otherDocuments")}
+  disabled={(formData.otherDocuments?.length || 0) >= 5}
 />
 
                     {formData.otherDocuments?.length > 0 && (
@@ -618,6 +707,7 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
                         ))}
                       </ul>
                     )}
+
                   </div>
                 </div>
 
@@ -668,83 +758,144 @@ const [customDeliveryHour, setCustomDeliveryHour] = useState(
     />
   )}
 </div>
+<div className="form-group">
+                    <label>Presentation</label>
+                    <input
+  type="file"
+  name="presentation"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "presentation")}
+/>
+
+                    {formData.presentation?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.presentation.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>CAD Files</label>
+                    <input
+  type="file"
+  name="cad"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "cad")}
+/>
+
+                    {formData.cad?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Installation Docs</label>
+                    <input
+  type="file"
+  name="salesAggrement"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "salesAggrement")}
+/>
+
+                    {formData.salesAggrement?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+
+
 
                 </div>
 
                 <h3>Project Lead Time Matrix</h3>
                 <div className="lead-time-matrix-container">
 
-                  {leadTimeMatrix.map((item, index) => (
-                    <div key={index} className="item-row">
-                      <input
-                        className="user-search-input"
-                        type="text"
-                        placeholder="Manufacturer Name"
-                        value={item.itemName}
-                        onChange={(e) =>
-                          handleItemChange(index, "itemName", e.target.value)
-                        }
-                      />
-                      <input
-                        className="user-search-input"
-                        type="text"
-                        placeholder="Description"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleItemChange(index, "quantity", e.target.value)
-                        }
-                        maxLength={50}
-                      />
+                {leadTimeMatrix.map((item, index) => (
+  <div key={index} className="item-row">
+    <div className="form-group1">
+      <label>Manufacturer Name </label>
+      <input
+        className="user-search-input1"
+        type="text"
+        placeholder="Manufacturer Name"
+        value={item.itemName}
+        onChange={(e) => handleItemChange(index, "itemName", e.target.value)}
+      />
+    </div>
+    <div className="form-group1">
+      <label>Description </label>
+      <input
+        className="user-search-input1"
+        type="text"
+        placeholder="Description"
+        value={item.quantity}
+        onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+        maxLength={50}
+      />
+    </div>
+    <div className="form-group1">
+      <label>Expected Delivery Date</label>
+      <input
+        className="user-search-input1"
+        type="date"
+        value={item.expectedDeliveryDate}
+        min={new Date().toISOString().split("T")[0]}
+        onChange={(e) => handleItemChange(index, "expectedDeliveryDate", e.target.value)}
+      />
+    </div>
+    <div className="form-group1">
+      <label>Expected Arrival Date</label>
+      <input
+        className="user-search-input1"
+        type="date"
+        value={item.expectedArrivalDate}
+        min={item.expectedDeliveryDate || new Date().toISOString().split("T")[0]}
+        onChange={(e) => handleItemChange(index, "expectedArrivalDate", e.target.value)}
+      />
+    </div>
+    <div className="form-group1">
+      <label>Status</label>
+      <select
+        className="user-search-input1"
+        value={item.status}
+        onChange={(e) => handleItemChange(index, "status", e.target.value)}
+      >
+        <option value="Pending">Pending</option>
+        <option value="In Transit">In Transit</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Installed">Installed</option>
+      </select>
+    </div>
+    {leadTimeMatrix.length > 1 && (
+      <button
+        className="add-user-btn"
+        type="button"
+        onClick={() => handleRemoveItemRow(index)}
+      >
+        Remove
+      </button>
+    )}
+  </div>
+))}
 
-<input
-  className="user-search-input"
-  type="date"
-  required
-  value={item.expectedDeliveryDate}
-  onChange={(e) =>
-    handleItemChange(index, "expectedDeliveryDate", e.target.value)
-  }
-/>
-<input
-  className="user-search-input"
-  type="date"
-  required
-  value={item.expectedArrivalDate}
-  onChange={(e) =>
-    handleItemChange(index, "expectedArrivalDate", e.target.value)
-  }
-
-/>
-
-                      <select
-                        className="user-search-input"
-                        value={item.status}
-                        onChange={(e) =>
-                          handleItemChange(index, "status", e.target.value)
-                        }
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="In Transit">In Transit</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Installed">Installed</option>
-                      </select>
-                      {leadTimeMatrix.length > 1 && (
-                        <button
-                          className="add-user-btn"
-                          type="button"
-                          onClick={() => handleRemoveItemRow(index)}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
                   <button
                     className="add-user-btn"
                     type="button"
                     onClick={handleAddItemRow}
                   >
-                    + Add Item
+                    Add Row
                   </button>
                 </div>
 

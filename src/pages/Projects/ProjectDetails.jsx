@@ -44,7 +44,7 @@ const [selectedItemId, setSelectedItemId] = useState(null);
 const [itemComments, setItemComments] = useState([]);
 const [groupedItemComments, setGroupedItemComments] = useState({});
 const [itemCommentText, setItemCommentText] = useState('');
-
+const [dataDoc , setDataDoc] = useState()
 const [isPunchCanvasOpen, setIsPunchCanvasOpen] = useState(false);
 const [selectedPunchItemId, setSelectedPunchItemId] = useState(null);
 const [punchComments, setPunchComments] = useState([]);
@@ -67,6 +67,7 @@ const fetchDocuments = async () => {
     const docsArray = res.data || [];
   console.log(docsArray , "docArray")
     const docMapData = {};
+    setDataDoc(docsArray)
     docsArray.forEach(doc => {
       docMapData[doc.documentType] = doc.filePath;
     });
@@ -185,7 +186,10 @@ useEffect(() => {
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
-    otherDocuments: []
+    otherDocuments: [] , 
+    presentation : [] , 
+    salesAggrement : [] , 
+    cad : [] , 
   });
   const roleId = JSON.parse(localStorage.getItem("user"))
   const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
@@ -389,6 +393,15 @@ useEffect(() => {
           fetchedProject.invoice = Array.isArray(fetchedProject.invoice)
           ? fetchedProject.invoice
           : JSON.parse(fetchedProject.invoice || '[]');
+          fetchedProject.cad = Array.isArray(fetchedProject.cad)
+          ? fetchedProject.cad
+          : JSON.parse(fetchedProject.cad || '[]');
+          fetchedProject.salesAggrement = Array.isArray(fetchedProject.salesAggrement)
+          ? fetchedProject.salesAggrement
+          : JSON.parse(fetchedProject.salesAggrement || '[]');
+          fetchedProject.presentation = Array.isArray(fetchedProject.presentation)
+          ? fetchedProject.presentation
+          : JSON.parse(fetchedProject.presentation || '[]');
         
         setInvoiceFiles(fetchedProject.invoice);
         
@@ -404,7 +417,7 @@ useEffect(() => {
     fetchProjectDetails();
   }, [projectId]);
 
-
+  console.log({project})
   if (loading) {
     return (
       <Layout>
@@ -654,9 +667,15 @@ setLoadingDoc(false)
       
 
 {[
-{ title: "Installation Docs", files: project.proposals, category: 'proposals'  },
-{ title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
-{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' },
+{ title: "Detailed Proposal", files: project.proposals, category: 'proposals'  },
+{ title: "Floor Plans", files: project.floorPlans, category: 'floorPlans' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } , 
+{ title: "Cad Files", files: project.cad, category: 'cad' },
+{ title: "Options Presentation", files: project.presentation, category: 'presentation' },
+{ title: "Sales Agreement" , files: project.salesAggrement, category: 'salesAggrement' }
+
+
+
 ]
 
 
@@ -689,7 +708,7 @@ setLoadingDoc(false)
 </div>
 )}
 {(() => {
-const files = Array.isArray(docCategory.files)
+const files = Array.isArray(docCategory?.files)
 ? docCategory.files
 : typeof docCategory.files === 'string'
 ? JSON.parse(docCategory.files)
@@ -781,25 +800,40 @@ return files.length > 0 ? (
     <div className="tab-panel">
     <h2>Uploaded Documents</h2>
    
-{Object.keys(docMap).map((key, idx) => {
-  const normalizedKey = normalize(key);
-  const fileEntry = Object.entries(docsData).find(([docType]) => normalize(docType) === normalizedKey);
-  const filePath = fileEntry?.[1];
-  const fileName = filePath?.split('/').pop();
-  const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
-
+    {Object.keys(docMap).map((key, idx) => {
+   const normalizedKey = normalize(key);
+   const fileEntry = Object.entries(docsData).find(
+     ([docType]) => normalize(docType) === normalizedKey
+   );
+   const filePath = fileEntry?.[1];
+   const fileName = filePath?.split('/').pop();
+   const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+   const matchedDoc = dataDoc?.find(doc => normalize(doc.documentType) === normalizedKey);
+   const documentId = matchedDoc?.id; // ✅ You now have documentId
   return (
     <div key={idx} className="doc-view-section">
       <h4>{docMap[key]}</h4>
       {filePath ? (
         <div className="file-item-enhanced">
           <span className="file-name-enhanced">{fileName}</span>
-          <button
+        < button
             className="file-action-btn"
             onClick={() => window.open(`${fileUrl}`, '_blank')}
             title="View"
           >
             <FaEye />
+          </button>
+          <button
+            className="file-action-btn"
+            onClick={() => navigate(`/customerDoc/comment/${fileEntry[0]}/${documentId}`  , {
+              state : {
+                data : dataDoc , 
+               fileName : fileEntry[0]
+              }
+            })}
+            title="View"
+          >
+            <FaComment />
           </button>
         </div>
       ) : (
@@ -823,7 +857,7 @@ return files.length > 0 ? (
 
 
 {activeTab === 'team' && (
-  // udani hai 
+
 <div className="project-info-card">
 <h2>Assigned Team</h2>
 {project.assignedTeamRoles.length > 0 ? (
@@ -1268,7 +1302,7 @@ issue.createdByType === 'user'
       {/* Grouped Comments by Date */}
       {Object.keys(groupedComments).map((date) => (
         <div key={date} className="comment-date-group">
-          <p className="comment-date">{date}</p>
+          {/* <p className="comment-date"></p> */}
           {Object.keys(groupedComments)
   .sort((a, b) => new Date(a) - new Date(b)) 
   .map((date) => (
@@ -1282,8 +1316,8 @@ issue.createdByType === 'user'
               <div className="whatsapp-comment-user-info">
                 <img
                   src={
-                    comment?.fromUser?.profileImage
-                      ? `${url2}/${comment.fromUser.profileImage}`
+                    comment?.profileImage
+                      ? `${url2}/${comment.profileImage}`
                       : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   }
                   alt="User"
@@ -1291,7 +1325,7 @@ issue.createdByType === 'user'
                 />
                 <div>
                   <p className="whatsapp-comment-author">
-                    {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                    {comment?.name} ({comment?.userRole})
                   </p>
                 </div>
               </div>

@@ -4,12 +4,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { registerUser, editUser, getRoles, getAllUsers } from "../lib/api";
 import Swal from "sweetalert2";
 import "../styles/users.css";
-import { IoArrowBack } from "react-icons/io5";
 import Loader from "../components/Loader";
 import Required from "../components/Required";
 import { toast, ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BackButton from "../components/BackButton";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
 const roleLevels = {
   "Admin" : 1 , 
   "Super Admin": 1,
@@ -24,9 +25,10 @@ const UserForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [users, setUsers] = useState([]);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [sendCredentials, setSendCredentials] = useState(false);
 
   const createdBYId = JSON.parse(localStorage.getItem("user"));
   const defaultUserState = {
@@ -99,58 +101,68 @@ const UserForm = () => {
 
   const validateField = (name, value) => {
     const newErrors = { ...errors };
-
+  
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^\d{10}$/;
-    const passwordRegex = /^[A-Za-z0-9]{6,20}$/;
-
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
+  
     switch (name) {
       case "firstName":
         newErrors.firstName = !value
           ? "First Name is required"
           : !nameRegex.test(value)
-            ? "First Name must contain only letters"
-            : "";
+          ? "First Name must contain only letters"
+          : !/^[A-Z]/.test(value)
+          ? "First Name must start with a capital letter"
+          : "";
         break;
+  
       case "lastName":
         newErrors.lastName = !value
           ? "Last Name is required"
           : !nameRegex.test(value)
-            ? "Last Name must contain only letters"
-            : "";
+          ? "Last Name must contain only letters"
+          : !/^[A-Z]/.test(value)
+          ? "Last Name must start with a capital letter"
+          : "";
         break;
+  
       case "email":
         newErrors.email = !value
           ? "Email is required"
           : !emailRegex.test(value)
-            ? "Enter a valid email address"
-            : "";
+          ? "Enter a valid email address"
+          : "";
         break;
+  
       case "mobileNumber":
         newErrors.mobileNumber = !value
           ? "Mobile Number is required"
           : !mobileRegex.test(value)
-            ? "Enter a valid 10-digit number"
-            : "";
+          ? "Enter a valid 10-digit number"
+          : "";
         break;
-        case "password":
-          newErrors.password = !value
-            ? "Password is required"
-            : !passwordRegex.test(value)
-              ? "Password must be 6-20 characters long (no spaces or special characters)"
-              : "";
-          break;
+  
+      case "password":
+        newErrors.password = !value
+          ? "Password is required"
+          : !strongPasswordRegex.test(value)
+          ? "Password must be 6–20 characters and include uppercase, lowercase, number and special character"
+          : "";
+        break;
+  
       case "userRole":
         newErrors.userRole = !value ? "Role is required" : "";
         break;
+  
       default:
         break;
     }
-console.log("eerror p " , newErrors?.password)
+  
     setErrors(newErrors);
   };
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -186,14 +198,17 @@ console.log("eerror p " , newErrors?.password)
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+$/;
     const mobileRegex = /^\d{10}$/;
-    const passwordRegex = /^[A-Za-z0-9]{6,20}$/;
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
 
     // Validation (Only one toast at a time)
     if (!newUser.firstName) return toast.error("First Name is required", { toastId: "firstName" });
     if (!nameRegex.test(newUser.firstName)) return toast.error("First Name must contain only letters", { toastId: "firstName" });
+    if (!/^[A-Z]/.test(newUser.firstName)) return toast.error("First Name must start with a capital letter", { toastId: "firstName" });
 
     if (!newUser.lastName) return toast.error("Last Name is required", { toastId: "lastName" });
     if (!nameRegex.test(newUser.lastName)) return toast.error("Last Name must contain only letters", { toastId: "lastName" });
+    if (!/^[A-Z]/.test(newUser.lastName)) return toast.error("Last Name must start with a capital letter", { toastId: "lastName" });
+
 
     if (!newUser.email) return toast.error("Email is required", { toastId: "email" });
     if (!emailRegex.test(newUser.email)) return toast.error("Enter a valid email address", { toastId: "email" });
@@ -204,8 +219,34 @@ console.log("eerror p " , newErrors?.password)
     if (!newUser.userRole) return toast.error("Role is required", { toastId: "userRole" });
 
     if (!isEditMode) {
-        if (!newUser.password) return toast.error("Password is required", { toastId: "password" });
-        if (!passwordRegex.test(newUser.password)) return toast.error("Password must be 6-20 characters long (no spaces or special characters)", { toastId: "password" });
+      if (!newUser.password) {
+        return Swal.fire({
+          icon: "warning",
+          title: "Password Required",
+          text: "Please enter a password to proceed.",
+        });
+      }
+      
+      if (!strongPasswordRegex.test(newUser.password)) {
+        return Swal.fire({
+          icon: "error",
+          title: "Weak Password",
+          html: `
+            <div style="text-align: left;">
+              Your password must meet the following requirements:
+              <ul style="margin-top: 8px;">
+                <li>✅ 6–20 characters long</li>
+                <li>✅ At least one uppercase letter (A–Z)</li>
+                <li>✅ At least one lowercase letter (a–z)</li>
+                <li>✅ At least one number (0–9)</li>
+                <li>✅ At least one special character (@, $, !, %, *, ?, &)</li>
+              </ul>
+            </div>
+          `,
+        });
+      }
+      
+
     }
 
     try {
@@ -214,7 +255,7 @@ console.log("eerror p " , newErrors?.password)
             await editUser(id, newUser);
             toast.success("User updated successfully!", { toastId: "success" });
         } else {
-            await registerUser(newUser);
+          await registerUser({ ...newUser, sendCredentials });
             toast.success("User added successfully!", { toastId: "success" });
         }
         navigate("/users");
@@ -246,8 +287,11 @@ console.log("eerror p " , newErrors?.password)
                 placeholder="First Name"
                 value={newUser.firstName}
                 onChange={handleChange}
-                max={20}
+                maxLength={20}
               />
+              <small style={{ fontSize: "0.8rem", color: "#777" }}>
+  Must start with a capital letter and contain only letters.
+</small>
               {/* {errors.firstName && <p className="user-error">{errors.firstName}</p>} */}
             </div>
             <div className="user-form-group">
@@ -258,8 +302,11 @@ console.log("eerror p " , newErrors?.password)
                 placeholder="Last Name"
                 value={newUser.lastName}
                 onChange={handleChange}
-                max={20}
+                maxLength={20}
               />
+              <small style={{ fontSize: "0.8rem", color: "#777" }}>
+  Must start with a capital letter and contain only letters.
+</small>
               {/* {errors.lastName && <p className="user-error">{errors.lastName}</p>} */}
             </div>
           </div>
@@ -283,23 +330,35 @@ console.log("eerror p " , newErrors?.password)
             <div className="user-form-group">
               <label>Password <Required/></label>
               <input
-  type="password"
+  type={showPassword ? "text" : "password"}
   name="password"
   placeholder="Password"
+  maxLength={20}
   value={newUser.password}
   onChange={(e) => {
-    // Remove spaces and emojis while allowing letters and numbers
     const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
     setNewUser({ ...newUser, password: noSpaceEmojiValue });
   }}
   onKeyDown={(e) => {
-    // Block spaces and emojis
     if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
       e.preventDefault();
     }
   }}
-  
 />
+<span
+    onClick={() => setShowPassword(!showPassword)}
+    style={{
+      position: "absolute",
+      top: "42.5%",
+      right: "280px",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: "1.1rem",
+      color: "#666"
+    }}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </span>
 
               {/* {errors.password && <p className="user-error">{errors.password}</p>} */}
             </div>
@@ -350,6 +409,17 @@ console.log("eerror p " , newErrors?.password)
               </select>
             </div>
           </div>
+          <div className="user-form-row">
+  <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <input
+      type="checkbox"
+      checked={sendCredentials}
+      onChange={(e) => setSendCredentials(e.target.checked)}
+    />
+    Send credentials to user via email
+  </label>
+</div>
+
 
           <button type="submit" className="user-submit-btn">
             {isEditMode ? "Update User" : "Add User"}
