@@ -186,7 +186,10 @@ useEffect(() => {
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
-    otherDocuments: []
+    otherDocuments: [] , 
+    presentation : [] , 
+    salesAggrement : [] , 
+    cad : [] , 
   });
   const roleId = JSON.parse(localStorage.getItem("user"))
   const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
@@ -390,6 +393,15 @@ useEffect(() => {
           fetchedProject.invoice = Array.isArray(fetchedProject.invoice)
           ? fetchedProject.invoice
           : JSON.parse(fetchedProject.invoice || '[]');
+          fetchedProject.cad = Array.isArray(fetchedProject.cad)
+          ? fetchedProject.cad
+          : JSON.parse(fetchedProject.cad || '[]');
+          fetchedProject.salesAggrement = Array.isArray(fetchedProject.salesAggrement)
+          ? fetchedProject.salesAggrement
+          : JSON.parse(fetchedProject.salesAggrement || '[]');
+          fetchedProject.presentation = Array.isArray(fetchedProject.presentation)
+          ? fetchedProject.presentation
+          : JSON.parse(fetchedProject.presentation || '[]');
         
         setInvoiceFiles(fetchedProject.invoice);
         
@@ -655,12 +667,12 @@ setLoadingDoc(false)
       
 
 {[
-{ title: "Installation Docs", files: project.proposals, category: 'proposals'  },
-{ title: "Warranty", files: project.floorPlans, category: 'floorPlans' },
-{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } 
-// { title: "Cad Files", files: project.cad, category: 'cad' },
-// { title: "Options Presentation", files: project.presentation, category: 'presentation' },
-// { title: "Sales Aggrement" , files: project.salesAggrement, category: 'salesAggrement' }
+{ title: "Detailed Proposal", files: project.proposals, category: 'proposals'  },
+{ title: "Floor Plans", files: project.floorPlans, category: 'floorPlans' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } , 
+{ title: "Cad Files", files: project.cad, category: 'cad' },
+{ title: "Options Presentation", files: project.presentation, category: 'presentation' },
+{ title: "Sales Agreement" , files: project.salesAggrement, category: 'salesAggrement' }
 
 
 
