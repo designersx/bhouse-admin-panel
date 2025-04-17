@@ -170,9 +170,22 @@ otherDocuments: [],
   };
   const handleItemChange = (index, field, value) => {
     const updated = [...leadTimeItems];
-    updated[index][field] = value;
-    setLeadTimeItems(updated); 
+  
+    if (field === "tbd") {
+      updated[index][field] = value;
+  
+      if (value) {
+        // If TBD is checked, clear the date fields
+        updated[index].expectedDeliveryDate = "";
+        updated[index].expectedArrivalDate = "";
+      }
+    } else {
+      updated[index][field] = value;
+    }
+  
+    setLeadTimeItems(updated);
   };
+  
   
   const updateItem = async (item) => {
     try {
@@ -693,81 +706,125 @@ otherDocuments: [],
                   <div className="form-card">
   <h3>Project Lead Time Matrix</h3>
   <table className="lead-time-table">
-    <thead>
-      <tr>
-        <th>Manufacturer Name</th>
-        <th>Description</th>
-        <th>Expected Departure</th>
-        <th>Expected Arrival</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {leadTimeItems.map((item, index) => (
-        <tr key={item.id || index}>
-          <td>
-            <input
-            className='user-search-inputa'
-              value={item.itemName}
-              onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-            />
-          </td>
-          <td>
-  <input
-  className='user-search-inputa'
-    type="text"
-    value={item.quantity}
-    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-    maxLength={50}
-  />
-</td>
+  <thead>
+    <tr>
+      <th>Manufacturer Name</th>
+      <th>Description</th>
+      <th>TBD</th> {/* NEW COLUMN */}
+      <th>Expected Departure</th>
+      <th>Expected Arrival</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {leadTimeItems.map((item, index) => (
+      <tr key={item.id || index}>
+        <td>
+          <input
+            className="user-search-inputa"
+            value={item.itemName}
+            onChange={(e) =>
+              handleItemChange(index, "itemName", e.target.value)
+            }
+          />
+        </td>
 
-          <td>
-            <input
-            className='user-search-inputa'
-              type="date"
-              value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-              onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
-            />
-          </td>
-          <td>
-            <input
-            className='user-search-inputa'
-              type="date"
-              value={item.expectedArrivalDate?.slice(0, 10) || ''}
-              onChange={(e) => handleItemChange(index, 'expectedArrivalDate', e.target.value)}
-            />
-          </td>
-          <td>
-            <select
-            className='user-search-inputa'
-              value={item.status}
-              onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+        <td>
+          <input
+            className="user-search-inputa"
+            type="text"
+            value={item.quantity}
+            onChange={(e) =>
+              handleItemChange(index, "quantity", e.target.value)
+            }
+            maxLength={50}
+          />
+        </td>
+
+        {/* ✅ TBD Checkbox Column */}
+        <td>
+          <input
+            type="checkbox"
+            checked={item.tbd || false}
+            onChange={(e) =>
+              handleItemChange(index, "tbd", e.target.checked)
+            }
+          />
+        </td>
+
+        <td>
+          <input
+            className="user-search-inputa"
+            type="date"
+            value={item.expectedDeliveryDate?.slice(0, 10) || ""}
+            onChange={(e) =>
+              handleItemChange(index, "expectedDeliveryDate", e.target.value)
+            }
+            disabled={item.tbd}
+          />
+        </td>
+
+        <td>
+          <input
+            className="user-search-inputa"
+            type="date"
+            value={item.expectedArrivalDate?.slice(0, 10) || ""}
+            onChange={(e) =>
+              handleItemChange(index, "expectedArrivalDate", e.target.value)
+            }
+            disabled={item.tbd}
+          />
+        </td>
+
+        <td>
+          <select
+            className="user-search-inputa"
+            value={item.status}
+            onChange={(e) =>
+              handleItemChange(index, "status", e.target.value)
+            }
+          >
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Installed">Installed</option>
+          </select>
+        </td>
+
+        <td>
+          {item.id ? (
+            <div className="btn-up">
+              <button
+                className="add-user-btna"
+                type="button"
+                onClick={() => updateItem(leadTimeItems[index])}
+              >
+                Update
+              </button>
+              <button
+                className="add-user-btna"
+                type="button"
+                onClick={() => deleteItem(item.id)}
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <button
+              className="add-user-btna"
+              type="button"
+              onClick={() => addNewItemToBackend(item, index)}
             >
-              <option value="Pending">Pending</option>
-              <option value="In Transit">In Transit</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Installed">Installed</option>
-            </select> 
-          </td>
-          <td>
-            {item.id ? (
-              <>
-              <div className='btn-up'>
-              <button className='add-user-btna' type="button" onClick={() => updateItem(leadTimeItems[index])}>Update</button>
-              <button  className='add-user-btna' type="button" onClick={() => deleteItem(item.id)}>Delete</button>
-              </div>
-              
-              </>
-            ) : (
-              <button  className='add-user-btna'  type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
-            )}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+              Add
+            </button>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
   <br/>
   <button className='add-user-btna' type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>
