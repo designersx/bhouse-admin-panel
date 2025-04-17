@@ -856,7 +856,45 @@ return files.length > 0 ? (
 
 
 
+{activeTab === 'team' && (
 
+<div className="project-info-card">
+<h2>Assigned Team</h2>
+{project.assignedTeamRoles.length > 0 ? (
+<div className="team-grid">
+  {project.assignedTeamRoles.map((roleGroup, index) => ( 
+    <div key={index} className="role-card">
+      <h3 className="role-title">{roleGroup.role}</h3>
+      {roleGroup.users.map((userId) => {
+        const user = allUsers.find(u => u.id.toString() === userId.toString());
+        return user ? (
+          <div key={user.id} className="user-card-horizontal">
+            <img 
+              src={user.profileImage ? `${url2}/${user.profileImage}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+              alt={`${user.firstName} ${user.lastName}`} 
+              className="user-profile-img-horizontal" 
+            />
+            <div className="user-info-horizontal">
+              <span className="user-name-horizontal">{user.firstName} {user.lastName}</span>
+              <button
+  className="comment-btna"
+  onClick={() => handleOpenComments(user)}
+>
+<FaCommentAlt />
+</button>
+
+            </div>
+          </div>
+        ) : null;
+      })}
+    </div>
+  ))}
+</div>
+) : (
+<p>No team assigned.</p>
+)}
+</div>
+)}
 
 
 
@@ -1264,7 +1302,7 @@ issue.createdByType === 'user'
       {/* Grouped Comments by Date */}
       {Object.keys(groupedComments).map((date) => (
         <div key={date} className="comment-date-group">
-          <p className="comment-date">{date}</p>
+          {/* <p className="comment-date"></p> */}
           {Object.keys(groupedComments)
   .sort((a, b) => new Date(a) - new Date(b)) 
   .map((date) => (
@@ -1278,8 +1316,8 @@ issue.createdByType === 'user'
               <div className="whatsapp-comment-user-info">
                 <img
                   src={
-                    comment?.fromUser?.profileImage
-                      ? `${url2}/${comment.fromUser.profileImage}`
+                    comment?.profileImage
+                      ? `${url2}/${comment.profileImage}`
                       : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   }
                   alt="User"
@@ -1287,7 +1325,7 @@ issue.createdByType === 'user'
                 />
                 <div>
                   <p className="whatsapp-comment-author">
-                    {comment?.fromUser?.firstName} {comment?.fromUser?.lastName} ({comment?.fromUser?.userRole})
+                    {comment?.name} ({comment?.userRole})
                   </p>
                 </div>
               </div>
