@@ -1381,17 +1381,20 @@ issue.createdByType === 'user'
               <div className="whatsapp-comment-user-info">
                 <img
                   src={
-                    comment?.creatorUser?.profileImage
-                      ? `${url2}/${comment.creatorUser.profileImage}`
+                    comment.profileImage
+                      ? `${url2}/${comment.profileImage}`
                       : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   }
                   alt="User"
                   className="whatsapp-comment-user-avatar"
                 />
                 <div>
-                  <p className="whatsapp-comment-author">
-                  {comment?.createdByName} ({comment?.userRole})
-                  </p>
+                <p className="whatsapp-comment-author">
+  {comment?.createdByName && comment?.userRole
+    ? `${comment.createdByName} (${comment.userRole})`
+    : 'Customer'}
+</p>
+
                 </div>
               </div>
               <p className="whatsapp-comment-text">{comment.comment}</p>
