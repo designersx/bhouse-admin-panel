@@ -190,6 +190,8 @@ useEffect(() => {
     presentation : [] , 
     salesAggrement : [] , 
     cad : [] , 
+    acknowledgements : [] , 
+    receivingReports : []
   });
   const roleId = JSON.parse(localStorage.getItem("user"))
   const {rolePermissions} = useRolePermissions(roleId?.user?.roleId)
@@ -402,6 +404,12 @@ useEffect(() => {
           fetchedProject.presentation = Array.isArray(fetchedProject.presentation)
           ? fetchedProject.presentation
           : JSON.parse(fetchedProject.presentation || '[]');
+          fetchedProject.acknowledgements = Array.isArray(fetchedProject.acknowledgements)
+          ? fetchedProject.acknowledgements
+          : JSON.parse(fetchedProject.acknowledgements || '[]');
+          fetchedProject.receivingReports = Array.isArray(fetchedProject.receivingReports)
+          ? fetchedProject.receivingReports
+          : JSON.parse(fetchedProject.receivingReports || '[]');
         
         setInvoiceFiles(fetchedProject.invoice);
         
@@ -672,7 +680,11 @@ setLoadingDoc(false)
 { title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } , 
 { title: "Cad Files", files: project.cad, category: 'cad' },
 { title: "Options Presentation", files: project.presentation, category: 'presentation' },
-{ title: "Sales Agreement" , files: project.salesAggrement, category: 'salesAggrement' }
+{ title: "Sales Agreement" , files: project.salesAggrement, category: 'salesAggrement' } ,
+{ title: "Acknowledgements" , files: project.acknowledgements, category: 'acknowledgements' },
+
+{ title: "Receiving Reports" , files: project.receivingReports, category: 'receivingReports' }
+
 
 
 

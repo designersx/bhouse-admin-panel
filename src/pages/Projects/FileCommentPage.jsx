@@ -12,7 +12,7 @@ const FileCommentsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { filePath, category } = location.state;
- 
+ console.log({category})
 
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');

@@ -670,7 +670,7 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   </div>
 
                   <div className="form-group">
-                    <label>Warranty</label>
+                    <label>Floor Plans</label>
                     <input
   type="file"
   name="floorPlans"
@@ -708,6 +708,61 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                       </ul>
                     )}
 
+                  </div>
+                  <div className="form-group">
+                    <label>Presentation</label>
+                    <input
+  type="file"
+  name="presentation"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "presentation")}
+/>
+
+                    {formData.presentation?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.presentation.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>CAD Files</label>
+                    <input
+  type="file"
+  name="cad"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "cad")}
+/>
+
+                    {formData.cad?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.cad.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Installation Docs</label>
+                    <input
+  type="file"
+  name="salesAggrement"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={(e) => handleFileInputChange(e, "salesAggrement")}
+/>
+
+                    {formData.salesAggrement?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.salesAggrement.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
 
@@ -758,61 +813,7 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
     />
   )}
 </div>
-<div className="form-group">
-                    <label>Presentation</label>
-                    <input
-  type="file"
-  name="presentation"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "presentation")}
-/>
 
-                    {formData.presentation?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.presentation.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <div className="form-group">
-                    <label>CAD Files</label>
-                    <input
-  type="file"
-  name="cad"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "cad")}
-/>
-
-                    {formData.cad?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label>Installation Docs</label>
-                    <input
-  type="file"
-  name="salesAggrement"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "salesAggrement")}
-/>
-
-                    {formData.salesAggrement?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
 
 
 
