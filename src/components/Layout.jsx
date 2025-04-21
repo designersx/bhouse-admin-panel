@@ -1,7 +1,7 @@
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
-import '../styles/layout.css';
-
+import '../styles/layout.css'
+import Offcanvas from './OffCanvas/OffCanvas';
 const Layout = ({ children }) => {
   return (
     <div className="layout">
