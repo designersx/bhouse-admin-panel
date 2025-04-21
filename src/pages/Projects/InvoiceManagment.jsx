@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import Loader from '../../components/Loader';
 import { url, url2 } from '../../lib/api';
 import '../../styles/Projects/InvoiceManagement.css'; 
-
+import { FaEye } from 'react-icons/fa';
 const InvoiceManagement = ({ projectId }) => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,10 +15,13 @@ const InvoiceManagement = ({ projectId }) => {
   const [showUpdateInvoiceModal, setShowUpdateInvoiceModal] = useState(false);
   const [invoiceData, setInvoiceData] = useState({
     totalAmount: '',
-    advancePaid: null,
+    advancePaid: 0,
     status: 'Pending',
     invoiceFile: null,
+    description: '', 
   });
+  
+
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [projectDetails, setProjectDetails] = useState({ totalValue: 0, advancePayment: 0 });
 
@@ -123,6 +126,8 @@ const InvoiceManagement = ({ projectId }) => {
       formData.append('totalAmount', invoiceData.totalAmount);
       formData.append('advancePaid', invoiceData.advancePaid);
       formData.append('status', invoiceData.status);
+      formData.append('description', invoiceData.description || '');
+
       if (invoiceData.invoiceFile) {
         formData.append('invoice', invoiceData.invoiceFile);
       }
@@ -148,6 +153,7 @@ const InvoiceManagement = ({ projectId }) => {
       if (invoiceData.invoiceFile) {
         formData.append('invoice', invoiceData.invoiceFile);
       }
+      formData.append('description', invoiceData.description || '');
 
       const response = await axios.put(`${url}/projects/${projectId}/invoice/${selectedInvoice.id}`, formData);
       toast.success('Invoice updated!');
@@ -210,71 +216,110 @@ const InvoiceManagement = ({ projectId }) => {
         <p>No invoices available.</p>
       ) : (
         <table className="invoice-management-table">
-          <thead>
-            <tr>
-              <th>S. No.</th>
-              <th>Total Amount</th>
-              <th>Advance Paid</th>
-              <th>Status</th>
-              <th>Created At</th>
-              <th>File</th>
-              <th>Actions</th>
+        <thead>
+          <tr>
+            <th>S. No.</th>
+            <th>Total Amount</th>
+            <th>Advance Paid</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Description</th>
+            
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoices.map((invoice, index) => (
+            <tr key={invoice.id}>
+              <td>{index + 1}</td>
+              <td>{invoice.totalAmount}</td>
+              <td>{invoice.advancePaid ?? '-'}</td>
+              <td>{invoice.status}</td>
+              <td>{new Date(invoice.createdAt).toLocaleString()}</td>
+      
+              {/* Description with tooltip on overflow */}
+              <td>
+                <div
+                  style={{
+                    maxWidth: '150px',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    cursor: invoice.description ? 'pointer' : 'default',
+                  }}
+                  title={invoice.description || 'No description'}
+                >
+                  {invoice.description || '—'}
+                </div>
+              </td>
+    
+              {/* Actions */}
+              <td>
+                {/* 👁️ View in new tab */}
+                <button
+                  onClick={() => {
+                    if (invoice.invoiceFilePath) {
+                      window.open(`${url2}/${invoice.invoiceFilePath}`, '_blank');
+                    } else {
+                      Swal.fire('No file uploaded for this invoice.');
+                    }
+                  }}
+                  title="View file"
+                >
+                  <FaEye />
+                </button>
+      
+                {/* ✏️ Edit */}
+                <button onClick={() => handleOpenUpdateInvoiceModal(invoice)} title="Edit">
+                  <FaEdit />
+                </button>
+      
+                {/* ⬇️ Download */}
+                <button
+                  onClick={async () => {
+                    if (!invoice.invoiceFilePath) {
+                      Swal.fire('No file to download.');
+                      return;
+                    }
+                    const response = await fetch(`${url2}/${invoice.invoiceFilePath}`);
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = invoice.invoiceFilePath.split('/').pop();
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  }}
+                  title="Download"
+                >
+                  <FaDownload />
+                </button>
+      
+                {/* 🗑️ Delete */}
+                <button
+                  onClick={() => {
+                    Swal.fire({
+                      title: 'Are you sure?',
+                      text: 'Do you want to remove this invoice?',
+                      icon: 'warning',
+                      showCancelButton: true,
+                      confirmButtonText: 'Yes, remove it!',
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        handleDeleteInvoice(invoice.id);
+                      }
+                    });
+                  }}
+                  title="Delete"
+                >
+                  <FaTrashAlt />
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice, index) => (
-              <tr key={invoice.id}>
-                <td>{index + 1}</td>
-                <td>{invoice.totalAmount}</td>
-                <td>{invoice.advancePaid}</td>
-                <td>{invoice.status}</td>
-                <td>{new Date(invoice.createdAt).toLocaleString()}</td>
-                <td>
-                  <button onClick={() => handleOpenFile(invoice.invoiceFilePath)}>
-                    {invoice.invoiceFilePath.split('/').pop()}
-                  </button>
-                </td>
-                <td>
-                  <button onClick={() => handleOpenUpdateInvoiceModal(invoice)}>
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={async () => {
-                      const response = await fetch(`${url2}/${invoice.invoiceFilePath}`);
-                      const blob = await response.blob();
-                      const downloadUrl = window.URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = downloadUrl;
-                      link.download = invoice.invoiceFilePath.split('/').pop();
-                      document.body.appendChild(link);
-                      link.click();
-                      link.remove();
-                    }}
-                  >
-                    <FaDownload />
-                  </button>
-                  <button
-                    onClick={() => {
-                      Swal.fire({
-                        title: 'Are you sure?',
-                        text: 'Do you want to remove this invoice?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, remove it!',
-                      }).then(async (result) => {
-                        if (result.isConfirmed) {
-                          handleDeleteInvoice(invoice.id);
-                        }
-                      });
-                    }}
-                  >
-                    <FaTrashAlt />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
       )}
 
       {/* Add Invoice Modal */}
@@ -315,6 +360,16 @@ const InvoiceManagement = ({ projectId }) => {
                 />
               </div>
             )}
+            <label>Description (optional)</label>
+<textarea
+  name="description"
+  value={invoiceData.description}
+  onChange={handleInvoiceChange}
+  maxLength={150}
+  placeholder="Enter invoice description (max 150 characters)"
+  style={{ width: '100%', resize: 'vertical', minHeight: '60px' }}
+/>
+
 
             <label>Invoice File</label>
             <input type="file" onChange={handleFileChange} />
@@ -333,56 +388,73 @@ const InvoiceManagement = ({ projectId }) => {
 
       {/* Update Invoice Modal */}
       {showUpdateInvoiceModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Update Invoice</h3>
+  <div className="modal-overlay">
+    <div className="modal-content">
+      <h3>Update Invoice</h3>
 
-            <label>Total Amount</label>
-            <input
-              type="number"
-              name="totalAmount"
-              value={invoiceData.totalAmount}
-              onChange={handleInvoiceChange}
-              maxLength={6}
-            />
+      {/* Total Amount */}
+      <label>Total Amount</label>
+      <input
+        type="number"
+        name="totalAmount"
+        value={invoiceData.totalAmount}
+        onChange={handleInvoiceChange}
+        maxLength={6}
+      />
 
+      {/* Status */}
+      <label>Status</label>
+      <select
+        name="status"
+        value={invoiceData.status}
+        onChange={handleInvoiceChange}
+      >
+        <option value="Paid">Paid</option>
+        <option value="Pending">Pending</option>
+        <option value="Partly Paid">Partly Paid</option>
+      </select>
 
-            <label>Status</label>
-            <select
-              name="status"
-              value={invoiceData.status}
-              onChange={handleInvoiceChange}
-            >
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-              <option value="Partly Paid">Partly Paid</option>
-            </select>
-
-            {invoiceData.status === 'Partly Paid' && (
-              <div>
-                <label>Advance Payment</label>
-                <input
-                  type="number"
-                  name="advancePaid"
-                  value={invoiceData.advancePaid}
-                  onChange={handleInvoiceChange}
-                  maxLength={6}
-                />
-              </div>
-            )}
-
-            <label>Invoice File</label>
-            <input type="file" onChange={handleFileChange} />
-            <div className='invoice-btn'>
-            <button onClick={handleSaveUpdatedInvoice}>
-              <MdSave />
-              Save
-            </button>
-            <button onClick={() => setShowUpdateInvoiceModal(false)}>Cancel</button>
-            </div>
-          </div>
+      {/* Advance Paid if partly */}
+      {invoiceData.status === 'Partly Paid' && (
+        <div>
+          <label>Advance Payment</label>
+          <input
+            type="number"
+            name="advancePaid"
+            value={invoiceData.advancePaid}
+            onChange={handleInvoiceChange}
+            maxLength={6}
+          />
         </div>
       )}
+
+      {/* Description */}
+      <label>Description</label>
+      <textarea
+        name="description"
+        value={invoiceData.description || ''}
+        onChange={handleInvoiceChange}
+        maxLength={150}
+        rows={3}
+        placeholder="Enter invoice description (optional, max 150 characters)"
+      />
+
+      {/* File Upload */}
+      <label>Invoice File</label>
+      <input type="file" onChange={handleFileChange} />
+
+      {/* Action Buttons */}
+      <div className='invoice-btn'>
+        <button onClick={handleSaveUpdatedInvoice}>
+          <MdSave />
+          Save
+        </button>
+        <button onClick={() => setShowUpdateInvoiceModal(false)}>Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
