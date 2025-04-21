@@ -18,8 +18,7 @@ function CustomerDocComment() {
 
   const fileName = stateFileName || decodeURIComponent(docName);
   const documentId = stateDocumentId || parseInt(docId);
-  console.log(docName, "file Name")
-  console.log(docId, "document")
+ 
 
   const document = stateData?.find((doc) =>
     doc.id === documentId || doc.documentType === fileName
@@ -55,7 +54,7 @@ function CustomerDocComment() {
       });
       setComment('');
       fetchComments();
-      console.log(res)
+    
     } catch (err) {
       console.error('Failed to submit comment:', err);
       console.log(err)
