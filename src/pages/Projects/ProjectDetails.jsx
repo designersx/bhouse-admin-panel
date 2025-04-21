@@ -919,14 +919,15 @@ return files.length > 0 ? (
 <h2>Project Lead Time Matrix</h2>
 <table className="matrix-table">
 <thead>
-  <tr>
-    <th>Manufacturer Name</th>
-    <th>Description</th> 
-    <th>Expected Departure </th>
-    <th>Expected Arrival</th>
-    <th>Status</th>
-    <th>Actions</th>
-  </tr>
+<tr>
+          <th>Manufacturer Name</th>
+          <th>Description</th>
+          <th>TBD</th>
+          <th>Expected Departure</th>
+          <th>Expected Arrival</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
 </thead>
 
 <tbody>
@@ -934,9 +935,9 @@ return files.length > 0 ? (
 const isEditable = editableRows[index] || !item.id; 
 
 const handleSave = () => {
-if (!item.itemName || !item.quantity || !item.expectedDeliveryDate || !item.expectedArrivalDate || !item.status) {
-  return toast.error("All fields are required.");
-}
+  if (!item.itemName || !item.quantity || (!item.tbd && (!item.expectedDeliveryDate || !item.expectedArrivalDate)) || !item.status) {
+    return toast.error("All required fields must be filled.");
+  }
 
 if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
   return toast.error("Item Name must contain only letters.");
@@ -985,42 +986,47 @@ return (
     }}
   />
 </td>
+<td>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <input
+                    type="checkbox"
+                    checked={item.tbd || false}
+                    disabled={!isEditable}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      handleItemChange(index, 'tbd', checked);
+                      if (checked) {
+                        handleItemChange(index, 'expectedDeliveryDate', '');
+                        handleItemChange(index, 'expectedArrivalDate', '');
+                      }
+                    }}
+                  />
+                  TBD
+                </label>
+              </td>
 
 
-<td>
-  <input
-   style={{
-    height: "30px" ,
-    borderRadius: "5px" ,  
-    border : "1px solid #ccc"
-    
-  }}
-    type="date"
-    value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-    min={new Date().toISOString().split("T")[0]} 
-    disabled={!isEditable}
-    onChange={(e) =>
-      handleItemChange(index, 'expectedDeliveryDate', e.target.value)
-    }
-  />
-</td>
-<td>
-  <input
-   style={{
-    height: "30px" ,
-    borderRadius: "5px" ,  
-    border : "1px solid #ccc"
-    
-  }}
-    type="date"
-    value={item.expectedArrivalDate?.slice(0, 10) || ''}
-    min={new Date().toISOString().split("T")[0]} 
-    disabled={!isEditable}
-    onChange={(e) =>
-      handleItemChange(index, 'expectedArrivalDate', e.target.value)
-    }
-  />
-</td>
+              <td>
+                <input
+                  type="date"
+                  style={{ height: "30px", borderRadius: "5px", border: "1px solid #ccc" }}
+                  value={item.expectedDeliveryDate?.slice(0, 10) || ''}
+                  min={new Date().toISOString().split("T")[0]}
+                  disabled={item.tbd || !isEditable}
+                  onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
+                />
+              </td>
+
+              <td>
+                <input
+                  type="date"
+                  style={{ height: "30px", borderRadius: "5px", border: "1px solid #ccc" }}
+                  value={item.expectedArrivalDate?.slice(0, 10) || ''}
+                  min={new Date().toISOString().split("T")[0]}
+                  disabled={item.tbd || !isEditable}
+                  onChange={(e) => handleItemChange(index, 'expectedArrivalDate', e.target.value)}
+                />
+              </td>
   <td>
     <select
       value={item.status}
@@ -1393,17 +1399,20 @@ issue.createdByType === 'user'
               <div className="whatsapp-comment-user-info">
                 <img
                   src={
-                    comment?.creatorUser?.profileImage
-                      ? `${url2}/${comment.creatorUser.profileImage}`
+                    comment.profileImage
+                      ? `${url2}/${comment.profileImage}`
                       : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   }
                   alt="User"
                   className="whatsapp-comment-user-avatar"
                 />
                 <div>
-                  <p className="whatsapp-comment-author">
-                  {comment?.createdByName} ({comment?.userRole})
-                  </p>
+                <p className="whatsapp-comment-author">
+  {comment?.createdByName && comment?.userRole
+    ? `${comment.createdByName} (${comment.userRole})`
+    : 'Customer'}
+</p>
+
                 </div>
               </div>
               <p className="whatsapp-comment-text">{comment.comment}</p>

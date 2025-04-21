@@ -46,7 +46,12 @@ otherDocuments: [],
   const predefinedOptions = ["Regular Hours", "Before 9 AM", "After 6 PM"];
   const [deliveryHourOption, setDeliveryHourOption] = useState("Regular Hours");
   const [customDeliveryHour, setCustomDeliveryHour] = useState("");
-  
+  const [initialFinance, setInitialFinance] = useState({
+    advancePayment: '',
+    totalValue: ''
+  });
+  const [notifyClient, setNotifyClient] = useState(false);
+
   // Prefill when formData loads from DB
   useEffect(() => {
     const existing = formData.deliveryHours;
@@ -87,45 +92,59 @@ otherDocuments: [],
     try {
       const res = await axios.get(`${url}/projects/${projectId}`);
       const project = res.data;
-
+  
       const parsedRoles = typeof project.assignedTeamRoles === 'string'
         ? JSON.parse(project.assignedTeamRoles)
         : project.assignedTeamRoles;
-
+  
       const roleMap = {};
       const selected = [];
-
+  
       for (const { role, users } of parsedRoles) {
         roleMap[role] = users;
         selected.push(role);
         fetchUsers(role);
       }
+  
       setSelectedRoles(selected);
+  
       const formatDate = (dateString) =>
         dateString ? new Date(dateString).toISOString().slice(0, 10) : '';
-      
+  
+      // 🟡 Set initial financial values
+      setInitialFinance({
+        advancePayment: project.advancePayment,
+        totalValue: project.totalValue
+      });
+  
+      // 🟡 Set formData
       setFormData({
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
         estimatedCompletion: formatDate(project.estimatedCompletion),
         proposals: JSON.parse(project.proposals || '[]'),
-  floorPlans: JSON.parse(project.floorPlans || '[]'),
-  otherDocuments: JSON.parse(project.otherDocuments || '[]'),
+        floorPlans: JSON.parse(project.floorPlans || '[]'),
+        otherDocuments: JSON.parse(project.otherDocuments || '[]')
       });
-      
+  
+      // 🟡 Lead Time Matrix
       setLeadTimeMatrix(
         typeof project.leadTimeMatrix === 'string'
           ? JSON.parse(project.leadTimeMatrix || '[]')
           : project.leadTimeMatrix || []
       );
+  
       await fetchLeadTimeItems(projectId);
-
-      
+  
+      // 🟡 Reset checkbox initially
+      setNotifyClient(false);
+  
     } catch (error) {
       console.error('Error fetching project details:', error);
     }
   };
+  
   const handleAddItemRow = () => {
     setLeadTimeItems(prev => [
       ...prev,
@@ -170,9 +189,22 @@ otherDocuments: [],
   };
   const handleItemChange = (index, field, value) => {
     const updated = [...leadTimeItems];
-    updated[index][field] = value;
-    setLeadTimeItems(updated); 
+  
+    if (field === "tbd") {
+      updated[index][field] = value;
+  
+      if (value) {
+        // If TBD is checked, clear the date fields
+        updated[index].expectedDeliveryDate = "";
+        updated[index].expectedArrivalDate = "";
+      }
+    } else {
+      updated[index][field] = value;
+    }
+  
+    setLeadTimeItems(updated);
   };
+  
   
   const updateItem = async (item) => {
     try {
@@ -289,7 +321,17 @@ otherDocuments: [],
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  useEffect(() => {
+    if (
+      parseFloat(formData.advancePayment) !== parseFloat(initialFinance.advancePayment) ||
+      parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue)
+    ) {
+      setNotifyClient(true); // enable checkbox
+    } else {
+      setNotifyClient(false); // disable if values revert
+    }
+  }, [formData.advancePayment, formData.totalValue, initialFinance]);
+  
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
@@ -323,7 +365,10 @@ otherDocuments: [],
   
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-    console.log(formDataToSend)
+  
+    // ✅ Append checkbox value to backend
+    formDataToSend.append("notifyClientOnFinancialUpdate", notifyClient);
+  
     Object.entries(files).forEach(([category, fileArray]) => {
       fileArray.forEach((file) => formDataToSend.append(category, file));
     });
@@ -336,7 +381,6 @@ otherDocuments: [],
   
       if (res.status === 200) {
         Swal.fire("Project updated successfully!");
-        
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
@@ -346,6 +390,8 @@ otherDocuments: [],
       Swal.fire("Failed to update project");
     }
   };
+  
+  
 
   const validateStep = () => {
     const {
@@ -511,6 +557,23 @@ otherDocuments: [],
                   </div>
                  
                   </div>
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+  <input
+    type="checkbox"
+    checked={notifyClient}
+    onChange={() => setNotifyClient(!notifyClient)}
+    disabled={
+      parseFloat(formData.advancePayment) === parseFloat(initialFinance.advancePayment) &&
+      parseFloat(formData.totalValue) === parseFloat(initialFinance.totalValue)
+    }
+    style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
+  />
+  <label style={{ margin: 0, fontSize: '14px', userSelect: 'none' }}>
+    Notify client about updated advance or total value
+  </label>
+</div>
+
+
              
 
 
@@ -693,81 +756,125 @@ otherDocuments: [],
                   <div className="form-card">
   <h3>Project Lead Time Matrix</h3>
   <table className="lead-time-table">
-    <thead>
-      <tr>
-        <th>Manufacturer Name</th>
-        <th>Description</th>
-        <th>Expected Departure</th>
-        <th>Expected Arrival</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {leadTimeItems.map((item, index) => (
-        <tr key={item.id || index}>
-          <td>
-            <input
-            className='user-search-inputa'
-              value={item.itemName}
-              onChange={(e) => handleItemChange(index, 'itemName', e.target.value)}
-            />
-          </td>
-          <td>
-  <input
-  className='user-search-inputa'
-    type="text"
-    value={item.quantity}
-    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-    maxLength={50}
-  />
-</td>
+  <thead>
+    <tr>
+      <th>Manufacturer Name</th>
+      <th>Description</th>
+      <th>TBD</th> {/* NEW COLUMN */}
+      <th>Expected Departure</th>
+      <th>Expected Arrival</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {leadTimeItems.map((item, index) => (
+      <tr key={item.id || index}>
+        <td>
+          <input
+            className="user-search-inputa"
+            value={item.itemName}
+            onChange={(e) =>
+              handleItemChange(index, "itemName", e.target.value)
+            }
+          />
+        </td>
 
-          <td>
-            <input
-            className='user-search-inputa'
-              type="date"
-              value={item.expectedDeliveryDate?.slice(0, 10) || ''}
-              onChange={(e) => handleItemChange(index, 'expectedDeliveryDate', e.target.value)}
-            />
-          </td>
-          <td>
-            <input
-            className='user-search-inputa'
-              type="date"
-              value={item.expectedArrivalDate?.slice(0, 10) || ''}
-              onChange={(e) => handleItemChange(index, 'expectedArrivalDate', e.target.value)}
-            />
-          </td>
-          <td>
-            <select
-            className='user-search-inputa'
-              value={item.status}
-              onChange={(e) => handleItemChange(index, 'status', e.target.value)}
+        <td>
+          <input
+            className="user-search-inputa"
+            type="text"
+            value={item.quantity}
+            onChange={(e) =>
+              handleItemChange(index, "quantity", e.target.value)
+            }
+            maxLength={50}
+          />
+        </td>
+
+        {/* ✅ TBD Checkbox Column */}
+        <td>
+          <input
+            type="checkbox"
+            checked={item.tbd || false}
+            onChange={(e) =>
+              handleItemChange(index, "tbd", e.target.checked)
+            }
+          />
+        </td>
+
+        <td>
+          <input
+            className="user-search-inputa"
+            type="date"
+            value={item.expectedDeliveryDate?.slice(0, 10) || ""}
+            onChange={(e) =>
+              handleItemChange(index, "expectedDeliveryDate", e.target.value)
+            }
+            disabled={item.tbd}
+          />
+        </td>
+
+        <td>
+          <input
+            className="user-search-inputa"
+            type="date"
+            value={item.expectedArrivalDate?.slice(0, 10) || ""}
+            onChange={(e) =>
+              handleItemChange(index, "expectedArrivalDate", e.target.value)
+            }
+            disabled={item.tbd}
+          />
+        </td>
+
+        <td>
+          <select
+            className="user-search-inputa"
+            value={item.status}
+            onChange={(e) =>
+              handleItemChange(index, "status", e.target.value)
+            }
+          >
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Installed">Installed</option>
+          </select>
+        </td>
+
+        <td>
+          {item.id ? (
+            <div className="btn-up">
+              <button
+                className="add-user-btna"
+                type="button"
+                onClick={() => updateItem(leadTimeItems[index])}
+              >
+                Update
+              </button>
+              <button
+                className="add-user-btna"
+                type="button"
+                onClick={() => deleteItem(item.id)}
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <button
+              className="add-user-btna"
+              type="button"
+              onClick={() => addNewItemToBackend(item, index)}
             >
-              <option value="Pending">Pending</option>
-              <option value="In Transit">In Transit</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Installed">Installed</option>
-            </select> 
-          </td>
-          <td>
-            {item.id ? (
-              <>
-              <div className='btn-up'>
-              <button className='add-user-btna' type="button" onClick={() => updateItem(leadTimeItems[index])}>Update</button>
-              <button  className='add-user-btna' type="button" onClick={() => deleteItem(item.id)}>Delete</button>
-              </div>
-              
-              </>
-            ) : (
-              <button  className='add-user-btna'  type="button" onClick={() => addNewItemToBackend(item, index)}>Add</button>
-            )}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+              Add
+            </button>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
   <br/>
   <button className='add-user-btna' type="button" onClick={handleAddItemRow}>+ Add Row</button>
 </div>

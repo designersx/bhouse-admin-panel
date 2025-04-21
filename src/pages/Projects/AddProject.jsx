@@ -13,7 +13,7 @@ const AddProject = () => {
     const savedStep = localStorage.getItem("addProjectStep");
     return savedStep ? Number(savedStep) : 1;
   });
-  
+
   let [clientId, setClientId] = useState();
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem("addProjectFormData");
@@ -37,7 +37,6 @@ const AddProject = () => {
           clientId: "",
         };
   });
-  
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
@@ -58,25 +57,32 @@ const AddProject = () => {
           },
         ];
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
-  const [deliveryHourOption, setDeliveryHourOption] = useState(formData.deliveryHours || "Regular Hours");
-const [customDeliveryHour, setCustomDeliveryHour] = useState(
-  ["Regular Hours", "Before 9 AM", "After 6 PM"].includes(formData.deliveryHours)
-    ? ""
-    : formData.deliveryHours || ""
-);
-useEffect(() => {
-  localStorage.setItem("addProjectStep", step);
-}, [step]);
+  const [deliveryHourOption, setDeliveryHourOption] = useState(
+    formData.deliveryHours || "Regular Hours"
+  );
+  const [customDeliveryHour, setCustomDeliveryHour] = useState(
+    ["Regular Hours", "Before 9 AM", "After 6 PM"].includes(
+      formData.deliveryHours
+    )
+      ? ""
+      : formData.deliveryHours || ""
+  );
+  useEffect(() => {
+    localStorage.setItem("addProjectStep", step);
+  }, [step]);
 
-useEffect(() => {
-  localStorage.setItem("addProjectFormData", JSON.stringify(formData));
-}, [formData]);
+  useEffect(() => {
+    localStorage.setItem("addProjectFormData", JSON.stringify(formData));
+  }, [formData]);
 
-useEffect(() => {
-  localStorage.setItem("addProjectLeadMatrix", JSON.stringify(leadTimeMatrix));
-}, [leadTimeMatrix]);
+  useEffect(() => {
+    localStorage.setItem(
+      "addProjectLeadMatrix",
+      JSON.stringify(leadTimeMatrix)
+    );
+  }, [leadTimeMatrix]);
 
   const navigate = useNavigate();
 
@@ -90,34 +96,33 @@ useEffect(() => {
       totalValue,
       advancePayment,
     } = formData;
-  
+
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
-  
+
     if (!name.trim()) return "Project Name is required.";
-    if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
+    if (!/[a-zA-Z]/.test(name))
+      return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
     if (!clientName) return "Customer selection is required.";
-  
 
-  
     if (!estimatedCompletion) return "Estimated Occupancy Date is required.";
     if (estimatedCompletion < today)
       return "Estimated Occupancy Date cannot be in the past.";
-  
+
     if (!totalValue || totalValue <= 0)
       return "Total Value must be a positive number.";
-  
+
     if (!advancePayment || advancePayment <= 0) {
       return "Advance Payment must be a positive number.";
     }
-  
+
     if (parseFloat(advancePayment) > parseFloat(totalValue)) {
       return "Advance Payment cannot be more than Total Value.";
     }
-  
+
     return null;
   };
-  
+
   const validateStep2 = () => {
     if (selectedRoles.length === 0)
       return "At least one role must be selected.";
@@ -142,10 +147,20 @@ useEffect(() => {
 
   const handleItemChange = (index, field, value) => {
     const updated = [...leadTimeMatrix];
-    updated[index][field] = value;
+
+    if (field === "tbd") {
+      updated[index][field] = value;
+      if (value) {
+        // If TBD is true, clear both dates
+        updated[index].expectedDeliveryDate = "";
+        updated[index].expectedArrivalDate = "";
+      }
+    } else {
+      updated[index][field] = value;
+    }
+
     setLeadTimeMatrix(updated);
   };
-
   const handleAddItemRow = () => {
     setLeadTimeMatrix([
       ...leadTimeMatrix,
@@ -153,7 +168,7 @@ useEffect(() => {
         itemName: "",
         quantity: "",
         expectedDeliveryDate: "",
-        expectedArrivalDate:"",
+        expectedArrivalDate: "",
         status: "Pending",
       },
     ]);
@@ -196,18 +211,18 @@ useEffect(() => {
         const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         const users = data.users || [];
-  
+
         if (users.length === 0) {
           toast.error(`No users found in the role "${role}"`);
           return; // Exit early
         }
-  
+
         setSelectedRoles((prev) => [...prev, role]);
         setRoleUsers((prev) => ({ ...prev, [role]: users }));
-  
+
         const defaultUsers = users.filter((user) => user.permissionLevel === 2);
         const defaultUserIds = defaultUsers.map((user) => user.id);
-  
+
         setFormData((prev) => ({
           ...prev,
           assignedTeamRoles: {
@@ -221,7 +236,6 @@ useEffect(() => {
       }
     }
   };
-  
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -256,16 +270,15 @@ useEffect(() => {
       return null; // No required fields in Step 3
     };
 
-const errorMsg = step3validation() || validateLeadTimeMatrix();
-    if (errorMsg) {
-      Swal.fire({
-        icon: "error",
-        title: "Validation Error",
-        text: errorMsg,
-      });
-      return;
-    }
-    
+    // const errorMsg = step3validation() || validateLeadTimeMatrix();
+    //     if (errorMsg) {
+    //       Swal.fire({
+    //         icon: "error",
+    //         title: "Validation Error",
+    //         text: errorMsg,
+    //       });
+    //       return;
+    //     }
 
     const formDataToSend = new FormData();
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
@@ -293,18 +306,22 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
       itemName: item.itemName,
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
-        ? new Date(item.expectedDeliveryDate).toISOString().slice(0, 19).replace("T", " ")
+        ? new Date(item.expectedDeliveryDate)
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
-        ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
+        ? new Date(item.expectedArrivalDate)
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ")
         : null,
-      status: item.status || "Pending" 
+      status: item.status || "Pending",
     }));
-    
-    
+
     formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
-    
-    
+
     for (let file of files) {
       formDataToSend.append("files", file);
     }
@@ -336,7 +353,6 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
 
       const data = await response.json();
 
-      
       if (response.status === 201) {
         localStorage.removeItem("addProjectStep");
         localStorage.removeItem("addProjectFormData");
@@ -364,40 +380,39 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
   const handleFileInputChange = (e, fieldName) => {
     const files = Array.from(e.target.files);
     const existingFiles = formData[fieldName] || [];
-  
+
     if (existingFiles.length + files.length > 5) {
       toast.error("You can only upload up to 5 files per section.");
       return;
     }
-  
+
     setFormData((prev) => ({
       ...prev,
       [fieldName]: [...existingFiles, ...files],
     }));
   };
-  const validateLeadTimeMatrix = () => {
-    const today = new Date().toISOString().split("T")[0];
-  
-    for (let i = 0; i < leadTimeMatrix.length; i++) {
-      const item = leadTimeMatrix[i];
-  
-      if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
-      if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
-  
-      if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
-      // Optional: Add alphanumeric validation if needed
-      // if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
-  
-      if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
-      if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
-  
-      if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
-      if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
-    }
-  
-    return null;
-  };
-  
+  // const validateLeadTimeMatrix = () => {
+  //   const today = new Date().toISOString().split("T")[0];
+
+  //   for (let i = 0; i < leadTimeMatrix.length; i++) {
+  //     const item = leadTimeMatrix[i];
+
+  //     if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
+  //     if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
+
+  //     if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
+  //     if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
+
+  //     if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
+  //     if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
+
+  //     if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
+  //     if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
+  //   }
+
+  //   return null;
+  // };
+
   return (
     <Layout>
       <ToastContainer
@@ -422,9 +437,9 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                 <h3>Project Details</h3>
                 <div className="form-group-row">
                   <div className="form-group">
-                  <label>
-  Project Name <span className="required-star">*</span>
-</label>
+                    <label>
+                      Project Name <span className="required-star">*</span>
+                    </label>
 
                     <input
                       type="text"
@@ -437,9 +452,9 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                     />
                   </div>
                   <div className="form-group">
-                  <label>
-  Project Type <span className="required-star">*</span>
-</label>
+                    <label>
+                      Project Type <span className="required-star">*</span>
+                    </label>
 
                     <select
                       name="type"
@@ -457,9 +472,9 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
-                  <label>
-  Select Customer <span className="required-star">*</span>
-</label>
+                    <label>
+                      Select Customer <span className="required-star">*</span>
+                    </label>
 
                     <select
                       name="clientName"
@@ -501,9 +516,9 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
-                  <label>
-  Status <span className="required-star">*</span>
-</label>
+                    <label>
+                      Status <span className="required-star">*</span>
+                    </label>
 
                     <select
                       name="status"
@@ -526,25 +541,29 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                     </select>
                   </div>
                   <div className="form-group">
-                  <label>
-  Estimated Occupancy Date <span className="required-star">*</span>
-</label>
+                    <label>
+                      Estimated Occupancy Date{" "}
+                      <span className="required-star">*</span>
+                    </label>
 
-<input
-  type="date"
-  name="estimatedCompletion"
-  value={formData.estimatedCompletion}
-  min={formData.startDate || new Date().toISOString().split("T")[0]}
-  onChange={handleChange}
-  required
-/>
+                    <input
+                      type="date"
+                      name="estimatedCompletion"
+                      value={formData.estimatedCompletion}
+                      min={
+                        formData.startDate ||
+                        new Date().toISOString().split("T")[0]
+                      }
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
-                  <label>
-  Advance Payment <span className="required-star">*</span>
-</label>
+                    <label>
+                      Advance Payment <span className="required-star">*</span>
+                    </label>
 
                     <input
                       type="number"
@@ -556,9 +575,9 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                     />
                   </div>
                   <div className="form-group">
-                  <label>
-  Total Value <span className="required-star">*</span>
-</label>
+                    <label>
+                      Total Value <span className="required-star">*</span>
+                    </label>
 
                     <input
                       type="number"
@@ -581,9 +600,11 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
 
             {step === 2 && (
               <div className="form-card">
-                <h3>Roles & Permissions <span className="required-star">*</span></h3>
+                <h3>
+                  Roles & Permissions <span className="required-star">*</span>
+                </h3>
                 <div className="form-group-row">
-                  <div className="form-group"> 
+                  <div className="form-group">
                     <label>Assign Roles</label>
                     <div className="roles-container-ui">
                       {allRoles.map((role) => (
@@ -652,13 +673,13 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   <div className="form-group">
                     <label>Installation Docs</label>
                     <input
-  type="file"
-  name="proposals"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "proposals")}
-  disabled={(formData.proposals?.length || 0) >= 5}
-/>
+                      type="file"
+                      name="proposals"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileInputChange(e, "proposals")}
+                      disabled={(formData.proposals?.length || 0) >= 5}
+                    />
 
                     {formData.proposals?.length > 0 && (
                       <ul className="file-preview-list">
@@ -672,13 +693,13 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   <div className="form-group">
                     <label>Floor Plans</label>
                     <input
-  type="file"
-  name="floorPlans"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "floorPlans")}
-  disabled={(formData.floorPlans?.length || 0) >= 5}
-/>
+                      type="file"
+                      name="floorPlans"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileInputChange(e, "floorPlans")}
+                      disabled={(formData.floorPlans?.length || 0) >= 5}
+                    />
 
                     {formData.floorPlans?.length > 0 && (
                       <ul className="file-preview-list">
@@ -692,13 +713,15 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   <div className="form-group">
                     <label>Product Maintenance</label>
                     <input
-  type="file"
-  name="otherDocuments"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "otherDocuments")}
-  disabled={(formData.otherDocuments?.length || 0) >= 5}
-/>
+                      type="file"
+                      name="otherDocuments"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) =>
+                        handleFileInputChange(e, "otherDocuments")
+                      }
+                      disabled={(formData.otherDocuments?.length || 0) >= 5}
+                    />
 
                     {formData.otherDocuments?.length > 0 && (
                       <ul className="file-preview-list">
@@ -707,17 +730,68 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                         ))}
                       </ul>
                     )}
-
                   </div>
                   <div className="form-group">
+
+                    <label>Delivery Address</label>
+                    <input
+                      type="text"
+                      name="deliveryAddress"
+                      value={formData.deliveryAddress}
+                      onChange={handleChange}
+                      placeholder="Enter delivery address"
+                      maxLength={50}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Delivery Hours</label>
+                    <select
+                      value={deliveryHourOption}
+                      onChange={(e) => {
+                        const selected = e.target.value;
+                        setDeliveryHourOption(selected);
+                        const valueToSave =
+                          selected === "Other" ? customDeliveryHour : selected;
+
+                        // Update formData
+                        handleChange({
+                          target: { name: "deliveryHours", value: valueToSave },
+                        });
+                      }}
+                    >
+                      <option value="Regular Hours">Regular Hours</option>
+                      <option value="Before 9 AM">Before 9 AM</option>
+                      <option value="After 6 PM">After 6 PM</option>
+                      <option value="Other">Other</option>
+                    </select>
+
+                    {deliveryHourOption === "Other" && (
+                      <input
+                        type="text"
+                        placeholder="Enter custom delivery hours"
+                        value={customDeliveryHour}
+                        onChange={(e) => {
+                          setCustomDeliveryHour(e.target.value);
+                          handleChange({
+                            target: {
+                              name: "deliveryHours",
+                              value: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="form-group">
+
                     <label>Presentation</label>
                     <input
-  type="file"
-  name="presentation"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "presentation")}
-/>
+                      type="file"
+                      name="presentation"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileInputChange(e, "presentation")}
+                    />
 
                     {formData.presentation?.length > 0 && (
                       <ul className="file-preview-list">
@@ -730,12 +804,12 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   <div className="form-group">
                     <label>CAD Files</label>
                     <input
-  type="file"
-  name="cad"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "cad")}
-/>
+                      type="file"
+                      name="cad"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileInputChange(e, "cad")}
+                    />
 
                     {formData.cad?.length > 0 && (
                       <ul className="file-preview-list">
@@ -749,12 +823,14 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                   <div className="form-group">
                     <label>Installation Docs</label>
                     <input
-  type="file"
-  name="salesAggrement"
-  multiple
-  accept=".jpg,.jpeg,.png,.pdf"
-  onChange={(e) => handleFileInputChange(e, "salesAggrement")}
-/>
+                      type="file"
+                      name="salesAggrement"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) =>
+                        handleFileInputChange(e, "salesAggrement")
+                      }
+                    />
 
                     {formData.salesAggrement?.length > 0 && (
                       <ul className="file-preview-list">
@@ -764,6 +840,7 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                       </ul>
                     )}
                   </div>
+
                 </div>
 
                 <div className="form-group-row">
@@ -818,78 +895,140 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
 
 
 
+
                 </div>
 
                 <h3>Project Lead Time Matrix</h3>
                 <div className="lead-time-matrix-container">
+                  {leadTimeMatrix.map((item, index) => (
+                    <div key={index} className="item-row">
+                      <div className="form-group1">
+                        <label>Manufacturer Name</label>
+                        <input
+                          className="user-search-input1"
+                          type="text"
+                          placeholder="Manufacturer Name"
+                          value={item.itemName}
+                          onChange={(e) =>
+                            handleItemChange(index, "itemName", e.target.value)
+                          }
+                        />
+                      </div>
 
-                {leadTimeMatrix.map((item, index) => (
-  <div key={index} className="item-row">
-    <div className="form-group1">
-      <label>Manufacturer Name </label>
-      <input
-        className="user-search-input1"
-        type="text"
-        placeholder="Manufacturer Name"
-        value={item.itemName}
-        onChange={(e) => handleItemChange(index, "itemName", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Description </label>
-      <input
-        className="user-search-input1"
-        type="text"
-        placeholder="Description"
-        value={item.quantity}
-        onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
-        maxLength={50}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Expected Delivery Date</label>
-      <input
-        className="user-search-input1"
-        type="date"
-        value={item.expectedDeliveryDate}
-        min={new Date().toISOString().split("T")[0]}
-        onChange={(e) => handleItemChange(index, "expectedDeliveryDate", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Expected Arrival Date</label>
-      <input
-        className="user-search-input1"
-        type="date"
-        value={item.expectedArrivalDate}
-        min={item.expectedDeliveryDate || new Date().toISOString().split("T")[0]}
-        onChange={(e) => handleItemChange(index, "expectedArrivalDate", e.target.value)}
-      />
-    </div>
-    <div className="form-group1">
-      <label>Status</label>
-      <select
-        className="user-search-input1"
-        value={item.status}
-        onChange={(e) => handleItemChange(index, "status", e.target.value)}
-      >
-        <option value="Pending">Pending</option>
-        <option value="In Transit">In Transit</option>
-        <option value="Delivered">Delivered</option>
-        <option value="Installed">Installed</option>
-      </select>
-    </div>
-    {leadTimeMatrix.length > 1 && (
-      <button
-        className="add-user-btn"
-        type="button"
-        onClick={() => handleRemoveItemRow(index)}
-      >
-        Remove
-      </button>
-    )}
-  </div>
-))}
+                      <div className="form-group1">
+                        <label>Description</label>
+                        <input
+                          className="user-search-input1"
+                          type="text"
+                          placeholder="Description"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleItemChange(index, "quantity", e.target.value)
+                          }
+                          maxLength={50}
+                        />
+                      </div>
+
+                      {/* ✅ TBD Checkbox */}
+                      <div className="form-group1">
+                        <label>TBD</label>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={item.tbd || false}
+                      
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              handleItemChange(index, "tbd", checked);
+                              if (checked) {
+                                handleItemChange(
+                                  index,
+                                  "expectedDeliveryDate",
+                                  ""
+                                );
+                                handleItemChange(
+                                  index,
+                                  "expectedArrivalDate",
+                                  ""
+                                );
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group1">
+                        <label>Expected Delivery Date</label>
+                        <input
+                          className="user-search-input1"
+                          type="date"
+                          value={item.expectedDeliveryDate}
+                          min={new Date().toISOString().split("T")[0]}
+                          disabled={item.tbd}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "expectedDeliveryDate",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group1">
+                        <label>Expected Arrival Date</label>
+                        <input
+                          className="user-search-input1"
+                          type="date"
+                          value={item.expectedArrivalDate}
+                          min={
+                            item.expectedDeliveryDate ||
+                            new Date().toISOString().split("T")[0]
+                          }
+                          disabled={item.tbd}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "expectedArrivalDate",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group1">
+                        <label>Status</label>
+                        <select
+                          className="user-search-input1"
+                          value={item.status}
+                          onChange={(e) =>
+                            handleItemChange(index, "status", e.target.value)
+                          }
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="In Transit">In Transit</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Installed">Installed</option>
+                        </select>
+                      </div>
+
+                      {leadTimeMatrix.length > 1 && (
+                        <button
+                          className="add-user-btn"
+                          type="button"
+                          onClick={() => handleRemoveItemRow(index)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
 
                   <button
                     className="add-user-btn"
@@ -899,7 +1038,6 @@ const errorMsg = step3validation() || validateLeadTimeMatrix();
                     Add Row
                   </button>
                 </div>
-
                 <br />
 
                 <div className="form-navigation">
