@@ -61,7 +61,7 @@ const Customer = () => {
 
                 setProjectCounts(counts);
             } catch (error) {
-                console.error("Error fetching customers or projects:", error);
+                console.log("Error fetching customers or projects:", error);
             }
         };
 

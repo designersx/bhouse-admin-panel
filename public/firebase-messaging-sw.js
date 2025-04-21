@@ -18,37 +18,11 @@ firebase.initializeApp(firebaseConfig);
 // ✅ Get messaging instance
 const messaging = firebase.messaging();
 
-// messaging.onBackgroundMessage(function(payload) {
-//   const notificationTitle = payload.notification.title;
-//   const notificationOptions = {
-//     body: payload.notification.body,
-//     icon: '/Svg/b-houseLogo.svg'
-//   };
-
-//   self.registration.showNotification(notificationTitle, notificationOptions);
-// });
-let shownNotifications = new Set(); // Keeps track of shown notifications
-
 messaging.onBackgroundMessage(function(payload) {
-  const notifId = payload?.data?.id || payload?.notification?.title;
-
-  // If the notification was already shown, do not show it again
-  if (shownNotifications.has(notifId)) {
-    console.log('Notification already shown:', notifId);
-    return;
-  }
-
-  shownNotifications.add(notifId); // Mark this notification as shown
-
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/Svg/b-houseLogo.svg',
-    tag: notifId,       // ✅ Make tag same as notifId
-    renotify: true,     // Allows replacement if same tag used
-    data: {
-      click_action: payload?.data?.click_action || "/"
-    }
+    icon: '/Svg/b-houseLogo.svg'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
