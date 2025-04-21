@@ -46,7 +46,12 @@ otherDocuments: [],
   const predefinedOptions = ["Regular Hours", "Before 9 AM", "After 6 PM"];
   const [deliveryHourOption, setDeliveryHourOption] = useState("Regular Hours");
   const [customDeliveryHour, setCustomDeliveryHour] = useState("");
-  
+  const [initialFinance, setInitialFinance] = useState({
+    advancePayment: '',
+    totalValue: ''
+  });
+  const [notifyClient, setNotifyClient] = useState(false);
+
   // Prefill when formData loads from DB
   useEffect(() => {
     const existing = formData.deliveryHours;
@@ -87,45 +92,59 @@ otherDocuments: [],
     try {
       const res = await axios.get(`${url}/projects/${projectId}`);
       const project = res.data;
-
+  
       const parsedRoles = typeof project.assignedTeamRoles === 'string'
         ? JSON.parse(project.assignedTeamRoles)
         : project.assignedTeamRoles;
-
+  
       const roleMap = {};
       const selected = [];
-
+  
       for (const { role, users } of parsedRoles) {
         roleMap[role] = users;
         selected.push(role);
         fetchUsers(role);
       }
+  
       setSelectedRoles(selected);
+  
       const formatDate = (dateString) =>
         dateString ? new Date(dateString).toISOString().slice(0, 10) : '';
-      
+  
+      // 🟡 Set initial financial values
+      setInitialFinance({
+        advancePayment: project.advancePayment,
+        totalValue: project.totalValue
+      });
+  
+      // 🟡 Set formData
       setFormData({
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
         estimatedCompletion: formatDate(project.estimatedCompletion),
         proposals: JSON.parse(project.proposals || '[]'),
-  floorPlans: JSON.parse(project.floorPlans || '[]'),
-  otherDocuments: JSON.parse(project.otherDocuments || '[]'),
+        floorPlans: JSON.parse(project.floorPlans || '[]'),
+        otherDocuments: JSON.parse(project.otherDocuments || '[]')
       });
-      
+  
+      // 🟡 Lead Time Matrix
       setLeadTimeMatrix(
         typeof project.leadTimeMatrix === 'string'
           ? JSON.parse(project.leadTimeMatrix || '[]')
           : project.leadTimeMatrix || []
       );
+  
       await fetchLeadTimeItems(projectId);
-
-      
+  
+      // 🟡 Reset checkbox initially
+      setNotifyClient(false);
+  
     } catch (error) {
       console.error('Error fetching project details:', error);
     }
   };
+  
   const handleAddItemRow = () => {
     setLeadTimeItems(prev => [
       ...prev,
@@ -302,7 +321,17 @@ otherDocuments: [],
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  useEffect(() => {
+    if (
+      parseFloat(formData.advancePayment) !== parseFloat(initialFinance.advancePayment) ||
+      parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue)
+    ) {
+      setNotifyClient(true); // enable checkbox
+    } else {
+      setNotifyClient(false); // disable if values revert
+    }
+  }, [formData.advancePayment, formData.totalValue, initialFinance]);
+  
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
@@ -336,7 +365,10 @@ otherDocuments: [],
   
     formDataToSend.append("assignedTeamRoles", JSON.stringify(transformedRoles));
     formDataToSend.append("removedFiles", JSON.stringify(removedFiles));
-    console.log(formDataToSend)
+  
+    // ✅ Append checkbox value to backend
+    formDataToSend.append("notifyClientOnFinancialUpdate", notifyClient);
+  
     Object.entries(files).forEach(([category, fileArray]) => {
       fileArray.forEach((file) => formDataToSend.append(category, file));
     });
@@ -349,7 +381,6 @@ otherDocuments: [],
   
       if (res.status === 200) {
         Swal.fire("Project updated successfully!");
-        
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
@@ -359,6 +390,8 @@ otherDocuments: [],
       Swal.fire("Failed to update project");
     }
   };
+  
+  
 
   const validateStep = () => {
     const {
@@ -524,6 +557,23 @@ otherDocuments: [],
                   </div>
                  
                   </div>
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+  <input
+    type="checkbox"
+    checked={notifyClient}
+    onChange={() => setNotifyClient(!notifyClient)}
+    disabled={
+      parseFloat(formData.advancePayment) === parseFloat(initialFinance.advancePayment) &&
+      parseFloat(formData.totalValue) === parseFloat(initialFinance.totalValue)
+    }
+    style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
+  />
+  <label style={{ margin: 0, fontSize: '14px', userSelect: 'none' }}>
+    Notify client about updated advance or total value
+  </label>
+</div>
+
+
              
 
 

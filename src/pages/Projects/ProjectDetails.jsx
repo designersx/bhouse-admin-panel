@@ -186,10 +186,14 @@ const ProjectDetails = () => {
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
-    otherDocuments: [],
-    presentation: [],
-    salesAggrement: [],
-    cad: [],
+
+    otherDocuments: [] , 
+    presentation : [] , 
+    salesAggrement : [] , 
+    cad : [] , 
+    acknowledgements : [] , 
+    receivingReports : []
+
   });
   const roleId = JSON.parse(localStorage.getItem("user"))
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId)
@@ -403,6 +407,14 @@ const ProjectDetails = () => {
           ? fetchedProject.presentation
           : JSON.parse(fetchedProject.presentation || '[]');
 
+          fetchedProject.acknowledgements = Array.isArray(fetchedProject.acknowledgements)
+          ? fetchedProject.acknowledgements
+          : JSON.parse(fetchedProject.acknowledgements || '[]');
+          fetchedProject.receivingReports = Array.isArray(fetchedProject.receivingReports)
+          ? fetchedProject.receivingReports
+          : JSON.parse(fetchedProject.receivingReports || '[]');
+        
+
         setInvoiceFiles(fetchedProject.invoice);
 
 
@@ -590,10 +602,257 @@ const ProjectDetails = () => {
     <Layout>
       <ToastContainer />
       <div className='project-details-page'>
-        <BackButton />
-        <div className="project-details-header">
-          <h1>{project.name}</h1>
-          <p className="project-subtitle">{project.type} Project</p>
+
+        <BackButton/>
+      <div className="project-details-header">
+        <h1>{project.name}</h1>
+        <p className="project-subtitle">{project.type} Project</p>
+      </div>
+
+     
+
+
+{loadingDoc ? 
+<div className='doc-loader'><Loader/></div>
+ : 
+ <>
+ <div className="tabs">
+    {tabModules.map(({ key, label, permissionKey, alwaysVisible }) => {
+      const hasPermission =
+        alwaysVisible || // Show if marked alwaysVisible
+        (permissionKey && (rolePermissions?.[permissionKey]?.view ));
+      return hasPermission ? (
+        <button
+          key={key}
+          className={activeTab === key ? "tab active" : "tab"}
+          onClick={() => setActiveTab(key)}
+        >
+          {label}
+        </button>
+      ) : null; // Hide tab if not allowed
+    })}
+  </div>
+
+  <div className="tab-content">
+  {activeTab === 'overview' && (
+    <div className="project-details-container">
+      <div className="project-info-card">
+        <h2>Project Overview</h2>
+        <div className="info-group"><strong>Client:</strong> {project.clientName}</div>
+        <div className="info-group"><strong>Status:</strong> {project.status}</div>
+        <div className="info-group"><strong>Type:</strong> {project.type}</div>
+        <div className="info-group"><strong>Description:</strong> {project.description || "N/A"}</div>
+       
+        <div className="info-group"><strong>Estimated Occupancy Date:</strong> {new Date(project.estimatedCompletion).toLocaleDateString()}</div>
+        <div className="info-group"><strong>Total Value:</strong> $ {project.totalValue?.toLocaleString() || "N/A"}</div>
+        <div className="info-group"><strong>Advance Payment:</strong> $ {project.advancePayment?.toLocaleString() || "N/A"}</div>
+      </div>
+      <div className="project-info-card">
+        <h2>Delivery Details</h2>
+        <div className="info-group"><strong>Address:</strong> {project.deliveryAddress || "N/A"}</div>
+        <div className="info-group"><strong>Hours:</strong> {project.deliveryHours || "N/A"}</div>
+      </div>
+    </div>
+  )}
+{activeTab === 'documents' && (
+<div className="project-info-card">
+  <div className="tabs-container">
+    <div className="tabs-header">
+
+    <button 
+                    className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Admin")}
+                >
+                   BHOUSE
+                </button>
+                <button 
+                    className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`} 
+                    onClick={() => setActiveTabing("Customer")}
+                >
+                    Customer
+                </button>
+    </div>
+  </div>
+  <div className="tab-content">
+  {activeTabing === "Admin" && (
+    <div className="tab-panel">
+      <h2>Uploaded Documents</h2>
+      
+
+{[
+{ title: "Detailed Proposal", files: project.proposals, category: 'proposals'  },
+{ title: "Floor Plans", files: project.floorPlans, category: 'floorPlans' },
+{ title: "Product Maintenance", files: project.otherDocuments, category: 'otherDocuments' } , 
+{ title: "Cad Files", files: project.cad, category: 'cad' },
+{ title: "Options Presentation", files: project.presentation, category: 'presentation' },
+{ title: "Sales Agreement" , files: project.salesAggrement, category: 'salesAggrement' } ,
+{ title: "Acknowledgements" , files: project.acknowledgements, category: 'acknowledgements' },
+
+{ title: "Receiving Reports" , files: project.receivingReports, category: 'receivingReports' }
+
+
+
+
+]
+
+
+.map((docCategory, idx) => (
+<div key={idx} className="  -section">
+  <h3>{docCategory.title}</h3>
+  {rolePermissions?.ProjectDocument?.add ? 
+    <input
+    type="file"
+    multiple
+    onChange={(e) => handleFileUpload(e, docCategory.category)}
+    />
+  : null}
+
+
+{selectedFiles[docCategory.category]?.length > 0 && (
+<div className="file-preview-section">
+<h4>Files to be uploaded:</h4>
+<ul className="preview-list">
+  {selectedFiles[docCategory.category].map((file, i) => (
+            
+    <li key={i} className="preview-item">
+      {file.name}
+     
+      <span className="remove-preview" onClick={() => removeSelectedFile(docCategory.category, i)}>×</span>
+    </li>
+  ))}
+</ul>
+<button className="upload-btn" onClick={() => uploadSelectedFiles(docCategory.category)}>Upload</button>
+</div>
+)}
+{(() => {
+const files = Array.isArray(docCategory?.files)
+? docCategory.files
+: typeof docCategory.files === 'string'
+? JSON.parse(docCategory.files)
+: [];
+
+return files.length > 0 ? (
+
+<div className="uploaded-files">
+{files.map((filePath, idx) => {
+  const fileName = filePath.split('/').pop();
+  const fileUrl = filePath.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Download failed", error);
+      alert("Download failed, please try again.");
+    }
+  };
+
+
+  return (
+    <div key={idx} className="file-item-enhanced">
+      <span className="file-name-enhanced">{fileName}</span>
+      <div className="file-actions">
+        <button className="file-action-btn" onClick={() => window.open(fileUrl, '_blank')} title="View">
+          <FaEye />
+        </button>
+        <button className="file-action-btn" onClick={handleDownload} title="Download">
+          <FaDownload />
+        </button>
+        <button
+          className="file-action-btn"
+          title="Delete"
+          onClick={() => {
+            Swal.fire({
+              title: 'Are you sure?',
+              text: "Do you want to remove this file?",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, remove it!',
+              cancelButtonText: 'Cancel',
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                await handleProjectFileUpdate(filePath, docCategory.category);
+              }
+            });
+          }}
+        >
+          <MdDelete />
+        </button>
+        <button 
+          className="file-action-btn"
+          title="Comment"
+          onClick={() => navigate(`/project/${projectId}/file-comments`, {
+            state: {
+              filePath,
+              category: docCategory.category,
+            }
+          })}
+        >
+          <FaComment />
+        </button>
+      </div>
+    </div>
+  );
+})}
+</div>
+) : (
+<p>No documents uploaded.</p>
+);
+})()}
+
+</div>
+))}
+    </div>
+  )}
+  {activeTabing === "Customer" && (
+    <div className="tab-panel">
+    <h2>Uploaded Documents</h2>
+   
+    {Object.keys(docMap).map((key, idx) => {
+   const normalizedKey = normalize(key);
+   const fileEntry = Object.entries(docsData).find(
+     ([docType]) => normalize(docType) === normalizedKey
+   );
+   const filePath = fileEntry?.[1];
+   const fileName = filePath?.split('/').pop();
+   const fileUrl = filePath?.startsWith('uploads') ? `${url2}/${filePath}` : filePath;
+   const matchedDoc = dataDoc?.find(doc => normalize(doc.documentType) === normalizedKey);
+   const documentId = matchedDoc?.id; // ✅ You now have documentId
+  return (
+    <div key={idx} className="doc-view-section">
+      <h4>{docMap[key]}</h4>
+      {filePath ? (
+        <div className="file-item-enhanced">
+          <span className="file-name-enhanced">{fileName}</span>
+        < button
+            className="file-action-btn"
+            onClick={() => window.open(`${fileUrl}`, '_blank')}
+            title="View"
+          >
+            <FaEye />
+          </button>
+          <button
+            className="file-action-btn"
+            onClick={() => navigate(`/customerDoc/comment/${fileEntry[0]}/${documentId}`  , {
+              state : {
+                data : dataDoc , 
+               fileName : fileEntry[0]
+              }
+            })}
+            title="View"
+          >
+            <FaComment />
+          </button>
+
         </div>
 
 
