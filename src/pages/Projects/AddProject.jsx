@@ -691,7 +691,7 @@ const AddProject = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Warranty</label>
+                    <label>Floor Plans</label>
                     <input
                       type="file"
                       name="floorPlans"
@@ -731,10 +731,8 @@ const AddProject = () => {
                       </ul>
                     )}
                   </div>
-                </div>
-
-                <div className="form-group-row">
                   <div className="form-group">
+
                     <label>Delivery Address</label>
                     <input
                       type="text"
@@ -785,6 +783,7 @@ const AddProject = () => {
                     )}
                   </div>
                   <div className="form-group">
+
                     <label>Presentation</label>
                     <input
                       type="file"
@@ -814,7 +813,7 @@ const AddProject = () => {
 
                     {formData.cad?.length > 0 && (
                       <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
+                        {formData.cad.map((file, idx) => (
                           <li key={idx}>{file.name}</li>
                         ))}
                       </ul>
@@ -835,12 +834,68 @@ const AddProject = () => {
 
                     {formData.salesAggrement?.length > 0 && (
                       <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
+                        {formData.salesAggrement.map((file, idx) => (
                           <li key={idx}>{file.name}</li>
                         ))}
                       </ul>
                     )}
                   </div>
+
+                </div>
+
+                <div className="form-group-row">
+                  <div className="form-group">
+                    <label>Delivery Address</label>
+                    <input
+                      type="text"
+                      name="deliveryAddress"
+                      value={formData.deliveryAddress}
+                      onChange={handleChange}
+                      placeholder="Enter delivery address"
+                      maxLength={50}
+                    />
+                  </div>
+                  <div className="form-group">
+  <label>Delivery Hours</label>
+  <select
+    value={deliveryHourOption}
+    onChange={(e) => {
+      const selected = e.target.value;
+      setDeliveryHourOption(selected);
+      const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+
+      // Update formData
+      handleChange({
+        target: { name: "deliveryHours", value: valueToSave }
+      });
+    }}
+  >
+    <option value="Regular Hours">Regular Hours</option>
+    <option value="Before 9 AM">Before 9 AM</option>
+    <option value="After 6 PM">After 6 PM</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {deliveryHourOption === "Other" && (
+    <input
+      type="text"
+      placeholder="Enter custom delivery hours"
+      value={customDeliveryHour}
+      onChange={(e) => {
+        setCustomDeliveryHour(e.target.value);
+        handleChange({
+          target: { name: "deliveryHours", value: e.target.value }
+        });
+      }}
+    />
+  )}
+</div>
+
+
+
+
+
+
                 </div>
 
                 <h3>Project Lead Time Matrix</h3>
