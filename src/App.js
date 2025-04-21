@@ -31,6 +31,7 @@ import FileCommentsPage from './pages/Projects/FileCommentPage';
 import Requestform from './pages/RequestForm/Requestform';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 import CustomerDocComment from './components/CustomerDocComment'
+import { useEffect } from 'react';
 
 
 const App = () => {
@@ -38,7 +39,26 @@ const App = () => {
 const token = userData?.token;
 
 
+ //Check User has Permission
+  const requestPermission = async () => {
+    console.log('Requesting permission...');
+    try {
+      const permission = await Notification.requestPermission();
 
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+      } else {
+        console.warn('Notification permission denied.');
+      }
+
+    } catch (error) {
+      console.error('An error occurred while requesting permission or getting token:', error);
+    }
+  };
+  //function lock
+  useEffect(() => {
+    requestPermission()
+  }, [])
   useSessionTimeOut(token);
   return (
     <ThemeProvider>

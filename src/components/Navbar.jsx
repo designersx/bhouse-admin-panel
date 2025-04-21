@@ -5,9 +5,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { IoNotificationsOutline } from "react-icons/io5";
 import Swal from 'sweetalert2';
 import { CgProfile } from "react-icons/cg";
+import { useState } from 'react';
+import Offcanvas from './OffCanvas/OffCanvas';
+import { getNotificationsByUser } from '../lib/api';
+import { useEffect } from 'react';
 const Navbar = ({ isLogin }) => {
   const navigate = useNavigate();
-
+  const user = JSON.parse(localStorage.getItem("user"))
+  const [openOffcanvas, setOpenOffcanvas] = useState(false)
+  const [notification, setNotification] = useState([])
   const handleLogout = () => {
     Swal.fire({
       title: "Are you sure?",
@@ -28,8 +34,56 @@ const Navbar = ({ isLogin }) => {
   const handleLogo = () => {
     navigate("/dashboard");
   };
+  const handleOpenOffcanvas = () => {
+    setOpenOffcanvas(true)
+  }
+  const handleCloseOffcanvas = () => setOpenOffcanvas(false);
 
   const navbarClass = `navbar ${isLogin ? "login-page" : "logged-in"}`;
+  const fetchNotification = async () => {
+    try {
+      const response = await getNotificationsByUser(user?.user?.id)
+      console.log(response.data)
+      setNotification(response.data.notifications
+      )
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+  function formatNotificationTime(dateString) {
+    const inputDate = new Date(dateString);
+    const now = new Date();
+
+    const isToday =
+      inputDate.toDateString() === now.toDateString();
+
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    const isYesterday =
+      inputDate.toDateString() === yesterday.toDateString();
+
+    const time = inputDate.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    if (isToday) {
+      return `Today at ${time}`;
+    } else if (isYesterday) {
+      return `Yesterday at ${time}`;
+    } else {
+      const month = inputDate.toLocaleString('default', { month: 'short' });
+      const day = inputDate.getDate();
+      return `${month} ${day} at ${time}`;
+    }
+  }
+
+  useEffect(() => {
+    fetchNotification()
+  }, [])
 
   return (
     <div className={navbarClass}>
@@ -50,8 +104,8 @@ const Navbar = ({ isLogin }) => {
         </p>
         {!isLogin && (
           <>
-            <li><IoNotificationsOutline /></li>
-            <li> <CgProfile onClick={()=>navigate('/profile')} /></li>
+            <li onClick={handleOpenOffcanvas}><IoNotificationsOutline />    </li>
+            <li> <CgProfile onClick={() => navigate('/profile')} /></li>
             {/* <Link to="/settings"><FiSettings className='setting' /></Link> */}
             <li onClick={handleLogout}>
               {/* <Link><CiLogout className='logout' /></Link> */}
@@ -59,6 +113,29 @@ const Navbar = ({ isLogin }) => {
           </>
         )}
       </div>
+      {openOffcanvas && <Offcanvas isOpen={openOffcanvas} closeOffcanvas={handleCloseOffcanvas} >
+        {notification.map((message) => {
+          return (
+            <><div className="notification-container">
+              <div className="notification-card">
+                <div className="notification-header">
+                  <span className="sender-name">{message.senderName}</span>
+                  <span className="notification-time">{formatNotificationTime(message.createdAt)}</span>
+                </div>
+                <div className="notification-message">
+                  {message.message}
+                </div>
+              </div>
+            </div></>
+          )
+        })}
+
+
+
+
+
+      </Offcanvas>}
+
     </div>
   );
 };

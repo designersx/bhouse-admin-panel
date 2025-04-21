@@ -6,7 +6,8 @@ import Navbar from "../components/Navbar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-
+import { getFcmToken } from "../firebase/getFCMToken/getToken";
+import { sendFcmToken } from "../firebase/sendFcmTokenToDb/sendFcmToDb";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,13 +77,20 @@ const Login = () => {
     try {
       const res = await login(email, password);
       toast.success("Login Successful!");
+      const { user } = res
 
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
         localStorage.setItem("rememberedPassword", password);
+        //save Fcm
+        const FCM_Token = await getFcmToken();
+        await sendFcmToken(FCM_Token, user.id)
       } else {
         localStorage.removeItem("rememberedEmail");
         localStorage.removeItem("rememberedPassword");
+        //save Fcm
+        const FCM_Token = await getFcmToken();
+        await sendFcmToken(FCM_Token, user.id)
       }
 
       localStorage.setItem("user", JSON.stringify(res));
@@ -115,7 +123,7 @@ const Login = () => {
     <>
       <Navbar isLogin={true} />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      
+
       <div className="login-container">
         <form className="login-form" onSubmit={handleLogin}>
           <h2>Welcome Back 👋</h2>
@@ -137,7 +145,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-            
+
               maxLength={15}
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="eye-btn">
@@ -159,8 +167,8 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-btn" disabled={isLoading || isLockedOut}>
-  {isLoading ? <div className="login-spinner"></div> : "Login"}
-</button>
+            {isLoading ? <div className="login-spinner"></div> : "Login"}
+          </button>
 
         </form>
       </div>
