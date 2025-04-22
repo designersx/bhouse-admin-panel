@@ -1,5 +1,6 @@
 import { messaging } from '../firebaseConfig/firebaseConfig';
 import { getToken } from 'firebase/messaging';
+
 export const getFcmToken = async () => {
     try {
         const currentToken = await getToken(messaging, {

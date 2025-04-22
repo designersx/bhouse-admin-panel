@@ -18,8 +18,7 @@ function CustomerDocComment() {
 
   const fileName = stateFileName || decodeURIComponent(docName);
   const documentId = stateDocumentId || parseInt(docId);
-  console.log(docName , "file Name")
-  console.log(docId , "document")
+ 
 
   const document = stateData?.find((doc) =>
     doc.id === documentId || doc.documentType === fileName
@@ -48,15 +47,18 @@ function CustomerDocComment() {
     if (!comment || !documentId || !userId) return;
 
     try {
-      await axios.post(`${url}/customerDoc/comments`, {
+      const res = await axios.post(`${url}/customerDoc/comments`, {
         documentId,
         message: comment,
         userId,
       });
       setComment('');
       fetchComments();
+    
     } catch (err) {
       console.error('Failed to submit comment:', err);
+      console.log(err)
+
     }
   };
 
@@ -153,24 +155,24 @@ function CustomerDocComment() {
               ))}
             </div>
 
-          
+
           </div>
           <div className="whatsapp-comment-form">
-              <textarea
-                placeholder="Write your comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="whatsapp-comment-input"
-              />
-              <button
-                onClick={handleSubmit}
-                className="whatsapp-submit-btn"
-                disabled={!comment.trim()}
-                title={!comment.trim() ? "Type something first" : "Send comment"}
-              >
-                <FaTelegramPlane />
-              </button>
-            </div>
+            <textarea
+              placeholder="Write your comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="whatsapp-comment-input"
+            />
+            <button
+              onClick={handleSubmit}
+              className="whatsapp-submit-btn"
+              disabled={!comment.trim()}
+              title={!comment.trim() ? "Type something first" : "Send comment"}
+            >
+              <FaTelegramPlane />
+            </button>
+          </div>
         </Offcanvas>
       </div>
     </Layout>
