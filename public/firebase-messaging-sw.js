@@ -98,12 +98,10 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-
-
-
+y
 
 messaging.onBackgroundMessage(function(payload) {
-
+  console.log(payload)
   // Extract data from the payload
   const notificationTitle = payload.data.title || 'B-House Notification';  // Title updated to B-House
   const notificationBody = payload.data.body || 'You have a new message';  // Default body
@@ -131,7 +129,35 @@ messaging.onBackgroundMessage(function(payload) {
   // Show the notification with customized options
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
-  
+messaging.onMessage(function(payload) {
+ 
+  // Extract data from the payload
+  const notificationTitle = payload.data.title || 'B-House Notification';  // Title updated to B-House
+  const notificationBody = payload.data.body || 'You have a new message';  // Default body
+  const clickActionURL = payload.data.click_action || 'https://your-default-url.com/';
+  const documentType = payload.data.documentType || 'Document';  // Extract documentType if available
+
+  // Custom notification options
+  const notificationOptions = {
+    body: `${documentType}: ${notificationBody}`,  // Display document type along with the message
+    icon: '/Svg/b-houseLogo.svg',  // Custom icon for your notification
+    badge: '/Svg/notification-badge.svg',  // Optional: custom badge for the notification
+    data: {
+      url: clickActionURL
+    },
+    // Styling the notification appearance
+    actions: [
+      {
+        action: 'open', 
+        title: 'Open',
+        icon: '/Svg/open-icon.svg'  // Optional: custom icon for the action button
+      }
+    ]
+  };
+
+  // Show the notification with customized options
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+}); 
   
 self.addEventListener('notificationclick', function (event) {
   const click_action = event.notification.data?.url;

@@ -79,11 +79,10 @@
 
 /* Default (after login) */
 .navbar.logged-in {
-  left: 272px;
-  right: 0;
+ /* left: 0; */
   top: 0;
   width: 80%;
-  margin: 0 auto;
+
   z-index: 99;
  
 }
