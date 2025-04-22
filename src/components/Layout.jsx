@@ -5,7 +5,11 @@ import Offcanvas from './OffCanvas/OffCanvas';
 const Layout = ({ children }) => {
   return (
     <div className="layout">
+      <div className='side_Bar'>
+
       <Sidebar />
+      </div>
+      
       <div className="main-content">
         <Navbar />
         <div className="content">
