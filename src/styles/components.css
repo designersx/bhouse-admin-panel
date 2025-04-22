@@ -1,6 +1,6 @@
 /* SIDEBAR */
 .sidebar {
-    width: 15%;
+    width: 20%;
     height: 98vh;
     background-color: #004680;
     color: white;
@@ -13,7 +13,7 @@
     transition: transform 0.3s ease;
     z-index: 10;
     /* border-radius: 10px; */
-    margin-left: 5px;
+    /* margin-left: 5px; */
   }
   
   .sidebar .logo {
