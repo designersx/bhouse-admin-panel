@@ -48,9 +48,9 @@ const [dataDoc , setDataDoc] = useState()
 const [isPunchCanvasOpen, setIsPunchCanvasOpen] = useState(false);
 const [selectedPunchItemId, setSelectedPunchItemId] = useState(null);
 const [punchComments, setPunchComments] = useState([]);
-const [groupedPunchComments, setGroupedPunchComments] = useState({});
+const [groupedPunchComments, setGroupedPunchComments] = useState( {});
 const [punchCommentText, setPunchCommentText] = useState('');
-
+const [buttonClicked , setButtonClicked] = useState(false)
 const [docsData, setDocsData] = useState({});
 const docMap = {
   "Sample COI": "Sample COI",
@@ -172,13 +172,13 @@ const handleAddItemComment = async () => {
 };
 
 
-const commentsEndRef = useRef(null);
+const scrollRef = useRef(null);
 useEffect(() => {
-  if (isOffcanvasOpen) {
-    setTimeout(() => {
-      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-  }
+ 
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+
 }, [userComments, newCommentText]);
 
 
@@ -256,7 +256,7 @@ useEffect(() => {
       setNewCommentText('');
       await fetchUserComments(selectedUser.id);
       setTimeout(() => {
-        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
   
     } catch (err) {
@@ -265,39 +265,39 @@ useEffect(() => {
   };
   
   
-  
+  console.log(buttonClicked , "button clickd")
   useEffect(() => {
     axios.get(`${url}/items/${projectId}`)
       .then(res => setProjectItems(res.data))
       .catch(err => console.error("Failed to load items:", err));
-  }, [projectId]);
-  
+  }, [projectId , showPunchModal]);
+  const fetchPunchList = async () => {
+    try {
+      const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
+      const parsed = res.data.map(issue => ({
+        ...issue,
+        productImages: typeof issue.productImages === 'string'
+          ? JSON.parse(issue.productImages)
+          : Array.isArray(issue.productImages)
+          ? issue.productImages
+          : []
+      }));
+      setPunchList(parsed);
+      const initialStatus = {};
+      parsed.forEach(item => {
+        initialStatus[item.id] = item.status || 'Pending';
+      });
+      setStatusMap(initialStatus);
+    } catch (err) {
+      console.error("Error fetching punch list:", err);
+    }
+  };
   useEffect(() => {
-    const fetchPunchList = async () => {
-      try {
-        const res = await axios.get(`${url}/projects/${projectId}/punch-list`);
-        const parsed = res.data.map(issue => ({
-          ...issue,
-          productImages: typeof issue.productImages === 'string'
-            ? JSON.parse(issue.productImages)
-            : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : []
-        }));
-        setPunchList(parsed);
-        const initialStatus = {};
-        parsed.forEach(item => {
-          initialStatus[item.id] = item.status || 'Pending';
-        });
-        setStatusMap(initialStatus);
-      } catch (err) {
-        console.error("Error fetching punch list:", err);
-      }
-    };
+   
     
   
     fetchPunchList();
-  }, [projectId]);
+  }, [projectId , showPunchModal]);
   
 
   const handleItemChange = (index, field, value) => {
@@ -329,15 +329,20 @@ useEffect(() => {
   };
   
   const addNewItemToBackend = async (item, index) => {
+    setButtonClicked(true)
     try {
       const res = await axios.post(`${url}/items/project-items`, item);
       const updated = [...items];
       updated[index] = res.data;
       setItems(updated);
+      
       toast.success("Item added!");
     } catch (err) {
       alert("Failed to add item.");
       console.error(err);
+    }
+    finally{
+      setButtonClicked(false)
     }
   };
   
@@ -437,7 +442,7 @@ useEffect(() => {
         <div className="project-details-header">
           <h1>Project Details</h1>
         </div>
-        <div className="loading">Loading...</div>
+        <div className="loading"><Loader/></div>
       </Layout>
     );
   }
@@ -936,6 +941,8 @@ return files.length > 0 ? (
 const isEditable = editableRows[index] || !item.id; 
 
 const handleSave = () => {
+  console.log(buttonClicked , "button clic")
+
   if (!item.itemName || !item.quantity || (!item.tbd && (!item.expectedDeliveryDate || !item.expectedArrivalDate)) || !item.status) {
     return toast.error("All required fields must be filled.");
   }
@@ -948,7 +955,7 @@ if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
 if (item.id) {
   updateItem(item);
 } else {
-  addNewItemToBackend(item, index);
+  addNewItemToBackend(item, index)
 }
 
 // ✅ After saving, disable the row
@@ -1043,7 +1050,7 @@ return (
   <td>
     {item.id ? (
       isEditable ? (
-        <button onClick={handleSave}>Save</button>
+        <button disabled={buttonClicked ? true : false} > {buttonClicked ? "..." :<span onClick={handleSave}>Save</span> }</button>
       ) : (
         <>
           <button onClick={() => toggleEditRow(index)}><MdEdit /></button>
@@ -1057,7 +1064,7 @@ return (
       )
     ) : (
       <>
-        <button onClick={handleSave}>Save</button>
+       <button disabled={buttonClicked ? true : false} > {buttonClicked ? "Saving" :<span onClick={handleSave}>Save</span> }</button>
         <button onClick={() => removeRow(index)}>Remove</button>
       </>
     )}
@@ -1086,10 +1093,11 @@ return (
 <div className="modal-overlay">
 <div className="modal-content">
 <h3>Add Punch List Issue</h3>
-<label>Manufacturer</label>
+<label >Manufacturer</label>
 <select
   value={newIssue.projectItemId}
   onChange={(e) => setNewIssue({ ...newIssue, projectItemId: e.target.value })}
+ 
 >
   <option value="">Select</option>
   {projectItems.map(item => (
@@ -1311,7 +1319,7 @@ issue.createdByType === 'user'
   <div
   className="comments-list"
   style={{
-    overflowY: "auto",
+ 
     maxHeight: "500px",
     display: "flex",
     flexDirection: "column", 
@@ -1319,16 +1327,13 @@ issue.createdByType === 'user'
 >
 
       {/* Grouped Comments by Date */}
-      {Object.keys(groupedComments).map((date) => (
-        <div key={date} className="comment-date-group">
-          {/* <p className="comment-date"></p> */}
-          {Object.keys(groupedComments)
-  .sort((a, b) => new Date(a) - new Date(b)) 
+      {Object.keys(groupedComments)
+  .sort((a, b) => new Date(a) - new Date(b)) // Oldest date group on top
   .map((date) => (
     <div key={date} className="comment-date-group">
       <p className="comment-date">{date}</p>
       {groupedComments[date]
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Oldest to newest in each group
         .map((comment) => (
           <div key={comment.id}>
             <div className="whatsapp-comment-box">
@@ -1358,9 +1363,7 @@ issue.createdByType === 'user'
     </div>
 ))}
 
-        </div>
-      ))}
-      <div ref={commentsEndRef}></div>
+      <div ref={scrollRef}></div>
     </div>
   </div>
 
@@ -1385,9 +1388,7 @@ issue.createdByType === 'user'
   <div className="right-panel">
     <div
       className="comments-list"
-      style={{
-        overflowY: "auto",
-        maxHeight: "500px",
+      style={{   maxHeight: "500px",
         display: "flex",
         flexDirection: "column"
       }}
@@ -1424,7 +1425,10 @@ issue.createdByType === 'user'
           ))}
         </div>
       ))}
+     
     </div>
+    <div ref={scrollRef}></div>
+   
   </div>
 
   <div className="whatsapp-comment-form">
@@ -1455,7 +1459,7 @@ issue.createdByType === 'user'
         flexDirection: "column"
       }}
     >
-      {Object.keys(groupedPunchComments).map(date => (
+      {Object.keys(groupedPunchComments)?.map(date => (
         <div key={date} className="comment-date-group">
           <p className="comment-date">{date}</p>
           {groupedPunchComments[date].map(comment => {
