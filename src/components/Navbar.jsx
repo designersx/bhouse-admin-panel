@@ -43,7 +43,6 @@ const Navbar = ({ isLogin }) => {
   const fetchNotification = async () => {
     try {
       const response = await getNotificationsByUser(user?.user?.id)
-      console.log(response.data)
       setNotification(response.data.notifications
       )
     } catch (error) {
@@ -80,7 +79,9 @@ const Navbar = ({ isLogin }) => {
       return `${month} ${day} at ${time}`;
     }
   }
-
+  const handleRefresh = () => {
+    fetchNotification()
+  }
   useEffect(() => {
     fetchNotification()
   }, [])
@@ -113,8 +114,8 @@ const Navbar = ({ isLogin }) => {
           </>
         )}
       </div>
-      {openOffcanvas && <Offcanvas isOpen={openOffcanvas} closeOffcanvas={handleCloseOffcanvas} >
-        {notification.map((message) => {
+      {openOffcanvas && <Offcanvas isOpen={openOffcanvas} closeOffcanvas={handleCloseOffcanvas} getLatestComment={handleRefresh} >
+        {notification.length > 0 ? notification.map((message) => {
           return (
             <><div className="notification-container">
               <div className="notification-card">
@@ -128,7 +129,7 @@ const Navbar = ({ isLogin }) => {
               </div>
             </div></>
           )
-        })}
+        }) : "No data"}
 
 
 

@@ -10,7 +10,7 @@ const Offcanvas = ({ isOpen, closeOffcanvas, children  , getLatestComment}) => {
             <button onClick={closeOffcanvas} className="close-btn">
               &times;
             </button>
-           <LuRefreshCw onClick={getLatestComment}/>  
+           <LuRefreshCw onClick={getLatestComment} style={{cursor:"pointer"}}/>  
             <div className="offcanvas-body">{children}</div>
           </div>
         </div>
