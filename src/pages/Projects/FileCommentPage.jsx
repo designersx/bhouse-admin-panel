@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { url, url2 } from '../../lib/api';
@@ -7,17 +7,22 @@ import { FaArrowLeft } from 'react-icons/fa';
 import '../../styles/Projects/FileCommentsPage.css'; 
 import Offcanvas from '../../components/OffCanvas/OffCanvas';
 import { FaTelegramPlane } from 'react-icons/fa';
+import SpinnerLoader from '../../components/SpinnerLoader';
 const FileCommentsPage = () => {
   const { projectId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { filePath, category } = location.state;
  console.log({category})
-
+const [loader , setLoader] = useState(false)
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState('');
   const storedUser = localStorage.getItem('user'); 
 const userId = storedUser ? JSON.parse(storedUser).user.id : null;
+const latestCommentRef = useRef(null);
+useEffect(() => {
+  latestCommentRef.current?.scrollIntoView({ behavior: 'smooth' });
+}, [comments]);
   const fetchComments = async () => {
     try {
       const res = await axios.get(`${url}/projects/${projectId}/file-comments`, {
@@ -30,6 +35,7 @@ const userId = storedUser ? JSON.parse(storedUser).user.id : null;
   };
 
   const handleSubmit = async () => {
+    setLoader(true)
     if (!comment || !userId) return alert("Comment or User ID missing");
 
     try {
@@ -43,6 +49,9 @@ const userId = storedUser ? JSON.parse(storedUser).user.id : null;
       fetchComments();
     } catch (err) {
       console.error("Failed to submit comment:", err);
+    }
+    finally{
+      setLoader(false)
     }
   };
 
@@ -113,6 +122,7 @@ comments.forEach((comment) => {
         ))}
       </div>
     ))}
+      <div ref={latestCommentRef} />
   </div>
 
   
@@ -124,8 +134,8 @@ comments.forEach((comment) => {
       onChange={(e) => setComment(e.target.value)}
       className="whatsapp-comment-input"
     />
-    <button onClick={handleSubmit} className="whatsapp-submit-btn">
-      <FaTelegramPlane />
+    <button onClick={ loader ? null : handleSubmit} className="whatsapp-submit-btn">
+     {loader ? <SpinnerLoader size={10}/> :  <FaTelegramPlane />} 
     </button>
   </div>
       </Offcanvas>

@@ -44,65 +44,75 @@ const App = () => {
   const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   const messaging = getMessaging(app);
   // Check User has Permission
-  const requestPermission = async () => {
-    if (!isNewNotificationSupported()) {
-      console.warn('Notifications are not supported in this browser.');
-      return;
-    }
-
-    console.log('Requesting permission...');
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        console.log('Notification permission granted.');
-      } else {
-        console.warn('Notification permission denied.');
-      }
-    } catch (error) {
-      console.error('An error occurred while requesting permission:', error);
-    }
-  };
-  function isNewNotificationSupported() {
-    if (!window.Notification || !Notification.requestPermission)
-      return false;
-    if (Notification.permission === 'granted')
-      throw new Error('You must only call this *before* calling Notification.requestPermission(), otherwise this feature detect would bug the user with an actual notification!');
-    try {
-      new Notification('');
-    } catch (e) {
-      if (e.name === 'TypeError') return false;
-    }
-    return true;
-  }
-  //function lock
-  useEffect(() => {
-    requestPermission();
-    // Foreground notification listener
-    onMessage(messaging, (payload) => {
-      const notificationTitle = payload.data.title || 'B-House Notification';
-      const notificationBody = payload.data.body || 'You have a new message';
-      const clickActionURL = payload.data.click_action || 'https://your-default-url.com/';
-
-      // Create a simple notification without actions
+  onMessage(messaging, (payload) => {
+      const title = payload.data.title || 'New Notification';
+      const body = payload.data.body || 'You have a new message';
       if (Notification.permission === 'granted') {
-        new Notification(notificationTitle, {
-          body: notificationBody,
-          icon: '/Svg/b-houseLogo.svg'
+        new Notification(title, {
+          body,
+          icon: '/Svg/b-houseLogo.svg',
         });
       }
     });
+  // const requestPermission = async () => {
+  //   if (!isNewNotificationSupported()) {
+  //     console.warn('Notifications are not supported in this browser.');
+  //     return;
+  //   }
 
-    // Register the service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  }, [messaging]);
+  //   console.log('Requesting permission...');
+  //   try {
+  //     const permission = await Notification.requestPermission();
+  //     if (permission === 'granted') {
+  //       console.log('Notification permission granted.');
+  //     } else {
+  //       console.warn('Notification permission denied.');
+  //     }
+  //   } catch (error) {
+  //     console.error('An error occurred while requesting permission:', error);
+  //   }
+  // };
+  // function isNewNotificationSupported() {
+  //   if (!window.Notification || !Notification.requestPermission)
+  //     return false;
+  //   if (Notification.permission === 'granted')
+  //     throw new Error('You must only call this *before* calling Notification.requestPermission(), otherwise this feature detect would bug the user with an actual notification!');
+  //   try {
+  //     new Notification('');
+  //   } catch (e) {
+  //     if (e.name === 'TypeError') return false;
+  //   }
+  //   return true;
+  // }
+  //function lock
+  // useEffect(() => {
+  //   requestPermission();
+  //   // Foreground notification listener
+  //   onMessage(messaging, (payload) => {
+  //     const notificationTitle = payload.data.title || 'B-House Notification';
+  //     const notificationBody = payload.data.body || 'You have a new message';
+  //     const clickActionURL = payload.data.click_action || 'https://your-default-url.com/';
+
+  //     // Create a simple notification without actions
+  //     if (Notification.permission === 'granted') {
+  //       new Notification(notificationTitle, {
+  //         body: notificationBody,
+  //         icon: '/Svg/b-houseLogo.svg'
+  //       });
+  //     }
+  //   });
+
+  //   // Register the service worker
+  //   if ('serviceWorker' in navigator) {
+  //     navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  //       .then((registration) => {
+  //         console.log('Service Worker registered with scope:', registration.scope);
+  //       })
+  //       .catch((error) => {
+  //         console.error('Service Worker registration failed:', error);
+  //       });
+  //   }
+  // }, [messaging]);
 
   useSessionTimeOut(token);
   return (
@@ -140,5 +150,4 @@ const App = () => {
     </ThemeProvider>
   );
 };
-
 export default App;

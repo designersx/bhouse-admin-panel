@@ -6,8 +6,10 @@ import { url, url2 } from '../lib/api';
 import { FaTelegramPlane, FaArrowLeft } from 'react-icons/fa';
 import '../styles/Projects/FileCommentsPage.css';
 import Offcanvas from '../components/OffCanvas/OffCanvas';
+import SpinnerLoader from './SpinnerLoader';
 
 function CustomerDocComment() {
+  const latestCommentRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { docName, docId } = useParams();
@@ -42,8 +44,12 @@ function CustomerDocComment() {
       console.error('Failed to fetch comments:', err);
     }
   };
-
+  useEffect(() => {
+    latestCommentRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [comments]);
+const [loader , setLoader] = useState(false)
   const handleSubmit = async () => {
+    setLoader(true)
     if (!comment || !documentId || !userId) return;
 
     try {
@@ -52,6 +58,7 @@ function CustomerDocComment() {
         message: comment,
         userId,
       });
+      
       setComment('');
       fetchComments();
     
@@ -59,6 +66,9 @@ function CustomerDocComment() {
       console.error('Failed to submit comment:', err);
       console.log(err)
 
+    }
+    finally{
+      setLoader(false)
     }
   };
 
@@ -153,10 +163,12 @@ function CustomerDocComment() {
                   })}
                 </div>
               ))}
+                <div ref={latestCommentRef} />
             </div>
-
-
+           
+          
           </div>
+       
           <div className="whatsapp-comment-form">
             <textarea
               placeholder="Write your comment..."
@@ -165,14 +177,21 @@ function CustomerDocComment() {
               className="whatsapp-comment-input"
             />
             <button
-              onClick={handleSubmit}
+              onClick={()=>{if(!loader){
+                handleSubmit()
+              }else{
+
+              }
+                }}
               className="whatsapp-submit-btn"
               disabled={!comment.trim()}
               title={!comment.trim() ? "Type something first" : "Send comment"}
             >
-              <FaTelegramPlane />
+              
+              {loader ? <SpinnerLoader size={10}/>: <FaTelegramPlane />}
             </button>
           </div>
+         
         </Offcanvas>
       </div>
     </Layout>
