@@ -4,6 +4,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import '../../styles/Projects/project.css';
 import { url } from '../../lib/api';
+import Loader from '../../components/Loader';
 const ArchivedProjects = () => {
   const [archivedProjects, setArchivedProjects] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,7 +82,7 @@ const ArchivedProjects = () => {
 
       <div className="projects-table-container">
         {loading ? (
-          <p>Loading...</p>
+          <Loader/>
         ) : filteredProjects.length === 0 ? (
           <p>No archived projects found.</p>
         ) : (

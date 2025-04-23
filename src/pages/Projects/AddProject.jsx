@@ -91,13 +91,12 @@ const AddProject = () => {
       name,
       type,
       clientName,
-      startDate,
       estimatedCompletion,
       totalValue,
       advancePayment,
     } = formData;
 
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
 
     if (!name.trim()) return "Project Name is required.";
     if (!/[a-zA-Z]/.test(name))
@@ -126,9 +125,24 @@ const AddProject = () => {
   const validateStep2 = () => {
     if (selectedRoles.length === 0)
       return "At least one role must be selected.";
-
+  
+    if (deliveryHourOption === "Other") {
+      const trimmed = customDeliveryHour.trim();
+  
+      if (!trimmed) {
+        return "Please enter valid custom delivery hours.";
+      }
+      const invalidCharsRegex = /[^a-zA-Z0-9\s:-]/; 
+      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+  
+      if (invalidCharsRegex.test(trimmed) || emojiRegex.test(trimmed)) {
+        return "Delivery hours should not contain special characters or emojis.";
+      }
+    }
+  
     return null;
   };
+  
 
   const nextStep = () => {
     let errorMsg = null;
@@ -184,13 +198,15 @@ const AddProject = () => {
     const fetchCustomers = async () => {
       try {
         const data = await getCustomers();
-        setCustomers(data || []);
+        const activeCustomers = (data || []).filter(customer => customer.status === "active");
+        setCustomers(activeCustomers);
       } catch (error) {
         console.error("Error fetching customers:", error);
       }
     };
     fetchCustomers();
   }, []);
+  
 
   const handleRoleToggle = async (role) => {
     if (selectedRoles.includes(role)) {
@@ -211,18 +227,31 @@ const AddProject = () => {
         const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         const users = data.users || [];
-
+  
         if (users.length === 0) {
           toast.error(`No users found in the role "${role}"`);
-          return; // Exit early
+          return;
         }
-
+  
         setSelectedRoles((prev) => [...prev, role]);
         setRoleUsers((prev) => ({ ...prev, [role]: users }));
 
-        const defaultUsers = users.filter((user) => user.permissionLevel === 2);
-        const defaultUserIds = defaultUsers.map((user) => user.id);
-
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        const loggedInUserId = loggedInUser?.user?.id;
+        const loggedInUserRole = loggedInUser?.user?.userRole;
+  
+        let defaultUserIds = [];
+  
+        if (
+          loggedInUserRole === "Account Manager" &&
+          users.some((user) => user.id === loggedInUserId)
+        ) {
+          defaultUserIds = [loggedInUserId];
+        } else {
+          const defaultUsers = users.filter((user) => user.permissionLevel === 2);
+          defaultUserIds = defaultUsers.map((user) => user.id);
+        }
+  
         setFormData((prev) => ({
           ...prev,
           assignedTeamRoles: {
@@ -236,7 +265,7 @@ const AddProject = () => {
       }
     }
   };
-
+  
   useEffect(() => {
     const fetchRoles = async () => {
       const res = await fetch(`${url}/roles`);
@@ -248,10 +277,20 @@ const AddProject = () => {
         );
         const roleTitles = filtered.map((role) => role.title);
         setAllRoles(roleTitles);
+  
+        // ✅ Pre-select "Account Manager" if current user has that role
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        const userRole = loggedInUser?.user?.userRole;
+  
+        if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
+          // Simulate toggle to auto-select
+          handleRoleToggle("Account Manager");
+        }
       }
     };
     fetchRoles();
   }, []);
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -265,10 +304,8 @@ const AddProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
 
-    const step3validation = () => {
-      return null; // No required fields in Step 3
-    };
 
     // const errorMsg = step3validation() || validateLeadTimeMatrix();
     //     if (errorMsg) {
@@ -766,21 +803,31 @@ const AddProject = () => {
                     </select>
 
                     {deliveryHourOption === "Other" && (
-                      <input
-                        type="text"
-                        placeholder="Enter custom delivery hours"
-                        value={customDeliveryHour}
-                        onChange={(e) => {
-                          setCustomDeliveryHour(e.target.value);
-                          handleChange({
-                            target: {
-                              name: "deliveryHours",
-                              value: e.target.value,
-                            },
-                          });
-                        }}
-                      />
-                    )}
+  <input
+    type="text"
+    placeholder="Enter custom delivery hours"
+    value={customDeliveryHour}
+    onChange={(e) => {
+      const input = e.target.value;
+      const invalidCharsRegex = /[^a-zA-Z0-9\s:-]/;
+      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+
+      if (invalidCharsRegex.test(input) || emojiRegex.test(input)) {
+        return;
+      }
+
+      setCustomDeliveryHour(input);
+      handleChange({
+        target: {
+          name: "deliveryHours",
+          value: input,
+        },
+      });
+    }}
+  />
+)}
+
+
                   </div>
                   <div className="form-group">
 

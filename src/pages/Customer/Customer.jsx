@@ -240,7 +240,7 @@ const Customer = () => {
                                     <td className="border p-2">{customer.full_name}</td>
                                     <td className="border p-2">{projectCounts[customer.id] || 0}</td> {/* Project count */}
                                     <td className="border p-2">{customer.company_name}</td>
-                                    <td className="border p-2">{customer.status}</td>
+                                    <td className="border p-2">{customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}</td>
 
                                     {(canEdit || canDelete || canView) && (
                                         <td className="actions">

@@ -27,6 +27,9 @@ const Sidebar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         localStorage.removeItem('user');
+        localStorage.removeItem("addProjectStep");
+        localStorage.removeItem("addProjectFormData");
+        localStorage.removeItem("addProjectLeadMatrix");
         navigate('/');
     // window.location.reload()
         // resetPermissions()
