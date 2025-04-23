@@ -1,108 +1,162 @@
-/* DASHBOARD LAYOUT */
-.dashboard {
-  display: flex;
+.dashboard-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+.dashboard-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
 
+.subsection-title {
+  margin-top: 2rem;
+  font-size: 1.4rem;
+  color: #444;
+  border-left: 4px solid#004680ec;
+  padding-left: 10px;
+}
 
-/* KPI GRID */
-.grid {
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-/* CARD STYLING */
 .card {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
 }
 
-.card h3 {
-  margin-bottom: 8px;
-  font-size: 18px;
-  font-weight: 600;
+.stat-card h2 {
+  font-size: 1.1rem;
+  color: #555;
 }
 
-.card p {
-  font-size: 24px;
-  font-weight: 700;
-  color: #4f46e5;
+.stat-card p {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color:#004680ec;
+  margin-top: 0.5rem;
 }
 
-/* CHART SECTION */
-.chart-section {
-  margin-top: 24px;
+.customer-card h3 {
+  margin: 0;
+  color: #222;
+}
+
+.customer-card p {
+  margin: 0.5rem 0 0;
+  color: #444;
+}
+.customer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
-.chart-card {
-  background-color: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+.customer-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.chart-card:hover {
-  transform: translateY(-5px);
+.customer-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.chart-card h3 {
-  margin-bottom: 16px;
-  font-size: 16px;
+.customer-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid#004680ec;
+}
+
+.customer-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  color: #222;
+}
+
+.customer-value {
+  margin-top: 0.2rem;
+  color: #555;
+}
+.card-icon {
+  font-size: 2.2rem;
+  color:#004680ec;
+  margin-bottom: 0.5rem;
+}
+.project-list {
+  margin-top: 1rem;
+  background: #f9f9f9;
+  border-left: 4px solid #0d6efd;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+}
+
+.project-list h4 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  color:#004680ec;;
   font-weight: 600;
 }
 
-/* DARK MODE SUPPORT */
-.dark-mode .card,
-.dark-mode .chart-card {
-  background-color: #1f1f1f;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+.project-list ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style-type: disc;
 }
 
-.dark-mode .chart-card h3 {
-  color: #e5e7eb;
-}
-/* CHART SECTION */
-.chart-section {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
+.project-list li {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.3rem;
+  transition: color 0.2s ease;
 }
 
-.chart-card {
-  background-color: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+.project-list li:hover {
+  color: #004680ec;
+  cursor: pointer;
+}
+.chart-container {
+  max-width: 400px;
+  margin: 3rem auto;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
-.chart-card:hover {
-  transform: translateY(-5px);
+.chart-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
 }
 
-.chart-card h3 {
-  margin-bottom: 16px;
-  font-size: 16px;
+.chart-container h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 600;
+  color: #0d6efd;
 }
 
-/* DARK MODE SUPPORT */
-.dark-mode .chart-card {
-  background-color: #1f1f1f;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+/* Optional: Pie chart responsiveness */
+.chart-container canvas {
+  max-height: 300px;
 }
