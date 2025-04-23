@@ -25,10 +25,17 @@ const Sidebar = () => {
       confirmButtonText: "Yes, Logout!",
     }).then(async(result) => {
       if (result.isConfirmed) {
+
+        localStorage.removeItem('user');
+        localStorage.removeItem("addProjectStep");
+        localStorage.removeItem("addProjectFormData");
+        localStorage.removeItem("addProjectLeadMatrix");
+
        await deleteFcmToken(user?.user?.id)
         setTimeout(() => {
           localStorage.removeItem('user');
         }, 2000);
+
 
         navigate('/');
       }
