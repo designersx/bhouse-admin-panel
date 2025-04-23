@@ -318,7 +318,7 @@ export const getCustomerComments = async (customerId) => {
   const response = await fetch(`${url}/customer/getComment/${customerId}`);
   return response.json();
 };
-export const getNotificationsByUser = async (id) => {
-  const response = await axios.get(`${url}/getNotificationsByUser/${id}`);
+export const getNotificationsByUser = async (userId) => {
+  const response = await axios.get(`${url}/getNotificationsByUser/${userId}`);
   return response
 }
