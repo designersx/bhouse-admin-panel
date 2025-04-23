@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useRef } from 'react';
 import Layout from '../../components/Layout';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -14,10 +14,9 @@ import BackButton from '../../components/BackButton';
 import { MdEdit } from 'react-icons/md';
 import Offcanvas from '../../components/OffCanvas/OffCanvas';
 import { FaTelegramPlane } from "react-icons/fa"; 
-import { useRef } from 'react'; 
 import useRolePermissions from '../../hooks/useRolePermissions'
 import InvoiceManagement from './InvoiceManagment';
-
+import SpinnerLoader from '../../components/SpinnerLoader';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -52,6 +51,16 @@ const [groupedPunchComments, setGroupedPunchComments] = useState( {});
 const [punchCommentText, setPunchCommentText] = useState('');
 const [buttonClicked , setButtonClicked] = useState(false)
 const [docsData, setDocsData] = useState({});
+const [commentLoading , setCommentLoading] = useState(false)
+const scrollRef = useRef(null);
+useEffect(() => {
+  if(scrollRef.current){
+    scrollRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+
+
+
+}, [userComments, newCommentText , groupedComments , itemCommentText , punchCommentText , groupedPunchComments , groupedItemComments]);
 const docMap = {
   "Sample COI": "Sample COI",
   "COI (Certificate)": "COI (Certificate)",
@@ -99,6 +108,7 @@ const openPunchComment = async (punchId) => {
   }
 };
 const handleAddPunchComment = async () => {
+  setCommentLoading(true)
   const user = JSON.parse(localStorage.getItem("user"))?.user;
   const customer = JSON.parse(localStorage.getItem("customer"));
 
@@ -118,6 +128,9 @@ const handleAddPunchComment = async () => {
     openPunchComment(selectedPunchItemId); // refresh
   } catch (err) {
     console.error("Failed to add punch comment:", err);
+  }
+  finally{
+    setCommentLoading(false)
   }
 };
 
@@ -147,6 +160,7 @@ const openItemComment = async (itemId) => {
 
 
 const handleAddItemComment = async () => {
+  setCommentLoading(true)
   const user = JSON.parse(localStorage.getItem("user"))?.user;
   const customer = JSON.parse(localStorage.getItem("customer"));
 
@@ -169,17 +183,13 @@ const handleAddItemComment = async () => {
   } catch (err) {
     console.error("Failed to add comment:", err);
   }
+  finally{
+    setCommentLoading(false)
+  }
 };
 
 
-const scrollRef = useRef(null);
-useEffect(() => {
- 
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
 
-}, [userComments, newCommentText]);
 
 
 
@@ -241,6 +251,7 @@ useEffect(() => {
   };
   
   const handleAddComment = async () => {
+    setCommentLoading(true)
     const stored = JSON.parse(localStorage.getItem('user'));
     const fromUserId = stored?.user?.id;
   
@@ -255,12 +266,13 @@ useEffect(() => {
   
       setNewCommentText('');
       await fetchUserComments(selectedUser.id);
-      setTimeout(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+     
   
     } catch (err) {
       console.error("Error posting comment:", err);
+    }
+    finally{
+      setCommentLoading(false)
     }
   };
   
@@ -1328,9 +1340,9 @@ issue.createdByType === 'user'
 
       {/* Grouped Comments by Date */}
       {Object.keys(groupedComments)
-  .sort((a, b) => new Date(a) - new Date(b)) // Oldest date group on top
+  .sort((a, b) => new Date(a) - new Date(b)) 
   .map((date) => (
-    <div key={date} className="comment-date-group">
+    <div key={date} className="comment-date-group" >
       <p className="comment-date">{date}</p>
       {groupedComments[date]
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Oldest to newest in each group
@@ -1360,10 +1372,10 @@ issue.createdByType === 'user'
             </div>
           </div>
         ))}
-    </div>
+        <div ref={scrollRef} />
+    </div> 
 ))}
 
-      <div ref={scrollRef}></div>
     </div>
   </div>
 
@@ -1374,8 +1386,9 @@ issue.createdByType === 'user'
       className="whatsapp-comment-input"
       placeholder="Write your comment..."
     />
-    <button onClick={handleAddComment} className="whatsapp-submit-btn">
-      <FaTelegramPlane />
+    <button onClick={ commentLoading ? null :  handleAddComment} className="whatsapp-submit-btn">
+      {commentLoading ? <SpinnerLoader size={10}/> : <FaTelegramPlane />}
+      
     </button>
   </div>
 </Offcanvas>
@@ -1393,10 +1406,14 @@ issue.createdByType === 'user'
         flexDirection: "column"
       }}
     >
-      {Object.keys(groupedItemComments).map(date => (
+      {Object.keys(groupedItemComments)
+ .sort((a, b) => new Date(a) - new Date(b))
+      .map(date => (
         <div key={date} className="comment-date-group">
           <p className="comment-date">{date}</p>
-          {groupedItemComments[date].map(comment => (
+          {groupedItemComments[date]
+           .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+          .map(comment => (
             <div key={comment.id} className="whatsapp-comment-box">
               <div className="whatsapp-comment-user-info">
                 <img
@@ -1423,11 +1440,12 @@ issue.createdByType === 'user'
               </p>
             </div>
           ))}
+          <div ref={scrollRef} />
         </div>
       ))}
-     
+      
     </div>
-    <div ref={scrollRef}></div>
+  
    
   </div>
 
@@ -1438,8 +1456,8 @@ issue.createdByType === 'user'
       className="whatsapp-comment-input"
       placeholder="Write your comment..."
     />
-    <button onClick={handleAddItemComment} className="whatsapp-submit-btn">
-      <FaTelegramPlane />
+    <button onClick={ commentLoading ? null :  handleAddItemComment} className="whatsapp-submit-btn">
+    {commentLoading ? <SpinnerLoader size={10}/> : <FaTelegramPlane /> }  
     </button>
   </div>
 </Offcanvas>
@@ -1453,21 +1471,26 @@ issue.createdByType === 'user'
     <div
       className="comments-list"
       style={{
-        overflowY: "auto",
+        
         maxHeight: "500px",
         display: "flex",
         flexDirection: "column"
       }}
     >
-      {Object.keys(groupedPunchComments)?.map(date => (
-        <div key={date} className="comment-date-group">
-          <p className="comment-date">{date}</p>
-          {groupedPunchComments[date].map(comment => {
-            const isUser = !!comment.user;
-            const creator = isUser ? comment.user : comment.customer;
+      {Object.keys(groupedPunchComments)
+  .sort((a, b) => new Date(a) - new Date(b)) // Oldest date group first
+  .map(date => (
+    <div key={date} className="comment-date-group">
+      <p className="comment-date">{date}</p>
 
-            return (
-              <div key={comment.id} className="whatsapp-comment-box">
+      {groupedPunchComments[date]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // Oldest to newest inside each group
+        .map(comment => {
+          const isUser = !!comment.user;
+          const creator = isUser ? comment.user : comment.customer;
+
+          return (
+            <div key={comment.id} className="whatsapp-comment-box">
               <div className="whatsapp-comment-user-info">
                 <img
                   src={
@@ -1491,12 +1514,14 @@ issue.createdByType === 'user'
                 {new Date(comment.createdAt).toLocaleTimeString()}
               </p>
             </div>
-            
-            );
-          })}
-          
-        </div>
-      ))}
+          );
+        })}
+
+      {/* Scroll to latest (last) comment */}
+      <div ref={scrollRef} />
+    </div>
+))}
+
     </div>
   </div>
 
@@ -1507,8 +1532,8 @@ issue.createdByType === 'user'
       className="whatsapp-comment-input"
       placeholder="Write your comment..."
     />
-    <button onClick={handleAddPunchComment} className="whatsapp-submit-btn">
-      <FaTelegramPlane />
+    <button onClick={commentLoading ? null : handleAddPunchComment} className="whatsapp-submit-btn">
+    {commentLoading ? <SpinnerLoader size={10}/> : <FaTelegramPlane /> }  
     </button>
   </div>
 </Offcanvas>
