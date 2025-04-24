@@ -5,6 +5,7 @@ import Layout from "./Layout";
 import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
 import BackButton from "./BackButton";
+import { validateField, patterns } from "../utils/customerValidation";
 
 const EditCustomer = () => {
     const { id } = useParams();
@@ -93,21 +94,59 @@ const EditCustomer = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+      
+        // Validate required fields
+        for (const key in patterns) {
+          const error = validateField(key, formData[key]);
+          if (error) {
+            toast.dismiss();
+            toast.error(error);
+            return;
+          }
+        }
+      
+        // Additional checks
+        const companyError = validateField("company_name", formData.company_name);
+        const addressError = validateField("address", formData.address);
+        const deliveryError = validateField("delivery_address", formData.delivery_address);
+      
+        if (companyError) {
+          toast.error(companyError);
+          return;
+        }
+        if (addressError) {
+          toast.error(addressError);
+          return;
+        }
+        if (deliveryError) {
+          toast.error(deliveryError);
+          return;
+        }
+      
+        // Capital letter check for full name
+        if (!/^[A-Z]/.test(formData.full_name.trim())) {
+          toast.error("Full Name must start with a capital letter.");
+          return;
+        }
+      
 
-        if (!validateForm()) return;
-
-        await updateCustomer(id, formData);
-
-        // Success Notification
-        Swal.fire({
+      
+        try {
+          await updateCustomer(id, formData);
+      
+          await Swal.fire({
             icon: "success",
             title: "Customer Updated!",
             text: "Customer details have been updated successfully.",
             confirmButtonColor: "#3085d6",
-        });
-
-        navigate("/customers");
-    };
+          });
+      
+          navigate("/customers");
+        } catch (error) {
+          toast.error("Failed to update customer. Please try again.");
+        }
+      };
+      
 
     return (
         <Layout>

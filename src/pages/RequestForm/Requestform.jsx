@@ -4,18 +4,22 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import { url } from '../../lib/api';
 import './RequestForm.css';
+import Loader from '../../components/Loader';
 
 const RequestForm = () => {
-    const [requests, setRequests] = useState([]);
-    const [selected, setSelected] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
+  const [requests, setRequests] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true); 
 
   const fetchRequests = async () => {
     try {
       const res = await axios.get(`${url}/requests`);
-      setRequests(res.data);
+      setRequests(res.data || []);
     } catch (err) {
       console.error("Failed to fetch requests", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,12 +49,13 @@ const RequestForm = () => {
       }
     }
   };
- 
+
   const filteredRequests = requests.filter((r) =>
     r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.phone.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -60,7 +65,7 @@ const RequestForm = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
-  
+
   return (
     <Layout>
       <div className="request-page">
@@ -74,24 +79,28 @@ const RequestForm = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
 
-        <div className="request-grid">
-          {filteredRequests.length ? (
-            filteredRequests.map((req) => (
-              <div className="request-card" key={req.id} onClick={() => setSelected(req)}>
-                <h3>{req.fullName}</h3>
-                <p><strong>Email:</strong> {req.email}</p>
-                <p><strong>Phone:</strong> {req.phone}</p>
-              </div>
-            ))
-          ) : (
-            <p className="no-result">No requests found.</p>
-          )}
-        </div>
+        {loading ? (
+          <Loader /> 
+        ) : (
+          <div className="request-grid">
+            {filteredRequests.length > 0 ? (
+              filteredRequests.map((req) => (
+                <div className="request-card" key={req.id} onClick={() => setSelected(req)}>
+                  <h3>{req.fullName}</h3>
+                  <p><strong>Email:</strong> {req.email}</p>
+                  <p><strong>Phone:</strong> {req.phone}</p>
+                </div>
+              ))
+            ) : (
+              <p style={{ textAlign: "center", marginTop: "20px" }}>No requests found.</p>
+            )}
+          </div>
+        )}
 
         {selected && (
-            <div className="modal-overlay">
+          <div className="modal-overlay" onClick={() => setSelected(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setSelected(null)}>×</button>
+              <button className="close-btn" onClick={() => setSelected(null)}>×</button>
               <h2>Request Details</h2>
               <p><strong>Full Name:</strong> {selected.fullName}</p>
               <p><strong>Email:</strong> {selected.email}</p>

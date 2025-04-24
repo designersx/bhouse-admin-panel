@@ -38,26 +38,30 @@ const Login = () => {
 
   const validateForm = () => {
     toast.dismiss();
-    let isValid = true;
-
+  
     if (!email) {
-      toast.error("⚠ Email is required.");
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error(" Email is required.");
+      return false;
+    }
+  
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error("Invalid email format.");
-      isValid = false;
+      return false;
     }
-
+  
     if (!password) {
-      toast.error("⚠ Password is required.");
-      isValid = false;
-    } else if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      isValid = false;
+      toast.error(" Password is required.");
+      return false;
     }
-
-    return isValid;
+  
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return false;
+    }
+  
+    return true;
   };
+  
 
   const handleLogin = async (e) => {
     e.preventDefault();
