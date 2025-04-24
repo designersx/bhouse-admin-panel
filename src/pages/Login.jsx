@@ -107,7 +107,7 @@ const Login = () => {
 
       localStorage.setItem("failedLoginAttempts", newAttempts);
 
-      if (newAttempts >= 10) {
+      if (newAttempts >= 3) {
         const lockoutDuration = 60 * 1000; // 1 minute
         const lockoutUntil = Date.now() + lockoutDuration;
         localStorage.setItem("loginLockoutTime", lockoutUntil);
