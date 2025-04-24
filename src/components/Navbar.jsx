@@ -85,7 +85,8 @@ const Navbar = ({ isLogin }) => {
   useEffect(() => {
     fetchNotification()
   }, [])
-
+const usr = JSON.parse(localStorage.getItem("user"))
+let loggedInUserId = usr?.user?.id
   return (
     <div className={navbarClass}>
       {/* Logo */}
@@ -115,21 +116,25 @@ const Navbar = ({ isLogin }) => {
         )}
       </div>
       {openOffcanvas && <Offcanvas isOpen={openOffcanvas} closeOffcanvas={handleCloseOffcanvas} getLatestComment={handleRefresh} >
-        {notification.length > 0 ? notification.map((message) => {
-          return (
-            <><div className="notification-container">
-              <div className="notification-card">
-                <div className="notification-header">
-                  <span className="sender-name">{message.senderName}</span>
-                  <span className="notification-time">{formatNotificationTime(message.createdAt)}</span>
-                </div>
-                <div className="notification-message">
-                  {message.message}
-                </div>
-              </div>
-            </div></>
-          )
-        }) : "No data"}
+      {notification.length > 0 ? notification
+  .filter(
+    (message) => message.user_id === loggedInUserId && message.role === "user"
+  )
+  .map((message) => {
+    return (
+      <div key={message.id} className="notification-container">
+        <div className="notification-card">
+          <div className="notification-header">
+            <span className="sender-name">{message.senderName}</span>
+            <span className="notification-time">{formatNotificationTime(message.createdAt)}</span>
+          </div>
+          <div className="notification-message">
+            {message.message}
+          </div>
+        </div>
+      </div>
+    );
+  }) : "No data"}
 
 
 
