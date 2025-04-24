@@ -90,7 +90,7 @@ comments.forEach((comment) => {
           {filePath.endsWith('.pdf') ? (
             <iframe src={`${url2}/${filePath}`} title="File Preview" className="preview-frame" />
           ) : (
-            <img src={`${url2}/${filePath}`} alt="File Preview" className="preview-img" />
+            <img src={`${url2}/${filePath}`} alt="File Preview" className="preview-img1" />
           )}
         </div>
       </div>

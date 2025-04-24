@@ -1,64 +1,157 @@
+import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
-import Card from '../components/Card';
-import Chart from '../components/Chart';
 import '../styles/dashboard.css';
+import { url, url2 } from '../lib/api';
+import { FaProjectDiagram, FaClipboardList, FaDollarSign, FaMoneyCheckAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { MdOutlineLeaderboard } from 'react-icons/md';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+ChartJS.register(ArcElement, Tooltip, Legend);
+
 
 const Dashboard = () => {
-  // Line Chart Data (User Growth)
-  const lineChartData = [
-    { name: 'Jan', value: 120 },
-    { name: 'Feb', value: 180 },
-    { name: 'Mar', value: 240 },
-    { name: 'Apr', value: 300 },
-    { name: 'May', value: 420 },
-    { name: 'Jun', value: 500 },
-  ];
+  const [stats, setStats] = useState(null);
+  const [statusData, setStatusData] = useState([]);
 
-  // Bar Chart Data (Revenue)
-  const barChartData = [
-    { name: 'Jan', value: 4000 },
-    { name: 'Feb', value: 6000 },
-    { name: 'Mar', value: 7000 },
-    { name: 'Apr', value: 8500 },
-    { name: 'May', value: 9500 },
-    { name: 'Jun', value: 12000 },
-  ];
+  useEffect(() => {
+    const fetchStatusStats = async () => {
+      try {
+        const res = await fetch(`${url}/dashboard/project-status`);
+        const data = await res.json();
+        setStatusData(data);
+      } catch (err) {
+        console.error('Error fetching project status stats:', err);
+      }
+    };
+  
+    fetchStatusStats();
+  }, []);
+  const pieData = {
+    labels: statusData.map(s => s.status),
+    datasets: [
+      {
+        label: 'Projects by Status',
+        data: statusData.map(s => parseInt(s.count, 10)),
+        backgroundColor: [
+          '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1',
+          '#20c997', '#fd7e14', '#6610f2', '#6c757d', '#e83e8c', '#17a2b8'
+        ],
+        borderColor: '#fff',
+        borderWidth: 1
+      }
+    ]
+  };
+  const pieOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: '#333',
+          font: { size: 14 }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (tooltipItem) => {
+            const label = tooltipItem.label || '';
+            const value = tooltipItem.raw || 0;
+            return `${label}: ${value} projects`;
+          }
+        }
+      }
+    },
+    maintainAspectRatio: false
+  };
+  
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${url}/dashboard/stats`);
+        const data = await response.json();
+        setStats(data);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      }
+    };
 
-  // Pie Chart Data (Orders)
-  const pieChartData = [
-    { name: 'Completed', value: 320 },
-    { name: 'Pending', value: 60 },
-    { name: 'Cancelled', value: 20 },
-  ];
+    fetchStats();
+  }, []);
+
+  if (!stats) return <Layout><div className="dashboard-container">Loading...</div></Layout>;
 
   return (
     <Layout>
-      {/* KPI Stats */}
-      <div className="grid">
-        <Card title="Total Users" value="500" />
-        <Card title="Total Revenue" value="$12K" />
-        <Card title="Orders Completed" value="320" />
-      </div>
-
-      {/* Charts Section */}
-      <div className="chart-section">
-        {/* User Growth (Line Chart) */}
-        <div className="chart-card">
-          <h3>User Growth (Last 6 months)</h3>
-          <Chart type="line" data={lineChartData} />
+      <div className="dashboard-container">
+        <h1 className="dashboard-title">📊 Dashboard Overview</h1>
+        <div className="card-grid">
+          <div className="card stat-card">
+            <FaProjectDiagram className="card-icon" />
+            <h2>Total Projects</h2>
+            <p>{stats.totalProjects}</p>
+          </div>
+          <div className="card stat-card">
+            <FaClipboardList className="card-icon" />
+            <h2>Pending Punch List</h2>
+            <p>{stats.totalPendingPunchList}</p>
+          </div>
+          <div className="card stat-card">
+            <FaMoneyBillWave className="card-icon" />
+            <h2>Total Value Of Projects</h2>
+            <p>$ {stats.totalProjectValue.toLocaleString()}</p>
+          </div>
+          <div className="card stat-card">
+            <FaMoneyCheckAlt className="card-icon" />
+            <h2>Total Paid Amount</h2>
+            <p>$ {stats.totalPaidAmount.toLocaleString()}</p>
+          </div>
+          <div className="card stat-card">
+            <FaDollarSign className="card-icon" />
+            <h2>Outstanding Payment</h2>
+            <p>$ {stats.totalPendingAmount.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* Monthly Revenue (Bar Chart) */}
-        <div className="chart-card">
-          <h3>Monthly Revenue ($)</h3>
-          <Chart type="bar" data={barChartData} />
+        <h2 className="subsection-title"><MdOutlineLeaderboard /> Top 3 Customers by Project Value</h2>
+        <div className="card-grid customer-grid">
+          {stats.topCustomers.map((customer, index) => (
+           <div key={customer.clientId} className="card customer-card">
+           <div className="customer-header">
+             <img
+               src={
+                 customer.profilePhoto
+                   ? `${url2}/${customer.profilePhoto}`
+                   : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
+               }
+               alt={customer.full_name}
+               className="customer-avatar"
+             />
+             <div>
+               <h3 className="customer-name">#{index + 1} {customer.full_name}</h3>
+               <p className="customer-value">Total Value: $ {customer.totalProjectValue.toLocaleString()}</p>
+             </div>
+           </div>
+         
+           {/* 👇 Project List UI */}
+           {customer.projectNames?.length > 0 && (
+             <div className="project-list">
+               <h4>Projects</h4>
+               <ul>
+                 {customer.projectNames.map((projectName, i) => (
+                   <li key={i}>{projectName}</li>
+                 ))}
+               </ul>
+             </div>
+           )}
+         </div>
+         
+          ))}
         </div>
+        <div className="chart-container">
+  <h2 className="subsection-title">📊 Projects by Status</h2>
+  <Pie data={pieData} options={pieOptions} />
 
-        {/* Orders Status (Pie Chart) */}
-        <div className="chart-card">
-          <h3>Order Status Overview</h3>
-          <Chart type="pie" data={pieChartData} />
-        </div>
+</div>
+
       </div>
     </Layout>
   );
