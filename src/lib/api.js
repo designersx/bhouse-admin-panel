@@ -321,3 +321,6 @@ export const getNotificationsByUser = async (userId) => {
   const response = await axios.get(`${url}/getNotificationsByUser/${userId}`);
   return response
 }
+export const markNotificationRead = async (notificationId) => {
+  return await axios.put(`${url}/notifications/mark-read/${notificationId}`);
+};
