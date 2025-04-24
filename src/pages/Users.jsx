@@ -111,13 +111,22 @@ const [isLoading , setIsLoading] = useState(true)
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.firstName.toLowerCase().includes(search.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase()) ||
-    user.userRole.toLowerCase().includes(search.toLowerCase()) ||
-    user.status.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const email = user.email.toLowerCase();
+    const role = user.userRole.toLowerCase();
+    const status = user.status.toLowerCase();
+  
+    const searchKeywords = search.toLowerCase().split(" ").filter(Boolean); 
+
+    return searchKeywords.every(keyword =>
+      fullName.includes(keyword) ||
+      email.includes(keyword) ||
+      role.includes(keyword) ||
+      status.includes(keyword)
+    );
+  });
+  
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

@@ -43,8 +43,17 @@ function CustomerProjects({ customerId, customerName }) {
                             <h3 className="project-title">{project.name}</h3>
                             <p className="project-info"><strong>Type:</strong> {project.type}</p>
                             <p className="project-info"><strong>Description:</strong> {project.description}</p>
-                            <p className="project-info"><strong>Estimated Completion:</strong> {new Date(project.estimatedCompletion).toDateString()}</p>
-                            <p className="project-info"><strong>Total Value:</strong> ₹{project.totalValue}</p>
+                            <p className="project-info">
+  <strong>Estimated Completion:</strong>{" "}
+  {new Date(project.estimatedCompletion).toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })}
+</p>
+
+                            <p className="project-info"><strong>Total Value:</strong> ${project.totalValue}</p>
                             <p className="project-info"><strong>Delivery Address:</strong> {project.deliveryAddress}</p>
 
                             {/* Status Badge */}
