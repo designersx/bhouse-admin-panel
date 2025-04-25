@@ -774,6 +774,17 @@ const ProjectDetails = () => {
                             files: project.salesAggrement,
                             category: "salesAggrement",
                           },
+                          {
+                            title: "Acknowledgements",
+                            files: project.acknowledgements,
+                            category: "acknowledgements",
+                           
+                          },
+                          {
+                            title: "Receiving Reports",
+                            files: project.receivingReports,
+                            category: "receivingReports",
+                          }
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title}</h3>
