@@ -378,6 +378,12 @@ const AddProject = () => {
     for (let file of formData.salesAggrement || []) {
       formDataToSend.append("salesAggrement", file);
     }
+    for (let file of formData.receivingReports || []) {
+      formDataToSend.append("receivingReports", file);
+    }
+    for (let file of formData.acknowledgements || []) {
+      formDataToSend.append("acknowledgements", file);
+    }
 
     try {
       setIsLoading(true);
@@ -761,6 +767,48 @@ const AddProject = () => {
                     {formData.otherDocuments?.length > 0 && (
                       <ul className="file-preview-list">
                         {formData.otherDocuments.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>Acknowledgements</label>
+                    <input
+                      type="file"
+                      name="acknowledgements"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) =>
+                        handleFileInputChange(e, "acknowledgements")
+                      }
+                      disabled={(formData.acknowledgements?.length || 0) >= 5}
+                    />
+
+                    {formData.acknowledgements?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.acknowledgements.map((file, idx) => (
+                          <li key={idx}>{file.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>Receiving Reports</label>
+                    <input
+                      type="file"
+                      name="receivingReports"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) =>
+                        handleFileInputChange(e, "receivingReports")
+                      }
+                      disabled={(formData.receivingReports?.length || 0) >= 5}
+                    />
+
+                    {formData.oreceivingReports?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.receivingReports.map((file, idx) => (
                           <li key={idx}>{file.name}</li>
                         ))}
                       </ul>
