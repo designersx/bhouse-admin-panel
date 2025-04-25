@@ -8,10 +8,12 @@ import {
   FaMoneyCheckAlt,
   FaMoneyBillWave,
 } from "react-icons/fa";
+
 import { MdOutlineLeaderboard } from "react-icons/md";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Line } from "react-chartjs-2";
+
 import moment from "moment";
 import {
   CategoryScale,
@@ -19,6 +21,7 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
+import Loader from "../components/Loader";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -65,7 +68,7 @@ const Dashboard = () => {
       datasets: [
         {
           label: `Weekly Amount (${selectedMonth})`,
-          data: weeks.map((week) => monthlyData[selectedMonth][week]),
+          data: weeks?.map((week) => monthlyData[selectedMonth][week]),
           fill: false,
           borderColor: "#004680ec",
           backgroundColor: "#0d6efd",
@@ -76,11 +79,11 @@ const Dashboard = () => {
   };
 
   const pieData = {
-    labels: statusData.map((s) => s.status),
+    labels: statusData?.map((s) => s.status),
     datasets: [
       {
         label: "Projects by Status",
-        data: statusData.map((s) => parseInt(s.count, 10)),
+        data: statusData?.map((s) => parseInt(s.count, 10)),
         backgroundColor: [
           "#0d6efd",
           "#198754",
@@ -142,7 +145,7 @@ const Dashboard = () => {
   if (!stats)
     return (
       <Layout>
-        <div className="dashboard-container">Loading...</div>
+        <div className="dashboard-container"><Loader/></div>
       </Layout>
     );
 
@@ -190,7 +193,7 @@ const Dashboard = () => {
           <MdOutlineLeaderboard /> Top 3 Customers by Project Value
         </h2>
         <div className="card-grid customer-grid">
-          {stats.topCustomers.map((customer, index) => (
+          {stats?.topCustomers?.map((customer, index) => (
             <div key={customer.clientId} className="card customer-card">
               <div className="customer-header">
                 <img
@@ -212,14 +215,15 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* 👇 Project List UI */}
-              {customer.projectNames?.length > 0 && (
+              {customer.projects?.length > 0 && (
                 <div className="project-list">
                   <h4>Projects</h4>
                   <ul>
-                    {customer.projectNames.map((projectName, i) => (
-                      <li key={i}>{projectName}</li>
-                    ))}
+                    {customer.projects
+                      ?.map((projectName, i) => (
+                        <li title={`Total Value ${projectName?.value}`} key={i}>{projectName.name
+}</li>
+                      ))}
                   </ul>
                 </div>
               )}
@@ -239,7 +243,7 @@ const Dashboard = () => {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
               >
-                {Object.keys(monthlyData).map((month, idx) => (
+                {Object.keys(monthlyData)?.map((month, idx) => (
                   <option key={idx} value={month}>
                     {moment(month).format("MMMM YYYY")}
                   </option>

@@ -87,10 +87,10 @@ const Sidebar = () => {
             <Link to="/requested_customer"><IoGitPullRequestSharp />Requested Customers</Link>
           </li>
 
-
+{/* 
           <li className={location.pathname === '/settings' ? 'active' : ''}>
             <Link to="/settings"><FiSettings /> Settings</Link>
-          </li>
+          </li> */}
 
           <li onClick={handleLogout}>
             <Link><CiLogout /> Logout</Link>
