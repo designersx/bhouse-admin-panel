@@ -3,7 +3,7 @@ import axios from 'axios'
 export const url = 'https://bhouse.truet.net/api' || ""
 export const url2 = 'https://bhouse.truet.net' || ""
 // export const url2 = 'http://localhost:5000' || ""
-// kjkjjkjn
+
 export const registerUser = async (userData) => {
   try {
     const res = await axios.post(`${url}/auth/signup`, userData);
@@ -322,3 +322,6 @@ export const getNotificationsByUser = async (userId) => {
   const response = await axios.get(`${url}/getNotificationsByUser/${userId}`);
   return response
 }
+export const markNotificationRead = async (notificationId) => {
+  return await axios.put(`${url}/notifications/mark-read/${notificationId}`);
+};
