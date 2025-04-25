@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import "../styles/dashboard.css";
@@ -184,7 +183,7 @@ const Dashboard = () => {
             <div key={customer.clientId} className="card customer-card">
               <div className="customer-header">
                 <img
-                  src={customer.profilePhoto ? ${url2}/${customer.profilePhoto} : ${process.env.PUBLIC_URL}/assets/Default_pfp.jpg}
+                  src={customer.profilePhoto ? `${url2}/${customer.profilePhoto}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   alt={customer.full_name}
                   className="customer-avatar"
                 />
@@ -199,7 +198,7 @@ const Dashboard = () => {
                   <h4>Projects</h4>
                   <ul>
                     {customer.projects.map((projectName, i) => (
-                      <li title={Total Value ${projectName?.value}} key={i}>{projectName.name}</li>
+                      <li title={`Total Value ${projectName?.value}`} key={i}>{projectName.name}</li>
                     ))}
                   </ul>
                 </div>
