@@ -9,7 +9,9 @@ export const patterns = {
   
   export const validateField = (name, value) => {
     if (!value) {
-      return `${name.replace("_", " ")} is required`;
+      const label = name.replace("_", " ");
+      const capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1);
+      return `${capitalizedLabel} is required.`;
     }
   
     switch (name) {

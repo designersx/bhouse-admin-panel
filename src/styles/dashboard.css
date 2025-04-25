@@ -1,138 +1,128 @@
+/* dashboard.css */
+
 .dashboard-container {
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  background: #f4f7fa;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .dashboard-title {
   font-size: 2rem;
-  margin-bottom: 1.5rem;
   font-weight: bold;
-  color: #333;
-}
-
-.subsection-title {
-  margin-top: 2rem;
-  font-size: 1.4rem;
-  color: #444;
-  border-left: 4px solid#004680ec;
-  padding-left: 10px;
+  color: #004680ec;
+  margin-bottom: 1.5rem;
 }
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.card {
-  background: #fff;
-  border-radius: 16px;
+.stat-card {
+  background-color: #ffffff;
   padding: 1.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s;
 }
 
-.card:hover {
-  transform: translateY(-4px);
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.card-icon {
+  font-size: 2rem;
+  color: #004680ec;
+  margin-bottom: 0.5rem;
 }
 
 .stat-card h2 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: #555;
+  margin-bottom: 0.25rem;
 }
 
 .stat-card p {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  color:#004680ec;
-  margin-top: 0.5rem;
+  color: #004680ec;
 }
 
-.customer-card h3 {
-  margin: 0;
-  color: #222;
+.subsection-title {
+  font-size: 1.8rem;
+  margin: 2rem 0 1rem;
+  color: #004680ec;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.customer-card p {
-  margin: 0.5rem 0 0;
-  color: #444;
-}
 .customer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
 .customer-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .customer-header {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .customer-avatar {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid#004680ec;
+  border: 3px solid #004680ec;
 }
 
 .customer-name {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #004680ec;
   margin: 0;
-  color: #222;
 }
 
 .customer-value {
-  margin-top: 0.2rem;
-  color: #555;
+  color: #333;
+  font-size: 0.95rem;
 }
-.card-icon {
-  font-size: 2.2rem;
-  color:#004680ec;
-  margin-bottom: 0.5rem;
-}
+
 .project-list {
   margin-top: 1rem;
-  background: #f9f9f9;
-  border-left: 4px solid #0d6efd;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
 }
 
 .project-list h4 {
   font-size: 1rem;
-  margin: 0 0 0.5rem;
-  color:#004680ec;;
-  font-weight: 600;
+  color: #004680ec;
+  margin-bottom: 0.5rem;
 }
 
 .project-list ul {
-  margin: 0;
-  padding-left: 1.2rem;
-  list-style-type: disc;
+  list-style: none;
+  padding-left: 1rem;
 }
 
 .project-list li {
-  font-size: 0.95rem;
+  padding-left: 0.5rem;
+  border-left: 3px solid #004680ec;
+  margin-bottom: 0.4rem;
   color: #333;
-  margin-bottom: 0.3rem;
-  transition: color 0.2s ease;
 }
 
-.project-list li:hover {
-  color: #004680ec;
-  cursor: pointer;
-}
 .chart-container {
   max-width: 400px;
   margin: 3rem auto;
@@ -159,4 +149,30 @@
 /* Optional: Pie chart responsiveness */
 .chart-container canvas {
   max-height: 300px;
+}
+
+.wide-chart {
+  max-width: 800px;
+}
+
+.filter-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+.filter-row label {
+  color: #004680ec;
+  font-weight: 500;
+}
+.filter-row select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+.chart-container1{
+  display: flex;
+  
 }
