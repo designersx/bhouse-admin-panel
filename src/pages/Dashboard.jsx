@@ -6,13 +6,33 @@ import { FaProjectDiagram, FaClipboardList, FaDollarSign, FaMoneyCheckAlt, FaMon
 import { MdOutlineLeaderboard } from 'react-icons/md';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import moment from 'moment';
+import { CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 ChartJS.register(ArcElement, Tooltip, Legend);
-
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [statusData, setStatusData] = useState([]);
+  const [monthlyData, setMonthlyData] = useState({});
+  const [selectedMonth, setSelectedMonth] = useState('');
 
+  useEffect(() => {
+    const fetchMonthlyData = async () => {
+      try {
+        const res = await fetch(`${url}/dashboard/total-paid`);
+        const data = await res.json();
+        setMonthlyData(data.breakdown);
+        const months = Object.keys(data.breakdown);
+        if (months.length > 0) setSelectedMonth(months[0]);
+      } catch (err) {
+        console.error('Error fetching monthly breakdown:', err);
+      }
+    };
+    fetchMonthlyData();
+  }, []);
+    
   useEffect(() => {
     const fetchStatusStats = async () => {
       try {
@@ -26,6 +46,25 @@ const Dashboard = () => {
   
     fetchStatusStats();
   }, []);
+  const getLineData = () => {
+    if (!selectedMonth || !monthlyData[selectedMonth]) return {};
+  
+    const weeks = Object.keys(monthlyData[selectedMonth]).sort();
+    return {
+      labels: weeks,
+      datasets: [
+        {
+          label: `Weekly Amount (${selectedMonth})`,
+          data: weeks.map(week => monthlyData[selectedMonth][week]),
+          fill: false,
+          borderColor: '#004680ec',
+          backgroundColor: '#0d6efd',
+          tension: 0.4
+        }
+      ]
+    };
+  };
+  
   const pieData = {
     labels: statusData.map(s => s.status),
     datasets: [
@@ -76,7 +115,11 @@ const Dashboard = () => {
 
     fetchStats();
   }, []);
-
+  const getMonthTotal = () => {
+    const weeks = monthlyData[selectedMonth] || {};
+    return Object.values(weeks).reduce((sum, value) => sum + value, 0);
+  };
+  
   if (!stats) return <Layout><div className="dashboard-container">Loading...</div></Layout>;
 
   return (
@@ -146,9 +189,30 @@ const Dashboard = () => {
          
           ))}
         </div>
+        <div className='chart-container1'>
         <div className="chart-container">
   <h2 className="subsection-title">📊 Projects by Status</h2>
   <Pie data={pieData} options={pieOptions} />
+</div>
+<div className="chart-container wide-chart">
+  <h2 className="subsection-title">📈 Monthly Revenue Overview</h2>
+  <div className="filter-row">
+    <label>Select Month: </label>
+    <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
+      {Object.keys(monthlyData).map((month, idx) => (
+        <option key={idx} value={month}>{moment(month).format('MMMM YYYY')}</option>
+      ))}
+    </select>
+  </div>
+
+  {/* 💰 Monthly Total */}
+  <div className="monthly-total">
+    <strong>Total for {moment(selectedMonth).format('MMMM YYYY')}:</strong>
+    <span> $ {getMonthTotal().toLocaleString()}</span>
+  </div>
+
+  <Line data={getLineData()} />
+</div>
 
 </div>
 

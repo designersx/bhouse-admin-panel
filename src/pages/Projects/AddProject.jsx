@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { url } from "../../lib/api";
 import BackButton from "../../components/BackButton";
+import SpinnerLoader from "../../components/SpinnerLoader";
 const AddProject = () => {
   const [step, setStep] = useState(() => {
     const savedStep = localStorage.getItem("addProjectStep");
@@ -31,9 +32,6 @@ const AddProject = () => {
           deliveryAddress: "",
           deliveryHours: "",
           assignedTeamRoles: {},
-          allowClientView: true,
-          allowComments: true,
-          enableNotifications: true,
           clientId: "",
         };
   });
@@ -110,8 +108,7 @@ const AddProject = () => {
 
     if (!totalValue || totalValue <= 0)
       return "Total Value must be a positive number.";
-
-    if (!advancePayment || advancePayment <= 0) {
+    if (advancePayment !== undefined && advancePayment !== null && advancePayment !== '' && advancePayment <= 0) {
       return "Advance Payment must be a positive number.";
     }
 
@@ -271,7 +268,8 @@ const AddProject = () => {
       const res = await fetch(`${url}/roles`);
       const data = await res.json();
       if (data.success) {
-        const allowedLevels = [2, 3, 4, 5];
+        const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
+      
         const filtered = data.data.filter((role) =>
           allowedLevels.includes(role.defaultPermissionLevel)
         );
@@ -599,7 +597,7 @@ const AddProject = () => {
                 <div className="form-group-row">
                   <div className="form-group">
                     <label>
-                      Advance Payment <span className="required-star">*</span>
+                      Advance Payment 
                     </label>
 
                     <input
@@ -607,7 +605,7 @@ const AddProject = () => {
                       name="advancePayment"
                       value={formData.advancePayment}
                       onChange={handleChange}
-                      required
+                      maxLength={8}
                       placeholder="Enter Advance Amount"
                     />
                   </div>
@@ -621,6 +619,7 @@ const AddProject = () => {
                       name="totalValue"
                       value={formData.totalValue}
                       onChange={handleChange}
+                      maxLength={8}
                       required
                       placeholder="Enter total value"
                     />
@@ -768,67 +767,7 @@ const AddProject = () => {
                       </ul>
                     )}
                   </div>
-                  <div className="form-group">
-
-                    <label>Delivery Address</label>
-                    <input
-                      type="text"
-                      name="deliveryAddress"
-                      value={formData.deliveryAddress}
-                      onChange={handleChange}
-                      placeholder="Enter delivery address"
-                      maxLength={50}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Delivery Hours</label>
-                    <select
-                      value={deliveryHourOption}
-                      onChange={(e) => {
-                        const selected = e.target.value;
-                        setDeliveryHourOption(selected);
-                        const valueToSave =
-                          selected === "Other" ? customDeliveryHour : selected;
-
-                        // Update formData
-                        handleChange({
-                          target: { name: "deliveryHours", value: valueToSave },
-                        });
-                      }}
-                    >
-                      <option value="Regular Hours">Regular Hours</option>
-                      <option value="Before 9 AM">Before 9 AM</option>
-                      <option value="After 6 PM">After 6 PM</option>
-                      <option value="Other">Other</option>
-                    </select>
-
-                    {deliveryHourOption === "Other" && (
-  <input
-    type="text"
-    placeholder="Enter custom delivery hours"
-    value={customDeliveryHour}
-    onChange={(e) => {
-      const input = e.target.value;
-      const invalidCharsRegex = /[^a-zA-Z0-9\s:-]/;
-      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
-
-      if (invalidCharsRegex.test(input) || emojiRegex.test(input)) {
-        return;
-      }
-
-      setCustomDeliveryHour(input);
-      handleChange({
-        target: {
-          name: "deliveryHours",
-          value: input,
-        },
-      });
-    }}
-  />
-)}
-
-
-                  </div>
+              
                   <div className="form-group">
 
                     <label>Presentation</label>
@@ -1091,49 +1030,8 @@ const AddProject = () => {
                   <button type="button" onClick={prevStep}>
                     Previous
                   </button>
-                  <button type="button" onClick={nextStep}>
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="form-card">
-                <h3>Additional Settings</h3>
-                <div className="form-group">
-                  <label>Allow Client View</label>
-                  <input
-                    type="checkbox"
-                    name="allowClientView"
-                    checked={formData.allowClientView}
-                    onChange={handleCheckboxChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Allow Comments</label>
-                  <input
-                    type="checkbox"
-                    name="allowComments"
-                    checked={formData.allowComments}
-                    onChange={handleCheckboxChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Enable Notifications</label>
-                  <input
-                    type="checkbox"
-                    name="enableNotifications"
-                    checked={formData.enableNotifications}
-                    onChange={handleCheckboxChange}
-                  />
-                </div>
-                <div className="form-navigation">
-                  <button type="button" onClick={prevStep}>
-                    Previous
-                  </button>
                   {isLoading ? (
-                    <button type="submit">Submitting...</button>
+                    <SpinnerLoader/>
                   ) : (
                     <button type="submit">Submit</button>
                   )}
