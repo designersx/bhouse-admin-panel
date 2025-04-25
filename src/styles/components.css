@@ -176,3 +176,15 @@ body {
   .back-btn:hover{
    cursor: pointer;
   }
+  .notification-card.unread {
+    background-color: #f0f8ff; /* light blue for unread */
+    border-left: 4px solid #007bff;
+  }
+  
+  .notification-card.read {
+    background-color: #fff;
+    opacity: 0.8;
+  }
+  .notification-card {
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+  }

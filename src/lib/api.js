@@ -1,8 +1,10 @@
 import axios from 'axios'
-// export const url = 'http://localhost:5000/api' || ""
-export const url = 'https://bhouse.truet.net/api' || ""
-export const url2 = 'https://bhouse.truet.net' || ""
-// export const url2 = 'http://localhost:5000' || ""
+
+export const url = 'http://localhost:5000/api' || ""
+export const url2 = 'http://localhost:5000' || ""
+// export const url = 'https://bhouse.truet.net/api' || ""
+// export const url2 = 'https://bhouse.truet.net' || ""
+
 
 export const registerUser = async (userData) => {
   try {
@@ -10,7 +12,7 @@ export const registerUser = async (userData) => {
     const res = await axios.post(`${url}/auth/signup`, userData);
     return res.data;
   } catch (error) {
-    throw error.response.data;
+    throw error.response.data; 
   }
 };
 export const getAllUsers = async () => {

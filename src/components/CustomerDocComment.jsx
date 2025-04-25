@@ -18,6 +18,8 @@ function CustomerDocComment() {
   const stateData = location.state?.data;
   const stateDocumentId = location.state?.documentId;
 
+  const filePathz = location.state.filePath
+console.log(filePathz , "hjjj")
   const fileName = stateFileName || decodeURIComponent(docName);
   const documentId = stateDocumentId || parseInt(docId);
  
@@ -102,15 +104,15 @@ const [loader , setLoader] = useState(false)
           <h2 className="title">{fileName}</h2>
 
           <div className="file-preview">
-            {filePath?.endsWith('.pdf') ? (
+            {filePath?.endsWith('.pdf') || filePathz?.endsWith('.pdf') ? (
               <iframe
-                src={`${url2}/${filePath}`}
+              src={filePath?.length > 0 ? `${url2}/${filePath}` : `${url2}/${filePathz}`}
                 title="File Preview"
                 className="preview-frame"
               />
             ) : (
               <img
-                src={`${url2}/${filePath}`}
+              src={filePath?.length > 0 ? `${url2}/${filePath}` : `${url2}/${filePathz}`}
                 alt="Preview"
                 className="preview-img"
               />
