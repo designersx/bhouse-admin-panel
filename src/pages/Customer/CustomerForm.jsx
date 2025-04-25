@@ -21,10 +21,6 @@ const CustomerForm = () => {
     status: "active",
     password: "",
     send_login_credentials: false,
-    enable_email_notifications: false,
-    enable_sms_notifications: false,
-    building_delivery_hours: "",
-    require_coi: false,
     createdBy: "admin",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -365,36 +361,6 @@ const CustomerForm = () => {
                   onChange={handleChange}
                 />
                 Send Login Credentials
-              </label>
-
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="enable_email_notifications"
-                  checked={formData.enable_email_notifications}
-                  onChange={handleChange}
-                />
-                Enable Email Notifications
-              </label>
-
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="enable_sms_notifications"
-                  checked={formData.enable_sms_notifications}
-                  onChange={handleChange}
-                />
-                Enable SMS Notifications
-              </label>
-
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="require_coi"
-                  checked={formData.require_coi}
-                  onChange={handleChange}
-                />
-                Require COI
               </label>
             </div>
 
