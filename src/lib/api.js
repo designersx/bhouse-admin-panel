@@ -5,6 +5,7 @@ export const url2 = 'https://bhouse.truet.net' || ""
 // export const url2 = 'http://localhost:5000' || ""
 export const registerUser = async (userData) => {
   try {
+    // fds
     const res = await axios.post(`${url}/auth/signup`, userData);
     return res.data;
   } catch (error) {

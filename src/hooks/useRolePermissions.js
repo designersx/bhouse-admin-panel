@@ -6,7 +6,7 @@ const useRolePermissions = (id) => {
   const [rolePermissions, setPermissions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+// dsa
   useEffect(() => {
     if (!id) return;
 
