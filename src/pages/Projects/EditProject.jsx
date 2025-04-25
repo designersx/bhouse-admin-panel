@@ -449,7 +449,6 @@ salesAggrement: [],
         <div className="step-indicator">
           <span className={step === 1 ? 'active' : ''}>Step 1</span>
           <span className={step === 2 ? 'active' : ''}>Step 2</span>
-          <span className={step === 3 ? 'active' : ''}>Step 3</span>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={`form-step step-${step}`}>
@@ -982,7 +981,7 @@ salesAggrement: [],
 <div className="form-navigation">
                   <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
                   {isLoading ? (
-                    <SpinnerLoader/>
+                     <SpinnerLoader size="30px"/>
                   ) : (
                   <button className='add-user-btna' type="submit">Submit</button>
                   )}

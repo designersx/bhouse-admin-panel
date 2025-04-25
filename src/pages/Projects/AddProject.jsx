@@ -462,7 +462,6 @@ const AddProject = () => {
         <div className="step-indicator">
           <span className={step === 1 ? "active" : ""}>Step 1</span>
           <span className={step === 2 ? "active" : ""}>Step 2</span>
-          <span className={step === 3 ? "active" : ""}>Step 3</span>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -1031,7 +1030,7 @@ const AddProject = () => {
                     Previous
                   </button>
                   {isLoading ? (
-                    <SpinnerLoader/>
+                    <SpinnerLoader size="30px"/>
                   ) : (
                     <button type="submit">Submit</button>
                   )}
