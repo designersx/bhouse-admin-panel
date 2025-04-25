@@ -13,44 +13,59 @@
   color: #004680ec;
   margin-bottom: 1.5rem;
 }
-
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
   margin-bottom: 2rem;
 }
 
 .stat-card {
-  background-color: #ffffff;
-  padding: 1.5rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.2s;
+  background: linear-gradient(135deg, #ffffff, #f8f9fb);
+  padding: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 80px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e4e7ec;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
 }
 
-.card-icon {
-  font-size: 2rem;
-  color: #004680ec;
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   margin-bottom: 0.5rem;
 }
 
+.card-icon,
+.card-icon1 {
+  font-size: 1.8rem;
+  color:#004680ec;
+}
+
 .stat-card h2 {
-  font-size: 1.2rem;
-  color: #555;
-  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+  color: #6c757d;
+  font-weight: 600;
+  margin: 0;
 }
 
 .stat-card p {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: #004680ec;
+  margin: 0.25rem 0 0;
 }
+
 
 .subsection-title {
   font-size: 1.8rem;
@@ -70,7 +85,7 @@
 .customer-card {
   background: white;
   border-radius: 20px;
-  padding: 1.5rem;
+  padding: 0.5rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -124,7 +139,7 @@
 }
 
 .chart-container {
-  max-width: 400px;
+  max-width: 500px;
   margin: 3rem auto;
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   padding: 2rem;
@@ -132,6 +147,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   text-align: center;
+  width: 450px
 }
 
 .chart-container:hover {
@@ -175,4 +191,10 @@
 .chart-container1{
   display: flex;
   
+}
+.card-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
