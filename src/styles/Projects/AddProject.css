@@ -367,9 +367,7 @@
   border-color: #4a90e2;
   outline: none;
 }
-.btn-up{
-  display: flex;
-}
+
 /* Button styles inside table */
 .add-user-btna {
   background-color: #004680;

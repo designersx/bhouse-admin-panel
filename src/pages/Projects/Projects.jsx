@@ -8,6 +8,7 @@ import useRolePermissions from '../../hooks/useRolePermissions';
 import { url } from '../../lib/api';
 import Loader from '../../components/Loader'
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
+import SpinnerLoader from '../../components/SpinnerLoader';
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -23,6 +24,8 @@ const Projects = () => {
   const canDelete = rolePermissions?.ProjectManagement?.delete;
   const canView = rolePermissions?.ProjectManagement?.view;
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusLoadingId, setStatusLoadingId] = useState(null);
+
 const itemsPerPage = 8;
 
   const getStatusClass = (status) => {
@@ -202,6 +205,8 @@ setFilteredProjects(visibleProjects);
     }
   };
   const handleStatusChange = async (projectId, newStatus) => {
+    setStatusLoadingId(projectId); 
+  
     try {
       const response = await axios.put(`${url}/projects/${projectId}`, { status: newStatus });
       if (response.status === 200) {
@@ -216,8 +221,11 @@ setFilteredProjects(visibleProjects);
     } catch (error) {
       console.error("Error updating status", error);
       Swal.fire("Failed to update status");
+    } finally {
+      setStatusLoadingId(null); // Clear loading state
     }
   };
+  
   const generatePageNumbers = (currentPage, totalPages) => {
     const pages = [];
     if (totalPages <= 4) {
@@ -299,23 +307,28 @@ setFilteredProjects(visibleProjects);
       <td>{project.name}</td>
       <td>{project.clientName}</td>
       <td>
-        <select
-          className={getStatusClass(project.status)}
-          value={project.status}
-          onChange={(e) => handleStatusChange(project.id, e.target.value)}
-        >
-          <option value="In progress">In progress</option>
-          <option value="Aproved">Aproved</option>
-          <option value="Waiting on Advance">Waiting on Advance</option>
-          <option value="Advance Paid">Advance Paid</option>
-          <option value="Order Processed">Order Processed</option>
-          <option value="Arrived">Arrived</option>
-          <option value="Delivered">Delivered</option>
-          <option value="Installed">Installed</option>
-          <option value="Punch">Punch</option>
-          <option value="Completed">Balance Owed</option>
-        </select>
-      </td>
+  {statusLoadingId === project.id ? (
+    <SpinnerLoader/>
+  ) : (
+    <select
+      className={getStatusClass(project.status)}
+      value={project.status}
+      onChange={(e) => handleStatusChange(project.id, e.target.value)}
+    >
+      <option value="In progress">In progress</option>
+      <option value="Aproved">Aproved</option>
+      <option value="Waiting on Advance">Waiting on Advance</option>
+      <option value="Advance Paid">Advance Paid</option>
+      <option value="Order Processed">Order Processed</option>
+      <option value="Arrived">Arrived</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Installed">Installed</option>
+      <option value="Punch">Punch</option>
+      <option value="Completed">Balance Owed</option>
+    </select>
+  )}
+</td>
+
       <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
       <td>{project.type}</td>
       <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>

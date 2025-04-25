@@ -349,7 +349,7 @@ const UserForm = () => {
     onClick={() => setShowPassword(!showPassword)}
     style={{
       position: "absolute",
-      top: "42.5%",
+      top: "41%",
       right: "280px",
       transform: "translateY(-50%)",
       cursor: "pointer",

@@ -7,6 +7,7 @@ import { url, getCustomers } from '../../lib/api';
 import Swal from 'sweetalert2';
 import { toast, ToastContainer } from 'react-toastify';
 import { url2 } from '../../lib/api';
+import SpinnerLoader from '../../components/SpinnerLoader';
 const EditProject = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -27,17 +28,16 @@ const EditProject = () => {
     deliveryAddress: '',
     deliveryHours: '',
     assignedTeamRoles: {},
-    allowClientView: true,
-    allowComments: true,
-    enableNotifications: true,
     proposals: [],
 floorPlans: [],
 otherDocuments: [],
-
+presentation: [],
+cad: [],
+salesAggrement: [],
   });
   console.log(formData?.clientId , "client id ")
   
-  
+    const [isLoading, setIsLoading] = useState(false);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
   const [removedFiles, setRemovedFiles] = useState([]);
@@ -82,7 +82,7 @@ otherDocuments: [],
 
   const fetchRoles = async () => {
     const res = await axios.get(`${url}/roles`);
-    const allowedLevels = [2, 3, 4, 5];
+    const allowedLevels = [2, 3, 4, 5,6,7,8,9,10];
     const filtered = res.data?.data.filter(role => allowedLevels.includes(role.defaultPermissionLevel));
     const roleTitles = filtered.map(role => role.title);
     setAllRoles(roleTitles);
@@ -125,7 +125,10 @@ otherDocuments: [],
         estimatedCompletion: formatDate(project.estimatedCompletion),
         proposals: JSON.parse(project.proposals || '[]'),
         floorPlans: JSON.parse(project.floorPlans || '[]'),
-        otherDocuments: JSON.parse(project.otherDocuments || '[]')
+        otherDocuments: JSON.parse(project.otherDocuments || '[]'),
+        presentation: JSON.parse(project.presentation || '[]'),
+        cad: JSON.parse(project.cad || '[]'),
+        salesAggrement: JSON.parse(project.salesAggrement || '[]'),
       });
   
       // 🟡 Lead Time Matrix
@@ -374,6 +377,7 @@ otherDocuments: [],
     });
   
     try {
+      setIsLoading(true);
       const res = await fetch(`${url}/projects/${projectId}`, {
         method: 'PUT',
         body: formDataToSend,
@@ -387,7 +391,11 @@ otherDocuments: [],
         Swal.fire(`Error: ${data.error}`);
       }
     } catch (err) {
+      setIsLoading(false);
       Swal.fire("Failed to update project");
+    }
+    finally {
+      setIsLoading(false);
     }
   };
   
@@ -409,8 +417,9 @@ otherDocuments: [],
       if (!type) return "Project Type is required.";
       if (!clientName) return "Customer selection is required.";
       if (!totalValue || isNaN(totalValue) || totalValue <= 0) return "Total Value must be a valid positive number.";
-      if (!advancePayment|| isNaN(advancePayment) || advancePayment <= 0) return "Total Value must be a valid positive number.";
-
+      if (advancePayment !== undefined && advancePayment !== null && advancePayment !== '' && advancePayment <= -1) {
+        return "Advance Payment must be a positive number.";
+      }
     }
   
     if (step === 2) {
@@ -440,7 +449,6 @@ otherDocuments: [],
         <div className="step-indicator">
           <span className={step === 1 ? 'active' : ''}>Step 1</span>
           <span className={step === 2 ? 'active' : ''}>Step 2</span>
-          <span className={step === 3 ? 'active' : ''}>Step 3</span>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={`form-step step-${step}`}>
@@ -479,7 +487,7 @@ otherDocuments: [],
       ...prev,
       clientName: e.target.value,
       deliveryAddress: selectedCustomer?.delivery_address || '',
-      clientId: selectedCustomer?.id || '', // updating clientId directly
+      clientId: selectedCustomer?.id || '', 
     }));
 
     setSelectedCustomerId(selectedCustomer?.id || '');
@@ -652,7 +660,7 @@ otherDocuments: [],
 
   {/* Floor Plans & CAD Files */}
   <div className="form-group">
-    <label>Warranty</label>
+    <label>Floor Plan</label>
     <input
       type="file"
       multiple
@@ -705,6 +713,96 @@ otherDocuments: [],
                 <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
               )}
               <button type="button" onClick={() => handleRemoveExistingFile('otherDocuments', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+  <div className="form-group">
+    <label>Presentation</label>
+    <input
+                      type="file"
+                      name="presentation"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('presentation', e)}
+    />
+    {formData.presentation && formData.presentation.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.presentation.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('presentation', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+  <div className="form-group">
+    <label>CAD Files</label>
+    <input
+                      type="file"
+                      name="cad"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('cad', e)}
+    />
+    {formData.cad && formData.cad.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.cad.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('cad', url)}>Remove</button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </div>
+  <div className="form-group">
+    <label>Installation Docs</label>
+    <input
+                      type="file"
+                      name="salesAggrement"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+      onChange={(e) => handleFileChange('salesAggrement', e)}
+    />
+    {formData.salesAggrement && formData.salesAggrement.length > 0 && (
+      <ul className="file-preview-list">
+        {formData.salesAggrement.map((url, idx) => {
+          const fileName = url.split('/').pop();
+          const fileExt = fileName.split('.').pop();
+          const fileUrl = url.startsWith('uploads') ? `${url2}/${url}` : url;
+
+          return (
+            <li key={idx}>
+              {['jpg', 'jpeg', 'png'].includes(fileExt) ? (
+                <img src={fileUrl} alt={fileName} width="100" />
+              ) : (
+                <a href={fileUrl} target="_blank" rel="noreferrer">{fileName}</a>
+              )}
+              <button type="button" onClick={() => handleRemoveExistingFile('salesAggrement', url)}>Remove</button>
             </li>
           );
         })}
@@ -880,31 +978,13 @@ otherDocuments: [],
 </div>
 
 
-                <div className="form-navigation">
+<div className="form-navigation">
                   <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
-                  <button className='add-user-btna' type="button" onClick={nextStep}>Next</button>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="form-card">
-                <h3>Additional Settings</h3>
-                <div className="form-group">
-                  <label>Allow Client View</label>
-                  <input type="checkbox" name="allowClientView" checked={formData.allowClientView} onChange={handleCheckboxChange} />
-                </div>
-                <div className="form-group">
-                  <label>Allow Comments</label>
-                  <input type="checkbox" name="allowComments" checked={formData.allowComments} onChange={handleCheckboxChange} />
-                </div>
-                <div className="form-group">
-                  <label>Enable Notifications</label>
-                  <input type="checkbox" name="enableNotifications" checked={formData.enableNotifications} onChange={handleCheckboxChange} />
-                </div>
-                <div className="form-navigation">
-                  <button className='add-user-btna' type="button" onClick={prevStep}>Previous</button>
+                  {isLoading ? (
+                     <SpinnerLoader size="30px"/>
+                  ) : (
                   <button className='add-user-btna' type="submit">Submit</button>
+                  )}
                 </div>
               </div>
             )}
