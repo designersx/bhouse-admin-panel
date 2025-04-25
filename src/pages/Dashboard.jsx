@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import "../styles/dashboard.css";
@@ -25,7 +23,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMonthlyData = async () => {
       try {
-        const res = await fetch(`${url}/dashboard/total-paid`);
+        const res = await fetch(${url}/dashboard/total-paid);
         const data = await res.json();
         setMonthlyData(data.breakdown || {}); // Ensure breakdown is not undefined
         const months = Object.keys(data?.breakdown || {});
@@ -41,7 +39,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStatusStats = async () => {
       try {
-        const res = await fetch(`${url}/dashboard/project-status`);
+        const res = await fetch(${url}/dashboard/project-status);
         const data = await res.json();
         setStatusData(data || []); // Ensure statusData is not undefined
       } catch (err) {
@@ -61,7 +59,7 @@ const Dashboard = () => {
       labels: weeks,
       datasets: [
         {
-          label: `Weekly Amount (${selectedMonth})`,
+          label: Weekly Amount (${selectedMonth}),
           data: weeks.map((week) => monthlyData[selectedMonth][week]),
           fill: false,
           borderColor: "#004680ec",
@@ -105,7 +103,7 @@ const Dashboard = () => {
           label: (tooltipItem) => {
             const label = tooltipItem.label || "";
             const value = tooltipItem.raw || 0;
-            return `${label}: ${value} projects`;
+            return ${label}: ${value} projects;
           },
         },
       },
@@ -117,7 +115,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${url}/dashboard/stats`);
+        const response = await fetch(${url}/dashboard/stats);
         const data = await response.json();
         setStats(data || {}); // Ensure stats is not undefined
       } catch (err) {
@@ -185,7 +183,7 @@ const Dashboard = () => {
             <div key={customer.clientId} className="card customer-card">
               <div className="customer-header">
                 <img
-                  src={customer.profilePhoto ? `${url2}/${customer.profilePhoto}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
+                  src={customer.profilePhoto ? `${url2}/${customer.profilePhoto}` : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`
                   alt={customer.full_name}
                   className="customer-avatar"
                 />
