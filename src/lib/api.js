@@ -3,13 +3,12 @@ import axios from 'axios'
 export const url = 'https://bhouse.truet.net/api' || ""
 export const url2 = 'https://bhouse.truet.net' || ""
 // export const url2 = 'http://localhost:5000' || ""
-// kjkjjkjn
 export const registerUser = async (userData) => {
   try {
     const res = await axios.post(`${url}/auth/signup`, userData);
     return res.data;
   } catch (error) {
-    throw error.response.data; 
+    throw error.response.data;
   }
 };
 export const getAllUsers = async () => {
