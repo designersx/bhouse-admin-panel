@@ -23,7 +23,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMonthlyData = async () => {
       try {
-        const res = await fetch(${url}/dashboard/total-paid);
+        const res = await fetch(`${url}/dashboard/total-paid`);
         const data = await res.json();
         setMonthlyData(data.breakdown || {}); // Ensure breakdown is not undefined
         const months = Object.keys(data?.breakdown || {});
