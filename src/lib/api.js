@@ -10,7 +10,7 @@ export const registerUser = async (userData) => {
     const res = await axios.post(`${url}/auth/signup`, userData);
     return res.data;
   } catch (error) {
-    throw error.response.data;
+    throw error.response.data; 
   }
 };
 export const getAllUsers = async () => {
