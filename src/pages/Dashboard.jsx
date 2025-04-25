@@ -39,7 +39,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStatusStats = async () => {
       try {
-        const res = await fetch(${url}/dashboard/project-status);
+        const res = await fetch(`${url}/dashboard/project-status`);
         const data = await res.json();
         setStatusData(data || []); // Ensure statusData is not undefined
       } catch (err) {
@@ -115,7 +115,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(${url}/dashboard/stats);
+        const response = await fetch(`${url}/dashboard/stats`);
         const data = await response.json();
         setStats(data || {}); // Ensure stats is not undefined
       } catch (err) {
