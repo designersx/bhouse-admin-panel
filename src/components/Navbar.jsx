@@ -8,14 +8,14 @@ import { CgProfile } from "react-icons/cg";
 import { useState, useEffect } from 'react';
 import Offcanvas from './OffCanvas/OffCanvas';
 import Modal from '../../src/components/Modal/Model';
-import { getNotificationsByUser, markNotificationRead } from '../lib/api'; // markNotificationRead is your new API method
+import { getNotificationsByUser, markNotificationRead } from '../lib/api';
 
 const Navbar = ({ isLogin }) => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const [openOffcanvas, setOpenOffcanvas] = useState(false);
   const [notification, setNotification] = useState([]);
-  const [modalData, setModalData] = useState(null); // Modal content
+  const [modalData, setModalData] = useState(null);
 
   const fetchNotification = async () => {
     try {
@@ -29,7 +29,6 @@ const Navbar = ({ isLogin }) => {
   const formatNotificationTime = (dateString) => {
     const inputDate = new Date(dateString);
     const now = new Date();
-
     const isToday = inputDate.toDateString() === now.toDateString();
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
@@ -66,14 +65,33 @@ const Navbar = ({ isLogin }) => {
   };
 
   const handleNotificationClick = async (message) => {
-    setModalData(message); // open modal
-    try {
+    if (message.path) {
+      const encodedPath = message.path
+        .split('/')
+        .map(part => encodeURIComponent(part))
+        .join('/');
+  
+      navigate(encodedPath, {
+        state: {
+          notificationId: message.id,
+          filePath: message.filePath || null,
+          category : message?.documentType
+        },
+      });
+      await markNotificationRead(message.id);
+  
+      // Don't mark it read yet — let it happen on the opened page
+    }else {
+      // Show modal and mark as read
+      setModalData(message);
       if (!message.isRead) {
-        await markNotificationRead(message.id); // Mark as read
-        fetchNotification(); // Refresh notifications
+        try {
+          await markNotificationRead(message.id);
+          fetchNotification();
+        } catch (error) {
+          console.error("Failed to mark notification as read:", error);
+        }
       }
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
     }
   };
 
@@ -88,7 +106,6 @@ const Navbar = ({ isLogin }) => {
   const handleLogo = () => navigate("/dashboard");
   const handleOpenOffcanvas = () => setOpenOffcanvas(true);
   const handleCloseOffcanvas = () => setOpenOffcanvas(false);
-
   const navbarClass = `navbar ${isLogin ? "login-page" : "logged-in"}`;
   const loggedInUserId = user?.user?.id;
 
@@ -120,7 +137,11 @@ const Navbar = ({ isLogin }) => {
       </div>
 
       {openOffcanvas && (
-        <Offcanvas isOpen={openOffcanvas} closeOffcanvas={handleCloseOffcanvas}  getLatestComment={fetchNotification} >
+        <Offcanvas
+          isOpen={openOffcanvas}
+          closeOffcanvas={handleCloseOffcanvas}
+          getLatestComment={fetchNotification}
+        >
           {notification.length > 0 ? notification
             .filter(msg => msg.user_id === loggedInUserId && msg.role === "user")
             .map(msg => (
