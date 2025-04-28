@@ -530,7 +530,7 @@
 //       </div>
 //     </Layout>
 //         )
-      
+
 // };
 
 //         export default Projects;
@@ -545,7 +545,7 @@ import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
 import { url } from '../../lib/api';
 import Loader from '../../components/Loader'
-import { FaEdit, FaEye, FaTrash  } from 'react-icons/fa';
+import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import { MdReviews } from "react-icons/md";
 import SpinnerLoader from '../../components/SpinnerLoader';
 import { ToastContainer, toast } from "react-toastify";
@@ -566,8 +566,8 @@ const Projects = () => {
   const canView = rolePermissions?.ProjectManagement?.view;
   const [currentPage, setCurrentPage] = useState(1);
   const [statusLoadingId, setStatusLoadingId] = useState(null);
-  const [mailLoading , setMailLoading] = useState(false)
-const itemsPerPage = 8;
+  const [mailLoading, setMailLoading] = useState(false)
+  const itemsPerPage = 8;
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -579,7 +579,7 @@ const itemsPerPage = 8;
       default: return "badge default";
     }
   };
-  
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -596,12 +596,12 @@ const itemsPerPage = 8;
     if (!Array.isArray(assignedTeamRoles)) return "";
 
     const userMap = {};
-    if(allUsers){
+    if (allUsers) {
       allUsers?.forEach(user => {
         userMap[user.id] = `${user.firstName} ${user.lastName}`;
       });
     }
-   
+
 
     return assignedTeamRoles
       .flatMap(roleEntry =>
@@ -611,7 +611,7 @@ const itemsPerPage = 8;
       )
       .join(", ");
   };
-console.log(getAssignedUserNames())
+  console.log(getAssignedUserNames())
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -622,7 +622,7 @@ console.log(getAssignedUserNames())
         );
         const localData = JSON.parse(localStorage.getItem('user'));
         const userData = localData?.user;
-    
+
         if (!userData) {
           console.log("No user data found in localStorage");
           setProjects([]);
@@ -630,12 +630,12 @@ console.log(getAssignedUserNames())
           setLoading(false);
           return;
         }
-    
+
         const userId = userData.id;
         const userRole = userData.userRole;
-    
+
         let visibleProjects = [];
-    
+
         if (userRole === "Super Admin" || userRole === "Admin") {
           visibleProjects = allProjects;
         } else {
@@ -645,10 +645,10 @@ console.log(getAssignedUserNames())
             );
           });
         }
-    
+
         visibleProjects.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-setProjects(visibleProjects);
-setFilteredProjects(visibleProjects);
+        setProjects(visibleProjects);
+        setFilteredProjects(visibleProjects);
 
         setLoading(false);
       } catch (error) {
@@ -656,14 +656,14 @@ setFilteredProjects(visibleProjects);
         setLoading(false);
       }
     };
-    
+
 
     fetchProjects();
   }, []);
 
   const sortAndSetProjects = (list, order) => {
     let sorted = [...list];
-  
+
     if (order === "atoz") {
       sorted.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     } else if (order === "ztoa") {
@@ -672,29 +672,29 @@ setFilteredProjects(visibleProjects);
       // default: sort by createdAt descending (latest first)
       sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
-  
+
     setFilteredProjects(sorted);
   };
-  
+
   const handleSearch = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-  
+
     let filtered = [...projects];
-  
+
     if (query) {
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(query.toLowerCase()) ||
         project.clientName.toLowerCase().includes(query.toLowerCase())
       );
     }
-  
+
     sortAndSetProjects(filtered, sortOrder);
   };
   useEffect(() => {
     sortAndSetProjects(filteredProjects, sortOrder);
   }, [sortOrder]);
-  
+
 
   const navigate = useNavigate();
   const handleViewProject = (projectId) => {
@@ -746,8 +746,8 @@ setFilteredProjects(visibleProjects);
     }
   };
   const handleStatusChange = async (projectId, newStatus) => {
-    setStatusLoadingId(projectId); 
-  
+    setStatusLoadingId(projectId);
+
     try {
       const response = await axios.put(`${url}/projects/${projectId}`, { status: newStatus });
       if (response.status === 200) {
@@ -766,7 +766,7 @@ setFilteredProjects(visibleProjects);
       setStatusLoadingId(null); // Clear loading state
     }
   };
-  
+
   const generatePageNumbers = (currentPage, totalPages) => {
     const pages = [];
     if (totalPages <= 4) {
@@ -783,12 +783,12 @@ setFilteredProjects(visibleProjects);
     return pages;
   };
   async function sendGoogleReviewEmail(projectId) {
-    setMailLoading(true)
+    // setMailLoading(true)
     try {
       const response = await axios.post(`${url}/reviews`, {
         projectId: projectId
       });
-  
+
       if (response.data.message) {
         toast.success('Review email sent successfully!');
       }
@@ -796,171 +796,171 @@ setFilteredProjects(visibleProjects);
       console.error('Failed to send review email:', error);
       toast.error('Failed to send review email.');
     }
-    finally{
-      setMailLoading(false)
+    finally {
+      // setMailLoading(false)
     }
   }
   return (
     <Layout>
-       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="roles-container">
         <div className='project-first-header'>
-        <h2 >Projects</h2>
-       
-        {canCreate && (
-          <button className="add-user-btn" onClick={handleArchivedProjectClick}>
-            Archived Projects
-          </button>
-        )}
+          <h2 >Projects</h2>
+
+          {canCreate && (
+            <button className="add-user-btn" onClick={handleArchivedProjectClick}>
+              Archived Projects
+            </button>
+          )}
         </div>
-      <div className="user-roles-header">
-        {canCreate && (
-          <button className="add-user-btn" onClick={handleNewProjectClick}>
-           Add Project
-          </button>
-        )}
-        <div className="user-roles-headerb">
-<select
-  className="user-sort-input"
-  value={sortOrder}
-  onChange={(e) => setSortOrder(e.target.value)}
->
-  <option value="default">Sort: Latest First</option>
-  <option value="atoz">Sort A - Z</option>
-  <option value="ztoa">Sort Z - A</option>
-</select>
+        <div className="user-roles-header">
+          {canCreate && (
+            <button className="add-user-btn" onClick={handleNewProjectClick}>
+              Add Project
+            </button>
+          )}
+          <div className="user-roles-headerb">
+            <select
+              className="user-sort-input"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="default">Sort: Latest First</option>
+              <option value="atoz">Sort A - Z</option>
+              <option value="ztoa">Sort Z - A</option>
+            </select>
 
-        <input
-          type="text"
-          placeholder="Search projects..."
-          value={searchQuery}
-          onChange={handleSearch}
-          className="user-search-input"
-        />
-      </div>
-</div>
-      <div className="roles-table">
-        {loading ? (
-            <Loader/>
-        ) : (
-          <table className="projects-table">
-            <thead>
-              <tr>
-              <th>Sr No</th>
-                <th>Project Name</th>
-                <th>Client Name</th>
-                <th>Status</th>
-                <th>Assigned Team</th>
-                <th>Type</th>
-                <th>Estimated Completion</th>
-                {(canEdit || canDelete || canView) && <th>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProjects.length ? <>
-                {filteredProjects
-  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-  .map((project, index) => (
-    <tr key={project.id}>
-      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-      <td>{project.name}</td>
-      <td>{project.clientName}</td>
-      <td>
-  {statusLoadingId === project.id ? (
-    <SpinnerLoader/>
-  ) : (
-    <select
-      className={getStatusClass(project.status)}
-      value={project.status}
-      onChange={(e) => handleStatusChange(project.id, e.target.value)}
-    >
-      <option value="In progress">In progress</option>
-      <option value="Aproved">Aproved</option>
-      <option value="Waiting on Advance">Waiting on Advance</option>
-      <option value="Advance Paid">Advance Paid</option>
-      <option value="Order Processed">Order Processed</option>
-      <option value="Arrived">Arrived</option>
-      <option value="Delivered">Delivered</option>
-      <option value="Installed">Installed</option>
-      <option value="Punch">Punch</option>
-      <option value="Completed">Balance Owed</option>
-    </select>
-  )}
-</td>
-
-      <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
-      <td>{project.type}</td>
-      <td>{new Date(project.estimatedCompletion).toLocaleDateString()}</td>
-      <td className="actions">
-        {canEdit && (
-          <FaEdit
-            style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
-            title="Edit"
-            onClick={() => handleEditProject(project.id)}
-          />
-        )}
-        {canView && (
-          <FaEye
-            style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
-            title="View"
-            onClick={() => handleViewProject(project.id)}
-          />
-        )}
-        {canDelete && (
-          <FaTrash
-            style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
-            title="Delete"
-            onClick={() => handleArchiveProject(project.id)}
-          />
-        )}
-        {mailLoading ? <SpinnerLoader size={10}/> :   < MdReviews
-        style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
-            title="Send Review Mail"
-            onClick={() => sendGoogleReviewEmail(project.id)}
-       /> }
-     
-      </td>
-    </tr>
-))}
-
-              </> :  <td colSpan="7" style={{ textAlign: "center" }}>No Project found</td> }
-              
-            </tbody>
-          </table>
-        )}
-        {filteredProjects.length > itemsPerPage && (
-  <div className="pagination">
-    <button
-      className="icon-btn"
-      onClick={() => setCurrentPage((prev) => prev - 1)}
-      disabled={currentPage === 1}
-    >
-      ◀
-    </button>
-
-    {generatePageNumbers(currentPage, Math.ceil(filteredProjects.length / itemsPerPage)).map(
-      (page, index) => (
-        <div
-          key={index}
-          className={`page-btn ${currentPage === page ? "active" : ""}`}
-          onClick={() => typeof page === "number" && setCurrentPage(page)}
-        >
-          {page}
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="user-search-input"
+            />
+          </div>
         </div>
-      )
-    )}
+        <div className="roles-table">
+          {loading ? (
+            <Loader />
+          ) : (
+            <table className="projects-table">
+              <thead>
+                <tr>
+                  <th>Sr No</th>
+                  <th>Project Name</th>
+                  <th>Client Name</th>
+                  <th>Status</th>
+                  <th>Assigned Team</th>
+                  <th>Type</th>
+                  <th>Estimated Completion</th>
+                  {(canEdit || canDelete || canView) && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProjects.length ? <>
+                  {filteredProjects
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((project, index) => (
+                      <tr key={project.id}>
+                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                        <td>{project.name}</td>
+                        <td>{project.clientName}</td>
+                        <td>
+                          {statusLoadingId === project.id ? (
+                            <SpinnerLoader />
+                          ) : (
+                            <select
+                              className={getStatusClass(project.status)}
+                              value={project.status}
+                              onChange={(e) => handleStatusChange(project.id, e.target.value)}
+                            >
+                              <option value="In progress">In progress</option>
+                              <option value="Aproved">Aproved</option>
+                              <option value="Waiting on Advance">Waiting on Advance</option>
+                              <option value="Advance Paid">Advance Paid</option>
+                              <option value="Order Processed">Order Processed</option>
+                              <option value="Arrived">Arrived</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Installed">Installed</option>
+                              <option value="Punch">Punch</option>
+                              <option value="Completed">Balance Owed</option>
+                            </select>
+                          )}
+                        </td>
 
-    <button
-      className="icon-btn"
-      onClick={() => setCurrentPage((prev) => prev + 1)}
-      disabled={currentPage === Math.ceil(filteredProjects.length / itemsPerPage)}
-    >
-      ▶
-    </button>
-  </div>
-)}
+                        <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
+                        <td>{project.type}</td>
+                        <td>    {parseInt(project.estimatedCompletion)} Weeks</td>
+                        <td className="actions">
+                          {canEdit && (
+                            <FaEdit
+                              style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
+                              title="Edit"
+                              onClick={() => handleEditProject(project.id)}
+                            />
+                          )}
+                          {canView && (
+                            <FaEye
+                              style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
+                              title="View"
+                              onClick={() => handleViewProject(project.id)}
+                            />
+                          )}
+                          {canDelete && (
+                            <FaTrash
+                              style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+                              title="Delete"
+                              onClick={() => handleArchiveProject(project.id)}
+                            />
+                          )}
+                          {mailLoading ? <SpinnerLoader size={10} /> : < MdReviews
+                            style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+                            title="Send Review Mail"
+                            onClick={() => sendGoogleReviewEmail(project.id)}
+                          />}
 
-      </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                </> : <td colSpan="7" style={{ textAlign: "center" }}>No Project found</td>}
+
+              </tbody>
+            </table>
+          )}
+          {filteredProjects.length > itemsPerPage && (
+            <div className="pagination">
+              <button
+                className="icon-btn"
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                disabled={currentPage === 1}
+              >
+                ◀
+              </button>
+
+              {generatePageNumbers(currentPage, Math.ceil(filteredProjects.length / itemsPerPage)).map(
+                (page, index) => (
+                  <div
+                    key={index}
+                    className={`page-btn ${currentPage === page ? "active" : ""}`}
+                    onClick={() => typeof page === "number" && setCurrentPage(page)}
+                  >
+                    {page}
+                  </div>
+                )
+              )}
+
+              <button
+                className="icon-btn"
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                disabled={currentPage === Math.ceil(filteredProjects.length / itemsPerPage)}
+              >
+                ▶
+              </button>
+            </div>
+          )}
+
+        </div>
       </div>
     </Layout>
   );
