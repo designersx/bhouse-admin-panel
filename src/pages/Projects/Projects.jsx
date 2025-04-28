@@ -7,8 +7,11 @@ import Swal from 'sweetalert2';
 import useRolePermissions from '../../hooks/useRolePermissions';
 import { url } from '../../lib/api';
 import Loader from '../../components/Loader'
-import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaEye, FaTrash  } from 'react-icons/fa';
+import { MdReviews } from "react-icons/md";
 import SpinnerLoader from '../../components/SpinnerLoader';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -25,7 +28,7 @@ const Projects = () => {
   const canView = rolePermissions?.ProjectManagement?.view;
   const [currentPage, setCurrentPage] = useState(1);
   const [statusLoadingId, setStatusLoadingId] = useState(null);
-
+  const [mailLoading , setMailLoading] = useState(false)
 const itemsPerPage = 8;
 
   const getStatusClass = (status) => {
@@ -241,9 +244,27 @@ setFilteredProjects(visibleProjects);
     }
     return pages;
   };
+  async function sendGoogleReviewEmail(projectId) {
+    setMailLoading(true)
+    try {
+      const response = await axios.post(`${url}/reviews`, {
+        projectId: projectId
+      });
   
+      if (response.data.message) {
+        toast.success('Review email sent successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to send review email:', error);
+      toast.error('Failed to send review email.');
+    }
+    finally{
+      setMailLoading(false)
+    }
+  }
   return (
     <Layout>
+       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="roles-container">
         <div className='project-first-header'>
         <h2 >Projects</h2>
@@ -354,6 +375,12 @@ setFilteredProjects(visibleProjects);
             onClick={() => handleArchiveProject(project.id)}
           />
         )}
+        {mailLoading ? <SpinnerLoader size={10}/> :   < MdReviews
+        style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+            title="Send Review Mail"
+            onClick={() => sendGoogleReviewEmail(project.id)}
+       /> }
+     
       </td>
     </tr>
 ))}

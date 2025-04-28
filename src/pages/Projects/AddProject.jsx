@@ -176,10 +176,10 @@ const AddProject = () => {
     setLeadTimeMatrix([
       ...leadTimeMatrix,
       {
-        itemName: "",
-        quantity: "",
-        expectedDeliveryDate: "",
-        expectedArrivalDate: "",
+        itemName: null,
+        quantity: null,
+        expectedDeliveryDate: null,
+        expectedArrivalDate: null,
         status: "Pending",
       },
     ]);
@@ -354,8 +354,10 @@ const AddProject = () => {
         : null,
       status: item.status || "Pending",
     }));
-
-    formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
+       console.log(sanitizedMatrix)
+    if (sanitizedMatrix[0].itemName !== "") {
+      formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
+    }
 
     for (let file of files) {
       formDataToSend.append("files", file);
@@ -611,6 +613,7 @@ const AddProject = () => {
                       value={formData.advancePayment}
                       onChange={handleChange}
                       maxLength={8}
+                      required
                       placeholder="Enter Advance Amount"
                     />
                   </div>
