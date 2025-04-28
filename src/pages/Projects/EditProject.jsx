@@ -124,7 +124,11 @@ const EditProject = () => {
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
-        estimatedCompletion: formatDate(project.estimatedCompletion),
+        estimatedCompletion: project.estimatedCompletion
+        ? project.estimatedCompletion.includes('_') 
+          ? project.estimatedCompletion.split('_')[0]
+          : project.estimatedCompletion
+        : "",
         proposals: JSON.parse(project.proposals || "[]"),
         floorPlans: JSON.parse(project.floorPlans || "[]"),
         otherDocuments: JSON.parse(project.otherDocuments || "[]"),
@@ -326,7 +330,7 @@ const EditProject = () => {
   useEffect(() => {
     const shouldEnableCheckbox =
       parseFloat(formData.advancePayment) !==
-        parseFloat(initialFinance.advancePayment) ||
+      parseFloat(initialFinance.advancePayment) ||
       parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue);
 
     // Only enable/disable the checkbox — do not set it to true
@@ -574,13 +578,23 @@ const EditProject = () => {
                       Estimated Occupancy Date{" "}
                       <span className="required-star">*</span>
                     </label>
-                    <input
-                      type="date"
+
+                    <select
                       name="estimatedCompletion"
                       value={formData.estimatedCompletion}
-                      min={formData.startDate || ""}
                       onChange={handleChange}
-                    />
+                      required
+                    >
+                      <option value="">Select Completion Time</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
+                        <option key={week} value={`${week}_weeks`}>
+                          {week} Week{week > 1 ? "s" : ""}
+                        </option>
+                      ))}
+
+                    </select>
+
+
                   </div>
                 </div>
 
@@ -656,9 +670,8 @@ const EditProject = () => {
                   {allRoles.map((role) => (
                     <div
                       key={role}
-                      className={`role-card ${
-                        selectedRoles.includes(role) ? "active" : ""
-                      }`}
+                      className={`role-card ${selectedRoles.includes(role) ? "active" : ""
+                        }`}
                     >
                       <div className="role-header">
                         <label>

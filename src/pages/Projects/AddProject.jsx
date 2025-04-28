@@ -21,19 +21,19 @@ const AddProject = () => {
     return savedData
       ? JSON.parse(savedData)
       : {
-          name: "",
-          type: "Corporate Office",
-          clientName: "",
-          description: "",
-          startDate: "",
-          estimatedCompletion: "",
-          totalValue: "",
-          advancePayment: "",
-          deliveryAddress: "",
-          deliveryHours: "",
-          assignedTeamRoles: {},
-          clientId: "",
-        };
+        name: "",
+        type: "Corporate Office",
+        clientName: "",
+        description: "",
+        startDate: "",
+        estimatedCompletion: "",
+        totalValue: "",
+        advancePayment: "",
+        deliveryAddress: "",
+        deliveryHours: "",
+        assignedTeamRoles: {},
+        clientId: "",
+      };
   });
 
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -46,14 +46,14 @@ const AddProject = () => {
     return savedMatrix
       ? JSON.parse(savedMatrix)
       : [
-          {
-            itemName: "",
-            quantity: "",
-            expectedDeliveryDate: "",
-            expectedArrivalDate: "",
-            status: "Pending",
-          },
-        ];
+        {
+          itemName: "",
+          quantity: "",
+          expectedDeliveryDate: "",
+          expectedArrivalDate: "",
+          status: "Pending",
+        },
+      ];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -103,8 +103,9 @@ const AddProject = () => {
     if (!clientName) return "Customer selection is required.";
 
     if (!estimatedCompletion) return "Estimated Occupancy Date is required.";
-    if (estimatedCompletion < today)
-      return "Estimated Occupancy Date cannot be in the past.";
+    // if (estimatedCompletion < today)
+    
+    //   return "Estimated Occupancy Date cannot be in the past.";
 
     if (!totalValue || totalValue <= 0)
       return "Total Value must be a positive number.";
@@ -122,24 +123,24 @@ const AddProject = () => {
   const validateStep2 = () => {
     if (selectedRoles.length === 0)
       return "At least one role must be selected.";
-  
+
     if (deliveryHourOption === "Other") {
       const trimmed = customDeliveryHour.trim();
-  
+
       if (!trimmed) {
         return "Please enter valid custom delivery hours.";
       }
-      const invalidCharsRegex = /[^a-zA-Z0-9\s:-]/; 
+      const invalidCharsRegex = /[^a-zA-Z0-9\s:-]/;
       const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
-  
+
       if (invalidCharsRegex.test(trimmed) || emojiRegex.test(trimmed)) {
         return "Delivery hours should not contain special characters or emojis.";
       }
     }
-  
+
     return null;
   };
-  
+
 
   const nextStep = () => {
     let errorMsg = null;
@@ -203,7 +204,7 @@ const AddProject = () => {
     };
     fetchCustomers();
   }, []);
-  
+
 
   const handleRoleToggle = async (role) => {
     if (selectedRoles.includes(role)) {
@@ -224,21 +225,21 @@ const AddProject = () => {
         const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         const users = data.users || [];
-  
+
         if (users.length === 0) {
           toast.error(`No users found in the role "${role}"`);
           return;
         }
-  
+
         setSelectedRoles((prev) => [...prev, role]);
         setRoleUsers((prev) => ({ ...prev, [role]: users }));
 
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
         const loggedInUserId = loggedInUser?.user?.id;
         const loggedInUserRole = loggedInUser?.user?.userRole;
-  
+
         let defaultUserIds = [];
-  
+
         if (
           loggedInUserRole === "Account Manager" &&
           users.some((user) => user.id === loggedInUserId)
@@ -248,7 +249,7 @@ const AddProject = () => {
           const defaultUsers = users.filter((user) => user.permissionLevel === 2);
           defaultUserIds = defaultUsers.map((user) => user.id);
         }
-  
+
         setFormData((prev) => ({
           ...prev,
           assignedTeamRoles: {
@@ -262,24 +263,24 @@ const AddProject = () => {
       }
     }
   };
-  
+
   useEffect(() => {
     const fetchRoles = async () => {
       const res = await fetch(`${url}/roles`);
       const data = await res.json();
       if (data.success) {
         const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
-      
+
         const filtered = data.data.filter((role) =>
           allowedLevels.includes(role.defaultPermissionLevel)
         );
         const roleTitles = filtered.map((role) => role.title);
         setAllRoles(roleTitles);
-  
+
         // ✅ Pre-select "Account Manager" if current user has that role
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
         const userRole = loggedInUser?.user?.userRole;
-  
+
         if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
           // Simulate toggle to auto-select
           handleRoleToggle("Account Manager");
@@ -288,7 +289,7 @@ const AddProject = () => {
     };
     fetchRoles();
   }, []);
-  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -302,18 +303,6 @@ const AddProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-
-
-    // const errorMsg = step3validation() || validateLeadTimeMatrix();
-    //     if (errorMsg) {
-    //       Swal.fire({
-    //         icon: "error",
-    //         title: "Validation Error",
-    //         text: errorMsg,
-    //       });
-    //       return;
-    //     }
 
     const formDataToSend = new FormData();
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
@@ -330,6 +319,7 @@ const AddProject = () => {
         } else {
           formDataToSend.append(key, formData[key]);
         }
+
       }
     });
 
@@ -342,15 +332,15 @@ const AddProject = () => {
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
         ? new Date(item.expectedDeliveryDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       status: item.status || "Pending",
     }));
@@ -582,7 +572,7 @@ const AddProject = () => {
                       <option value="Completed">Balance Owed</option>
                     </select>
                   </div>
-                  <div className="form-group">
+                  {/* <div className="form-group">
                     <label>
                       Estimated Occupancy Date{" "}
                       <span className="required-star">*</span>
@@ -599,12 +589,34 @@ const AddProject = () => {
                       onChange={handleChange}
                       required
                     />
+                  </div> */}
+                  <div className="form-group">
+                    <label>
+                      Estimated Occupancy Date{" "}
+                      <span className="required-star">*</span>
+                    </label>
+
+                    <select
+                      name="estimatedCompletion"
+                      value={formData.estimatedCompletion}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="">Select Completion Time</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
+                        <option key={week} value={`${week}_weeks`}>
+                          {week} Week{week > 1 ? "s" : ""}
+                        </option>
+                      ))}
+                    </select>
+
+                 
                   </div>
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
                     <label>
-                      Advance Payment 
+                      Advance Payment
                     </label>
 
                     <input
@@ -654,9 +666,8 @@ const AddProject = () => {
                       {allRoles.map((role) => (
                         <div
                           key={role}
-                          className={`role-card ${
-                            selectedRoles.includes(role) ? "active" : ""
-                          }`}
+                          className={`role-card ${selectedRoles.includes(role) ? "active" : ""
+                            }`}
                         >
                           <div className="role-header">
                             <label>
@@ -690,8 +701,8 @@ const AddProject = () => {
                                         const updatedUsers = e.target.checked
                                           ? [...prevSelected, user.id]
                                           : prevSelected.filter(
-                                              (id) => id !== user.id
-                                            );
+                                            (id) => id !== user.id
+                                          );
 
                                         setFormData((prev) => ({
                                           ...prev,
@@ -817,7 +828,7 @@ const AddProject = () => {
                       </ul>
                     )}
                   </div>
-              
+
                   <div className="form-group">
 
                     <label>Presentation</label>
@@ -892,40 +903,40 @@ const AddProject = () => {
                     />
                   </div>
                   <div className="form-group">
-  <label>Delivery Hours</label>
-  <select
-    value={deliveryHourOption}
-    onChange={(e) => {
-      const selected = e.target.value;
-      setDeliveryHourOption(selected);
-      const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+                    <label>Delivery Hours</label>
+                    <select
+                      value={deliveryHourOption}
+                      onChange={(e) => {
+                        const selected = e.target.value;
+                        setDeliveryHourOption(selected);
+                        const valueToSave = selected === "Other" ? customDeliveryHour : selected;
 
-      // Update formData
-      handleChange({
-        target: { name: "deliveryHours", value: valueToSave }
-      });
-    }}
-  >
-    <option value="Regular Hours">Regular Hours</option>
-    <option value="Before 9 AM">Before 9 AM</option>
-    <option value="After 6 PM">After 6 PM</option>
-    <option value="Other">Other</option>
-  </select>
+                        // Update formData
+                        handleChange({
+                          target: { name: "deliveryHours", value: valueToSave }
+                        });
+                      }}
+                    >
+                      <option value="Regular Hours">Regular Hours</option>
+                      <option value="Before 9 AM">Before 9 AM</option>
+                      <option value="After 6 PM">After 6 PM</option>
+                      <option value="Other">Other</option>
+                    </select>
 
-  {deliveryHourOption === "Other" && (
-    <input
-      type="text"
-      placeholder="Enter custom delivery hours"
-      value={customDeliveryHour}
-      onChange={(e) => {
-        setCustomDeliveryHour(e.target.value);
-        handleChange({
-          target: { name: "deliveryHours", value: e.target.value }
-        });
-      }}
-    />
-  )}
-</div>
+                    {deliveryHourOption === "Other" && (
+                      <input
+                        type="text"
+                        placeholder="Enter custom delivery hours"
+                        value={customDeliveryHour}
+                        onChange={(e) => {
+                          setCustomDeliveryHour(e.target.value);
+                          handleChange({
+                            target: { name: "deliveryHours", value: e.target.value }
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
 
 
 
@@ -978,7 +989,7 @@ const AddProject = () => {
                           <input
                             type="checkbox"
                             checked={item.tbd || false}
-                      
+
                             onChange={(e) => {
                               const checked = e.target.checked;
                               handleItemChange(index, "tbd", checked);
@@ -1081,7 +1092,7 @@ const AddProject = () => {
                     Previous
                   </button>
                   {isLoading ? (
-                    <SpinnerLoader size="30px"/>
+                    <SpinnerLoader size="30px" />
                   ) : (
                     <button type="submit">Submit</button>
                   )}
