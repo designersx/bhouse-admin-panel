@@ -8,7 +8,7 @@ import { FaProjectDiagram, FaClipboardList, FaMoneyCheckAlt, FaMoneyBillWave } f
 import { MdOutlineLeaderboard } from "react-icons/md";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Line } from "react-chartjs-2";
+import ReactEcharts from 'echarts-for-react';
 import moment from "moment";
 import { CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 import Loader from "../components/Loader";
@@ -53,24 +53,46 @@ const Dashboard = () => {
   }, []);
 
   // Get data for the line chart
-  const getLineData = () => {
+  const getEChartsOption = () => {
     if (!selectedMonth || !monthlyData[selectedMonth]) return {};
-
+  
     const weeks = Object.keys(monthlyData[selectedMonth]).sort();
+    const values = weeks.map((week) => monthlyData[selectedMonth][week]);
+  
     return {
-      labels: weeks,
-      datasets: [
+      tooltip: {
+        trigger: 'axis',
+      },
+      xAxis: {
+        type: 'category',
+        data: weeks,
+      },
+      yAxis: {
+        type: 'value',
+      },
+      series: [
         {
-          label: `Weekly Amount (${selectedMonth})`,
-          data: weeks.map((week) => monthlyData[selectedMonth][week]),
-          fill: false,
-          borderColor: "#004680ec",
-          backgroundColor: "#0d6efd",
-          tension: 0.4,
+          data: values,
+          type: 'line',
+          smooth: true,
+          lineStyle: {
+            width: 3,
+            color: '#0d6efd',
+          },
+          itemStyle: {
+            color: '#0d6efd',
+          },
         },
       ],
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true,
+      },
     };
   };
+  
 
   // Pie chart data
   const pieData = {
@@ -235,7 +257,8 @@ const Dashboard = () => {
               <span> $ {getMonthTotal().toLocaleString()}</span>
             </div>
 
-            {/* <Line data={getLineData()} /> */}
+            <ReactEcharts option={getEChartsOption()} style={{ height: 300, width: '100%' }} />
+
           </div>
         </div>
       </div>
