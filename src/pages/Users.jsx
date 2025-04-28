@@ -187,8 +187,8 @@ const [isLoading , setIsLoading] = useState(true)
           </thead>
          
           <tbody>
-            {paginatedUsers.length > 0 ? (
-              paginatedUsers.map((user , index) => (
+            {paginatedUsers?.length > 0 ? (
+              paginatedUsers?.map((user , index) => (
                 <tr key={user.id}>
                 <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
                   <td>{user.firstName} {user.lastName}</td>
@@ -265,7 +265,7 @@ const [isLoading , setIsLoading] = useState(true)
               ◀
             </button>
 
-            {generatePageNumbers(currentPage, totalPages).map((page, index) => (
+            {generatePageNumbers(currentPage, totalPages)?.map((page, index) => (
               <div
                 key={index}
                 className={`page-btn ${currentPage === page ? "active" : ""}`}
