@@ -68,12 +68,14 @@ const Projects = () => {
 
 
     return assignedTeamRoles
-      .flatMap(roleEntry =>
-        Array.isArray(roleEntry.users)
-          ? roleEntry.users.map(userId => userMap[userId] || `User ID: ${userId}`)
-          : []
-      )
-      .join(", ");
+    .flatMap(roleEntry =>
+      Array.isArray(roleEntry.users)
+        ? roleEntry.users
+            .map(userId => userMap[userId])
+            .filter(Boolean) // removes undefined (i.e., deleted users)
+        : []
+    )
+    .join(", ");
   };
   console.log(getAssignedUserNames())
 

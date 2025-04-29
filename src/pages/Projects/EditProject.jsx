@@ -34,6 +34,8 @@ const EditProject = () => {
     presentation: [],
     cad: [],
     salesAggrement: [],
+    acknowledgements : [] , 
+    receivingReports : []
   });
   console.log(formData?.clientId, "client id ");
 
@@ -135,6 +137,8 @@ const EditProject = () => {
         presentation: JSON.parse(project.presentation || "[]"),
         cad: JSON.parse(project.cad || "[]"),
         salesAggrement: JSON.parse(project.salesAggrement || "[]"),
+        receivingReports:JSON.parse(project.receivingReports || "[]"),
+        acknowledgements: JSON.parse(project.acknowledgements || "[]"),
       });
 
       // 🟡 Lead Time Matrix
@@ -370,6 +374,8 @@ const EditProject = () => {
           "proposals",
           "floorPlans",
           "otherDocuments",
+          "acknowledgements" , 
+          "receivingReports"
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -1008,6 +1014,95 @@ const EditProject = () => {
                       )}
                   </div>
                 </div>
+                <div className="form-group">
+                    <label>Acknowledgement</label>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("acknowledgements", e)}
+                    />
+                    {formData.acknowledgements && formData.acknowledgements.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.acknowledgements.map((url, idx) => {
+                          const fileName = url.split("/").pop();
+                          const fileExt = fileName.split(".").pop();
+                          const fileUrl = url.startsWith("uploads")
+                            ? `${url2}/${url}`
+                            : url;
+
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("acknowledgements", url)
+                                }
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Receving Reports</label>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("receivingReports", e)}
+                    />
+                    {formData.receivingReports && formData.receivingReports.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.receivingReports.map((url, idx) => {
+                          const fileName = url.split("/").pop();
+                          const fileExt = fileName.split(".").pop();
+                          const fileUrl = url.startsWith("uploads")
+                            ? `${url2}/${url}`
+                            : url;
+
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("receivingReports", url)
+                                }
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 <br />
 
                 <div className="form-group-row">

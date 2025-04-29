@@ -132,6 +132,7 @@
 }
 
 .add-project-container .file-preview-list li {
+  position: relative; /* ADD THIS */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -142,6 +143,30 @@
   max-width: 100%;
   overflow: hidden;
 }
+
+.add-project-container .file-preview-list li button {
+  position: absolute; 
+  top: 6px; 
+  right: 6px;
+  background-color: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.add-project-container .file-preview-list li button:hover {
+  background-color: #e04345;
+}
+
 
 .add-project-container .file-preview-list li img {
   border-radius: 4px;
@@ -159,20 +184,7 @@
   text-overflow: ellipsis;
 }
 
-.add-project-container .file-preview-list li button {
-  background-color: #ff4d4f;
-  color: #fff;
-  border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.2s ease-in-out;
-}
 
-.add-project-container .file-preview-list li button:hover {
-  background-color: #e04345;
-}
 
 /* Role Container Improvements */
 .add-project-container .roles-container-ui {
