@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import axios from 'axios';
@@ -12,6 +13,7 @@ import { MdReviews } from "react-icons/md";
 import SpinnerLoader from '../../components/SpinnerLoader';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// import Swal from 'sweetalert2';
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -28,7 +30,7 @@ const Projects = () => {
   const canView = rolePermissions?.ProjectManagement?.view;
   const [currentPage, setCurrentPage] = useState(1);
   const [statusLoadingId, setStatusLoadingId] = useState(null);
-  const [mailLoading, setMailLoading] = useState(false)
+  const [mailLoadingId, setMailLoadingId] = useState(null);
   const itemsPerPage = 8;
 
   const getStatusClass = (status) => {
@@ -245,21 +247,33 @@ const Projects = () => {
     return pages;
   };
   async function sendGoogleReviewEmail(projectId) {
-    // setMailLoading(true)
-    try {
-      const response = await axios.post(`${url}/reviews`, {
-        projectId: projectId
-      });
-
-      if (response.data.message) {
-        toast.success('Review email sent successfully!');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Do you want to send a review request email?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#004680',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, send it!',
+      cancelButtonText: 'Cancel',
+    });
+  
+    if (result.isConfirmed) {
+      setMailLoadingId(projectId);
+      try {
+        const response = await axios.post(`${url}/reviews`, {
+          projectId: projectId
+        });
+  
+        if (response.data.message) {
+          toast.success('Review email sent successfully!');
+        }
+      } catch (error) {
+        console.error('Failed to send review email:', error);
+        toast.error('Failed to send review email.');
+      } finally {
+        setMailLoadingId(null);
       }
-    } catch (error) {
-      console.error('Failed to send review email:', error);
-      toast.error('Failed to send review email.');
-    }
-    finally {
-      // setMailLoading(false)
     }
   }
   return (
@@ -376,11 +390,15 @@ const Projects = () => {
                               onClick={() => handleArchiveProject(project.id)}
                             />
                           )}
-                          {mailLoading ? <SpinnerLoader size={10} /> : < MdReviews
-                            style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
-                            title="Send Review Mail"
-                            onClick={() => sendGoogleReviewEmail(project.id)}
-                          />}
+                         {mailLoadingId === project.id ? (
+  <SpinnerLoader size={10} />
+) : (
+  <MdReviews
+    style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+    title="Send Review Mail"
+    onClick={() => sendGoogleReviewEmail(project.id)}
+  />
+)}
 
                         </td>
                       </tr>
