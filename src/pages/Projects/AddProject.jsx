@@ -424,27 +424,6 @@ const AddProject = () => {
       [fieldName]: [...existingFiles, ...files],
     }));
   };
-  // const validateLeadTimeMatrix = () => {
-  //   const today = new Date().toISOString().split("T")[0];
-
-  //   for (let i = 0; i < leadTimeMatrix.length; i++) {
-  //     const item = leadTimeMatrix[i];
-
-  //     if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
-  //     if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
-
-  //     if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
-  //     if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
-
-  //     if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
-  //     if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
-
-  //     if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
-  //     if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
-  //   }
-
-  //   return null;
-  // };
 
   return (
     <Layout>
