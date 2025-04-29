@@ -324,6 +324,7 @@ const ProjectDetails = () => {
     try {
       await axios.delete(`${url}/items/project-items/${id}`);
       setItems((prev) => prev.filter((item) => item.id !== id));
+      setMatrix((prev) => prev.filter((item) => item.id !== id));
       toast.success("Item deleted!");
     } catch (err) {
       toast.error("Error deleting item.");
@@ -338,6 +339,7 @@ const ProjectDetails = () => {
       const updated = [...items];
       updated[index] = res.data;
       setItems(updated);
+      setMatrix(updated)
 
       toast.success("Item added!");
     } catch (err) {
@@ -361,12 +363,13 @@ const ProjectDetails = () => {
       },
     ]);
   };
-
+const [matrix , setMatrix]  = useState()
   useEffect(() => {
     const fetchItems = async () => {
       try {
         const res = await axios.get(`${url}/items/${projectId}/`);
         setItems(res.data);
+        setMatrix(res.data)
       } catch (error) {
         console.error("Error fetching items:", error);
       }
@@ -459,6 +462,7 @@ const ProjectDetails = () => {
   }
   const removeRow = (index) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
+    setMatrix((prev) => prev.filter((_, i) => i !== index))
   };
   const handleFileUpload = (e, category) => {
     const files = Array.from(e.target.files);
@@ -1106,21 +1110,15 @@ const ProjectDetails = () => {
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
-                    <button
-                      className="leadtimematrixheadingbutton"
-                      disabled={notifyCustomerLoading}
-                      onClick={() => handleToNotifyCustomer()}
-                    >
-                      {notifyCustomerLoading ? (
-                        <>
-                          Notify customer <SpinnerLoader size={10} />
-                        </>
-                      ) : (
-                        "Notify customer"
-                      )}
-                    </button>
+
+                    {matrix.length > 0  ?
+                           <button className="leadtimematrixheadingbutton"  disabled={notifyCustomerLoading} onClick={() => handleToNotifyCustomer()}>{notifyCustomerLoading?<>Notify customer <SpinnerLoader size={10}/></>:"Notify customer"}</button>
+                    : null}
+             
+
                   </div>
                   <table className="matrix-table">
+                    {items.length > 0 ?
                     <thead>
                       <tr>
                         <th>Manufacturer Name</th>
@@ -1132,6 +1130,8 @@ const ProjectDetails = () => {
                         <th>Actions</th>
                       </tr>
                     </thead>
+                    : null}
+                    
 
                     <tbody>
                       {items.map((item, index) => {
