@@ -54,7 +54,7 @@ const ProjectDetails = () => {
   const [buttonClicked, setButtonClicked] = useState(false);
   const [docsData, setDocsData] = useState({});
   const [commentLoading, setCommentLoading] = useState(false);
-  const [notifyCustomerLoading,setNotifyCustomerLoading]=useState(false)
+  const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const scrollRef = useRef(null);
   useEffect(() => {
     if (scrollRef.current) {
@@ -287,8 +287,8 @@ const ProjectDetails = () => {
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-              ? issue.productImages
-              : [],
+            ? issue.productImages
+            : [],
       }));
       setPunchList(parsed);
       const initialStatus = {};
@@ -590,8 +590,8 @@ const [matrix , setMatrix]  = useState()
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-              ? issue.productImages
-              : [],
+            ? issue.productImages
+            : [],
       }));
       setPunchList(parsed);
     } catch (err) {
@@ -654,10 +654,13 @@ const [matrix , setMatrix]  = useState()
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          setNotifyCustomerLoading(true)
-          const response = await axios.post(`${url}/notifyCustomerOfItemStatus`, data);
+          setNotifyCustomerLoading(true);
+          const response = await axios.post(
+            `${url}/notifyCustomerOfItemStatus`,
+            data
+          );
           console.log(response);
-          setNotifyCustomerLoading(false)
+          setNotifyCustomerLoading(false);
           await Swal.fire({
             title: "Success!",
             text: "Customer has been notified successfully.",
@@ -665,16 +668,14 @@ const [matrix , setMatrix]  = useState()
             timer: 2000, // 3 seconds
             showConfirmButton: false,
           });
-        
         } catch (error) {
           console.error(error);
-          setNotifyCustomerLoading(false)
+          setNotifyCustomerLoading(false);
           Swal.fire("Error!", "Something went wrong while notifying.", "error");
         }
       }
     });
   };
-
 
   return (
     <Layout>
@@ -760,15 +761,17 @@ const [matrix , setMatrix]  = useState()
                   <div className="tabs-container">
                     <div className="tabs-header">
                       <button
-                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""
-                          }`}
+                        className={`tab-button ${
+                          activeTabing === "Admin" ? "active" : ""
+                        }`}
                         onClick={() => setActiveTabing("Admin")}
                       >
                         BHOUSE
                       </button>
                       <button
-                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""
-                          }`}
+                        className={`tab-button ${
+                          activeTabing === "Customer" ? "active" : ""
+                        }`}
                         onClick={() => setActiveTabing("Customer")}
                       >
                         Customer
@@ -815,13 +818,12 @@ const [matrix , setMatrix]  = useState()
                             title: "Acknowledgements",
                             files: project.acknowledgements,
                             category: "acknowledgements",
-
                           },
                           {
                             title: "Receiving Reports",
                             files: project.receivingReports,
                             category: "receivingReports",
-                          }
+                          },
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title}</h3>
@@ -837,45 +839,45 @@ const [matrix , setMatrix]  = useState()
 
                             {selectedFiles[docCategory.category]?.length >
                               0 && (
-                                <div className="file-preview-section">
-                                  <h4>Files to be uploaded:</h4>
-                                  <ul className="preview-list">
-                                    {selectedFiles[docCategory.category].map(
-                                      (file, i) => (
-                                        <li key={i} className="preview-item">
-                                          {file.name}
+                              <div className="file-preview-section">
+                                <h4>Files to be uploaded:</h4>
+                                <ul className="preview-list">
+                                  {selectedFiles[docCategory.category].map(
+                                    (file, i) => (
+                                      <li key={i} className="preview-item">
+                                        {file.name}
 
-                                          <span
-                                            className="remove-preview"
-                                            onClick={() =>
-                                              removeSelectedFile(
-                                                docCategory.category,
-                                                i
-                                              )
-                                            }
-                                          >
-                                            ×
-                                          </span>
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
-                                  <button
-                                    className="upload-btn"
-                                    onClick={() =>
-                                      uploadSelectedFiles(docCategory.category)
-                                    }
-                                  >
-                                    Upload
-                                  </button>
-                                </div>
-                              )}
+                                        <span
+                                          className="remove-preview"
+                                          onClick={() =>
+                                            removeSelectedFile(
+                                              docCategory.category,
+                                              i
+                                            )
+                                          }
+                                        >
+                                          ×
+                                        </span>
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                                <button
+                                  className="upload-btn"
+                                  onClick={() =>
+                                    uploadSelectedFiles(docCategory.category)
+                                  }
+                                >
+                                  Upload
+                                </button>
+                              </div>
+                            )}
                             {(() => {
                               const files = Array.isArray(docCategory?.files)
                                 ? docCategory.files
                                 : typeof docCategory.files === "string"
-                                  ? JSON.parse(docCategory.files)
-                                  : [];
+                                ? JSON.parse(docCategory.files)
+                                : [];
 
                               return files.length > 0 ? (
                                 <div className="uploaded-files">
@@ -1007,7 +1009,7 @@ const [matrix , setMatrix]  = useState()
                             (doc) =>
                               normalize(doc.documentType) === normalizedKey
                           );
-                          const documentId = matchedDoc?.id; // ✅ You now have documentId
+                          const documentId = matchedDoc?.id;
                           return (
                             <div key={idx} className="doc-view-section">
                               <h4>{docMap[key]}</h4>
@@ -1108,10 +1110,12 @@ const [matrix , setMatrix]  = useState()
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
+
                     {matrix.length > 0  ?
                            <button className="leadtimematrixheadingbutton"  disabled={notifyCustomerLoading} onClick={() => handleToNotifyCustomer()}>{notifyCustomerLoading?<>Notify customer <SpinnerLoader size={10}/></>:"Notify customer"}</button>
                     : null}
              
+
                   </div>
                   <table className="matrix-table">
                     {items.length > 0 ?
@@ -1578,8 +1582,9 @@ const [matrix , setMatrix]  = useState()
                             <div className="punch-card-top">
                               <h4>{issue.title}</h4>
                               <span
-                                className={`status-badge ${issue.status?.toLowerCase() || "pending"
-                                  }`}
+                                className={`status-badge ${
+                                  issue.status?.toLowerCase() || "pending"
+                                }`}
                               >
                                 {issue.status || "Pending"}
                               </span>
@@ -1670,8 +1675,9 @@ const [matrix , setMatrix]  = useState()
                             <p>
                               <strong>Created By:</strong>{" "}
                               {issue.createdByType === "user"
-                                ? `${issue.creatorUser?.firstName || ""} ${issue.creatorUser?.lastName || ""
-                                }`
+                                ? `${issue.creatorUser?.firstName || ""} ${
+                                    issue.creatorUser?.lastName || ""
+                                  }`
                                 : issue.creatorCustomer?.full_name || "N/A"}
                             </p>
                             <button

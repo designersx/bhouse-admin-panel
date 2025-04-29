@@ -21,19 +21,19 @@ const AddProject = () => {
     return savedData
       ? JSON.parse(savedData)
       : {
-        name: "",
-        type: "Corporate Office",
-        clientName: "",
-        description: "",
-        startDate: "",
-        estimatedCompletion: "",
-        totalValue: "",
-        advancePayment: "",
-        deliveryAddress: "",
-        deliveryHours: "",
-        assignedTeamRoles: {},
-        clientId: "",
-      };
+          name: "",
+          type: "Corporate Office",
+          clientName: "",
+          description: "",
+          startDate: "",
+          estimatedCompletion: "",
+          totalValue: "",
+          advancePayment: "",
+          deliveryAddress: "",
+          deliveryHours: "",
+          assignedTeamRoles: {},
+          clientId: "",
+        };
   });
 
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -46,14 +46,14 @@ const AddProject = () => {
     return savedMatrix
       ? JSON.parse(savedMatrix)
       : [
-        {
-          itemName: "",
-          quantity: "",
-          expectedDeliveryDate: "",
-          expectedArrivalDate: "",
-          status: "Pending",
-        },
-      ];
+          {
+            itemName: "",
+            quantity: "",
+            expectedDeliveryDate: "",
+            expectedArrivalDate: "",
+            status: "Pending",
+          },
+        ];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -104,12 +104,17 @@ const AddProject = () => {
 
     if (!estimatedCompletion) return "Estimated Occupancy Date is required.";
     // if (estimatedCompletion < today)
-    
+
     //   return "Estimated Occupancy Date cannot be in the past.";
 
     if (!totalValue || totalValue <= 0)
       return "Total Value must be a positive number.";
-    if (advancePayment !== undefined && advancePayment !== null && advancePayment !== '' && advancePayment <= 0) {
+    if (
+      advancePayment !== undefined &&
+      advancePayment !== null &&
+      advancePayment !== "" &&
+      advancePayment <= 0
+    ) {
       return "Advance Payment must be a positive number.";
     }
 
@@ -140,7 +145,6 @@ const AddProject = () => {
 
     return null;
   };
-
 
   const nextStep = () => {
     let errorMsg = null;
@@ -196,7 +200,9 @@ const AddProject = () => {
     const fetchCustomers = async () => {
       try {
         const data = await getCustomers();
-        const activeCustomers = (data || []).filter(customer => customer.status === "active");
+        const activeCustomers = (data || []).filter(
+          (customer) => customer.status === "active"
+        );
         setCustomers(activeCustomers);
       } catch (error) {
         console.error("Error fetching customers:", error);
@@ -204,7 +210,6 @@ const AddProject = () => {
     };
     fetchCustomers();
   }, []);
-
 
   const handleRoleToggle = async (role) => {
     if (selectedRoles.includes(role)) {
@@ -246,7 +251,9 @@ const AddProject = () => {
         ) {
           defaultUserIds = [loggedInUserId];
         } else {
-          const defaultUsers = users.filter((user) => user.permissionLevel === 2);
+          const defaultUsers = users.filter(
+            (user) => user.permissionLevel === 2
+          );
           defaultUserIds = defaultUsers.map((user) => user.id);
         }
 
@@ -281,7 +288,10 @@ const AddProject = () => {
         const loggedInUser = JSON.parse(localStorage.getItem("user"));
         const userRole = loggedInUser?.user?.userRole;
 
-        if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
+        if (
+          userRole === "Account Manager" &&
+          roleTitles.includes("Account Manager")
+        ) {
           // Simulate toggle to auto-select
           handleRoleToggle("Account Manager");
         }
@@ -289,7 +299,6 @@ const AddProject = () => {
     };
     fetchRoles();
   }, []);
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -319,7 +328,6 @@ const AddProject = () => {
         } else {
           formDataToSend.append(key, formData[key]);
         }
-
       }
     });
 
@@ -332,19 +340,19 @@ const AddProject = () => {
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
         ? new Date(item.expectedDeliveryDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ")
         : null,
       status: item.status || "Pending",
     }));
-       console.log(sanitizedMatrix)
+    console.log(sanitizedMatrix);
     if (sanitizedMatrix[0].itemName !== "") {
       formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
     }
@@ -424,6 +432,35 @@ const AddProject = () => {
       [fieldName]: [...existingFiles, ...files],
     }));
   };
+
+  // const validateLeadTimeMatrix = () => {
+  //   const today = new Date().toISOString().split("T")[0];
+
+  //   for (let i = 0; i < leadTimeMatrix.length; i++) {
+  //     const item = leadTimeMatrix[i];
+
+  //     if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
+  //     if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
+
+  //     if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
+  //     if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
+
+  //     if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
+  //     if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
+
+  //     if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
+  //     if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
+  //   }
+
+  //   return null;
+  // };
+  const handleRemoveFile = (field, index) => {
+    setFormData((prev) => {
+      const updatedFiles = prev[field]?.filter((_, idx) => idx !== index) || [];
+      return { ...prev, [field]: updatedFiles };
+    });
+  };
+
 
   return (
     <Layout>
@@ -588,15 +625,11 @@ const AddProject = () => {
                         </option>
                       ))}
                     </select>
-
-                 
                   </div>
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
-                    <label>
-                      Advance Payment
-                    </label>
+                    <label>Advance Payment</label>
 
                     <input
                       type="number"
@@ -645,8 +678,9 @@ const AddProject = () => {
                       {allRoles.map((role) => (
                         <div
                           key={role}
-                          className={`role-card ${selectedRoles.includes(role) ? "active" : ""
-                            }`}
+                          className={`role-card ${
+                            selectedRoles.includes(role) ? "active" : ""
+                          }`}
                         >
                           <div className="role-header">
                             <label>
@@ -680,8 +714,8 @@ const AddProject = () => {
                                         const updatedUsers = e.target.checked
                                           ? [...prevSelected, user.id]
                                           : prevSelected.filter(
-                                            (id) => id !== user.id
-                                          );
+                                              (id) => id !== user.id
+                                            );
 
                                         setFormData((prev) => ({
                                           ...prev,
@@ -705,7 +739,7 @@ const AddProject = () => {
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Detailed Proposal</label>
                     <input
                       type="file"
                       name="proposals"
@@ -715,13 +749,23 @@ const AddProject = () => {
                       disabled={(formData.proposals?.length || 0) >= 5}
                     />
 
-                    {formData.proposals?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.proposals && formData.proposals.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.proposals.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("proposals", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
 
                   <div className="form-group">
@@ -735,13 +779,23 @@ const AddProject = () => {
                       disabled={(formData.floorPlans?.length || 0) >= 5}
                     />
 
-                    {formData.floorPlans?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.floorPlans.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.floorPlans && formData.floorPlans.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.floorPlans.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("floorPlans", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
 
                   <div className="form-group">
@@ -759,9 +813,23 @@ const AddProject = () => {
 
                     {formData.otherDocuments?.length > 0 && (
                       <ul className="file-preview-list">
-                        {formData.otherDocuments.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
+                    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.otherDocuments.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("otherDocuments", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                       </ul>
                     )}
                   </div>
@@ -778,13 +846,23 @@ const AddProject = () => {
                       disabled={(formData.acknowledgements?.length || 0) >= 5}
                     />
 
-                    {formData.acknowledgements?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.acknowledgements.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.acknowledgements && formData.acknowledgements.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.acknowledgements.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("acknowledgements", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
                   <div className="form-group">
                     <label>Receiving Reports</label>
@@ -799,18 +877,27 @@ const AddProject = () => {
                       disabled={(formData.receivingReports?.length || 0) >= 5}
                     />
 
-                    {formData.oreceivingReports?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.receivingReports.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.receivingReports && formData.receivingReports.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.receivingReports.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("receivingReports", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
 
                   <div className="form-group">
-
-                    <label>Presentation</label>
+                    <label>Options Presentation</label>
                     <input
                       type="file"
                       name="presentation"
@@ -818,14 +905,24 @@ const AddProject = () => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "presentation")}
                     />
-
-                    {formData.presentation?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.presentation.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.presentation && formData.presentation.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.presentation.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("presentation", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
+                 
                   </div>
                   <div className="form-group">
                     <label>CAD Files</label>
@@ -836,18 +933,27 @@ const AddProject = () => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "cad")}
                     />
-
-                    {formData.cad?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.cad.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
+{formData.cad && formData.cad.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.cad.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("cad", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
                   </div>
 
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Sales Aggrement</label>
                     <input
                       type="file"
                       name="salesAggrement"
@@ -858,15 +964,25 @@ const AddProject = () => {
                       }
                     />
 
-                    {formData.salesAggrement?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.salesAggrement.map((file, idx) => (
-                          <li key={idx}>{file.name}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+{formData.salesAggrement && formData.salesAggrement.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.salesAggrement.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("salesAggrement", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
 
+                  </div>
                 </div>
 
                 <div className="form-group-row">
@@ -888,11 +1004,12 @@ const AddProject = () => {
                       onChange={(e) => {
                         const selected = e.target.value;
                         setDeliveryHourOption(selected);
-                        const valueToSave = selected === "Other" ? customDeliveryHour : selected;
+                        const valueToSave =
+                          selected === "Other" ? customDeliveryHour : selected;
 
                         // Update formData
                         handleChange({
-                          target: { name: "deliveryHours", value: valueToSave }
+                          target: { name: "deliveryHours", value: valueToSave },
                         });
                       }}
                     >
@@ -910,18 +1027,15 @@ const AddProject = () => {
                         onChange={(e) => {
                           setCustomDeliveryHour(e.target.value);
                           handleChange({
-                            target: { name: "deliveryHours", value: e.target.value }
+                            target: {
+                              name: "deliveryHours",
+                              value: e.target.value,
+                            },
                           });
                         }}
                       />
                     )}
                   </div>
-
-
-
-
-
-
                 </div>
 
                 <h3>Project Lead Time Matrix</h3>
@@ -968,7 +1082,6 @@ const AddProject = () => {
                           <input
                             type="checkbox"
                             checked={item.tbd || false}
-
                             onChange={(e) => {
                               const checked = e.target.checked;
                               handleItemChange(index, "tbd", checked);
