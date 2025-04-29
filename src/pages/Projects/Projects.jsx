@@ -1,6 +1,4 @@
 
-
-
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
 import axios from 'axios';
@@ -368,7 +366,8 @@ const Projects = () => {
 
                         <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
                         <td>{project.type}</td>
-                        <td>    {parseInt(project.estimatedCompletion)} Weeks</td>
+                        <td>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
+
                         <td className="actions">
                           {canEdit && (
                             <FaEdit
