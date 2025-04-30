@@ -370,6 +370,14 @@ const EditProject = () => {
     );
 
     Object.entries(formData).forEach(([key, val]) => {
+
+      if (
+        key.includes("Date") || key.includes("At")
+      ) {
+        const isValidDate = val && !isNaN(new Date(val).getTime());
+        if (!isValidDate) return; 
+      }
+    
       if (
         ![
           "assignedTeamRoles",
@@ -377,8 +385,7 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
-
-          "receivingReports",
+          "receivingReports"
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -387,6 +394,7 @@ const EditProject = () => {
         );
       }
     });
+    
 
     formDataToSend.append(
       "assignedTeamRoles",
