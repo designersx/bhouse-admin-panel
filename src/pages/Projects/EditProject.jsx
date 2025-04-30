@@ -34,8 +34,10 @@ const EditProject = () => {
     presentation: [],
     cad: [],
     salesAggrement: [],
-    acknowledgements : [] , 
-    receivingReports : []
+    acknowledgements: [],
+
+    receivingReports: [],
+
   });
   console.log(formData?.clientId, "client id ");
 
@@ -126,18 +128,16 @@ const EditProject = () => {
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
-        estimatedCompletion: project.estimatedCompletion
-        ? project.estimatedCompletion.includes('_') 
-          ? project.estimatedCompletion.split('_')[0]
-          : project.estimatedCompletion
-        : "",
+
+        estimatedCompletion: project.estimatedCompletion,
+
         proposals: JSON.parse(project.proposals || "[]"),
         floorPlans: JSON.parse(project.floorPlans || "[]"),
         otherDocuments: JSON.parse(project.otherDocuments || "[]"),
         presentation: JSON.parse(project.presentation || "[]"),
         cad: JSON.parse(project.cad || "[]"),
         salesAggrement: JSON.parse(project.salesAggrement || "[]"),
-        receivingReports:JSON.parse(project.receivingReports || "[]"),
+        receivingReports: JSON.parse(project.receivingReports || "[]"),
         acknowledgements: JSON.parse(project.acknowledgements || "[]"),
       });
 
@@ -241,7 +241,10 @@ const EditProject = () => {
   const fetchCustomers = async () => {
     try {
       const data = await getCustomers();
-      setCustomers(data || []);
+      const activeCustomers = (data || []).filter(
+        (customer) => customer.status === "active"
+      );
+      setCustomers(activeCustomers);
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
@@ -334,7 +337,7 @@ const EditProject = () => {
   useEffect(() => {
     const shouldEnableCheckbox =
       parseFloat(formData.advancePayment) !==
-      parseFloat(initialFinance.advancePayment) ||
+        parseFloat(initialFinance.advancePayment) ||
       parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue);
 
     // Only enable/disable the checkbox — do not set it to true
@@ -374,8 +377,10 @@ const EditProject = () => {
           "proposals",
           "floorPlans",
           "otherDocuments",
-          "acknowledgements" , 
-          "receivingReports"
+          "acknowledgements",
+
+          "receivingReports",
+
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -517,32 +522,29 @@ const EditProject = () => {
                       Select Customer <span className="required-star">*</span>
                     </label>
                     <select
-                      name="clientName"
-                      value={formData.clientName}
+                      name="clientId"
+                      value={formData.clientId}
                       onChange={(e) => {
                         const selectedCustomer = customers.find(
-                          (customer) => customer.full_name === e.target.value
+                          (customer) => customer.id === e.target.value
                         );
 
                         setFormData((prev) => ({
                           ...prev,
-                          clientName: e.target.value,
+                          clientId: selectedCustomer?.id || "",
+                          clientName: selectedCustomer?.full_name || "",
                           deliveryAddress:
                             selectedCustomer?.delivery_address || "",
-                          clientId: selectedCustomer?.id || "",
                         }));
-
-                        setSelectedCustomerId(selectedCustomer?.id || "");
                       }}
                       required
                     >
                       <option value="">Select a customer</option>
-                      {customers.length > 0 &&
-                        customers.map((customer) => (
-                          <option key={customer.id} value={customer.full_name}>
-                            {customer.full_name} ({customer.email})
-                          </option>
-                        ))}
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.full_name} ({customer.email})
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
@@ -591,16 +593,15 @@ const EditProject = () => {
                       onChange={handleChange}
                       required
                     >
+
                       <option value="">Select Completion Time</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
                         <option key={week} value={`${week}_weeks`}>
                           {week} Week{week > 1 ? "s" : ""}
                         </option>
+
                       ))}
-
                     </select>
-
-
                   </div>
                 </div>
 
@@ -626,7 +627,16 @@ const EditProject = () => {
                       type="number"
                       name="totalValue"
                       value={formData.totalValue}
-                      onChange={handleChange}
+                      // onChange={handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 8 && /^\d*$/.test(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            totalValue: value,
+                          }));
+                        }
+                      }}
                       required
                       placeholder="Enter total value"
                     />
@@ -676,8 +686,9 @@ const EditProject = () => {
                   {allRoles.map((role) => (
                     <div
                       key={role}
-                      className={`role-card ${selectedRoles.includes(role) ? "active" : ""
-                        }`}
+                      className={`role-card ${
+                        selectedRoles.includes(role) ? "active" : ""
+                      }`}
                     >
                       <div className="role-header">
                         <label>
@@ -719,7 +730,7 @@ const EditProject = () => {
                 <div className="form-group-row">
                   {/* Proposals & Presentations */}
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Detailed Proposal  </label>
                     <input
                       type="file"
                       multiple
@@ -754,7 +765,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("proposals", url)
                                 }
                               >
-                                Remove
+                                X
                               </button>
                             </li>
                           );
@@ -765,7 +776,7 @@ const EditProject = () => {
 
                   {/* Floor Plans & CAD Files */}
                   <div className="form-group">
-                    <label>Floor Plan</label>
+                    <label>Floor Plans</label>
                     <input
                       type="file"
                       multiple
@@ -800,7 +811,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("floorPlans", url)
                                 }
                               >
-                                Remove
+                              X
                               </button>
                             </li>
                           );
@@ -811,7 +822,8 @@ const EditProject = () => {
 
                   {/* Other Documents */}
                   <div className="form-group">
-                    <label>Product Maintenance</label>
+                    <label>Product Maintenance
+                    </label>
                     <input
                       type="file"
                       multiple
@@ -854,7 +866,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -863,7 +875,7 @@ const EditProject = () => {
                       )}
                   </div>
                   <div className="form-group">
-                    <label>Presentation</label>
+                    <label>Options Presentation</label>
                     <input
                       type="file"
                       name="presentation"
@@ -907,7 +919,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -952,7 +964,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("cad", url)
                                 }
                               >
-                                Remove
+                              X
                               </button>
                             </li>
                           );
@@ -961,7 +973,8 @@ const EditProject = () => {
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Sales Aggrement
+                    </label>
                     <input
                       type="file"
                       name="salesAggrement"
@@ -1005,7 +1018,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -1014,95 +1027,105 @@ const EditProject = () => {
                       )}
                   </div>
                 </div>
+                <div className="form-group-row">
                 <div className="form-group">
-                    <label>Acknowledgement</label>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => handleFileChange("acknowledgements", e)}
-                    />
-                    {formData.acknowledgements && formData.acknowledgements.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.acknowledgements.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("acknowledgements", url)
-                                }
+                  <label>Acknowledgements
+                  </label>
+
+                  <input
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={(e) => handleFileChange("acknowledgements", e)}
+                  />
+
+                  {formData.acknowledgements && formData.acknowledgements.length > 0 && (
+                    <ul className="file-preview-list">
+                      {formData.acknowledgements.map((url, idx) => {
+                        const fileName = url.split("/").pop();
+                        const fileExt = fileName.split(".").pop();
+                        const fileUrl = url.startsWith("uploads")
+                          ? `${url2}/${url}`
+                          : url;
+
+                        return (
+                          <li key={idx}>
+                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                              <img src={fileUrl} alt={fileName} width="100" />
+                            ) : (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
                               >
-                                Remove
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
+                                {fileName}
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveExistingFile("acknowledgements", url)
+                              }
+                            >
+                            X
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+               
+                <div className="form-group">
+                  <label>Receiving Reports
+                  </label>
 
-                  <div className="form-group">
-                    <label>Receving Reports</label>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => handleFileChange("receivingReports", e)}
-                    />
-                    {formData.receivingReports && formData.receivingReports.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.receivingReports.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
+                  <input
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={(e) => handleFileChange("receivingReports", e)}
+                  />
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("receivingReports", url)
-                                }
+                  {formData.receivingReports && formData.receivingReports.length > 0 && (
+                    <ul className="file-preview-list">
+                      {formData.receivingReports.map((url, idx) => {
+                        const fileName = url.split("/").pop();
+                        const fileExt = fileName.split(".").pop();
+                        const fileUrl = url.startsWith("uploads")
+                          ? `${url2}/${url}`
+                          : url;
+
+                        return (
+                          <li key={idx}>
+                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                              <img src={fileUrl} alt={fileName} width="100" />
+                            ) : (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
                               >
-                                Remove
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
+                                {fileName}
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveExistingFile("receivingReports", url)
+                              }
+                            >
+                              X
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
+                </div>
                 <br />
 
                 <div className="form-group-row">
@@ -1268,6 +1291,8 @@ const EditProject = () => {
                               <option value="In Transit">In Transit</option>
                               <option value="Delivered">Delivered</option>
                               <option value="Installed">Installed</option>
+                              <option value="Arrived">Arrived</option>
+                              
                             </select>
                           </td>
 
