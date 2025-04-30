@@ -368,16 +368,25 @@ const EditProject = () => {
         users,
       })
     );
+    if (
+      selectedRoles.includes("Account Manager") &&
+      (!formData.assignedTeamRoles["Account Manager"] ||
+        formData.assignedTeamRoles["Account Manager"].length === 0)
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Account Manager",
+        text: "You must assign at least one user under the 'Account Manager' role.",
+      });
+      return;
+    }
 
     Object.entries(formData).forEach(([key, val]) => {
-
-      if (
-        key.includes("Date") || key.includes("At")
-      ) {
+      if (key.includes("Date") || key.includes("At")) {
         const isValidDate = val && !isNaN(new Date(val).getTime());
-        if (!isValidDate) return; 
+        if (!isValidDate) return;
       }
-    
+
       if (
         ![
           "assignedTeamRoles",
@@ -385,7 +394,7 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
-          "receivingReports"
+          "receivingReports",
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -394,7 +403,6 @@ const EditProject = () => {
         );
       }
     });
-    
 
     formDataToSend.append(
       "assignedTeamRoles",
