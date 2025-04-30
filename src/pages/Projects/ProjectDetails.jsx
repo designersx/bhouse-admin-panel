@@ -287,8 +287,8 @@ const ProjectDetails = () => {
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : [],
+              ? issue.productImages
+              : [],
       }));
       setPunchList(parsed);
       const initialStatus = {};
@@ -363,7 +363,7 @@ const ProjectDetails = () => {
       },
     ]);
   };
-const [matrix , setMatrix]  = useState()
+  const [matrix, setMatrix] = useState()
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -507,6 +507,7 @@ const [matrix , setMatrix]  = useState()
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Upload failed.");
+      setLoadingDoc(false);
     }
   };
 
@@ -590,8 +591,8 @@ const [matrix , setMatrix]  = useState()
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : [],
+              ? issue.productImages
+              : [],
       }));
       setPunchList(parsed);
     } catch (err) {
@@ -676,7 +677,6 @@ const [matrix , setMatrix]  = useState()
       }
     });
   };
-
   return (
     <Layout>
       <ToastContainer />
@@ -761,17 +761,15 @@ const [matrix , setMatrix]  = useState()
                   <div className="tabs-container">
                     <div className="tabs-header">
                       <button
-                        className={`tab-button ${
-                          activeTabing === "Admin" ? "active" : ""
-                        }`}
+                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""
+                          }`}
                         onClick={() => setActiveTabing("Admin")}
                       >
                         BHOUSE
                       </button>
                       <button
-                        className={`tab-button ${
-                          activeTabing === "Customer" ? "active" : ""
-                        }`}
+                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""
+                          }`}
                         onClick={() => setActiveTabing("Customer")}
                       >
                         Customer
@@ -831,6 +829,7 @@ const [matrix , setMatrix]  = useState()
                               <input
                                 type="file"
                                 multiple
+                                accept={docCategory.category === "cad" ? ".pdf" : "*/*"}
                                 onChange={(e) =>
                                   handleFileUpload(e, docCategory.category)
                                 }
@@ -839,45 +838,45 @@ const [matrix , setMatrix]  = useState()
 
                             {selectedFiles[docCategory.category]?.length >
                               0 && (
-                              <div className="file-preview-section">
-                                <h4>Files to be uploaded:</h4>
-                                <ul className="preview-list">
-                                  {selectedFiles[docCategory.category].map(
-                                    (file, i) => (
-                                      <li key={i} className="preview-item">
-                                        {file.name}
+                                <div className="file-preview-section">
+                                  <h4>Files to be uploaded:</h4>
+                                  <ul className="preview-list">
+                                    {selectedFiles[docCategory.category].map(
+                                      (file, i) => (
+                                        <li key={i} className="preview-item">
+                                          {file.name}
 
-                                        <span
-                                          className="remove-preview"
-                                          onClick={() =>
-                                            removeSelectedFile(
-                                              docCategory.category,
-                                              i
-                                            )
-                                          }
-                                        >
-                                          ×
-                                        </span>
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                                <button
-                                  className="upload-btn"
-                                  onClick={() =>
-                                    uploadSelectedFiles(docCategory.category)
-                                  }
-                                >
-                                  Upload
-                                </button>
-                              </div>
-                            )}
+                                          <span
+                                            className="remove-preview"
+                                            onClick={() =>
+                                              removeSelectedFile(
+                                                docCategory.category,
+                                                i
+                                              )
+                                            }
+                                          >
+                                            ×
+                                          </span>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                  <button
+                                    className="upload-btn"
+                                    onClick={() =>
+                                      uploadSelectedFiles(docCategory.category)
+                                    }
+                                  >
+                                    Upload
+                                  </button>
+                                </div>
+                              )}
                             {(() => {
                               const files = Array.isArray(docCategory?.files)
                                 ? docCategory.files
                                 : typeof docCategory.files === "string"
-                                ? JSON.parse(docCategory.files)
-                                : [];
+                                  ? JSON.parse(docCategory.files)
+                                  : [];
 
                               return files.length > 0 ? (
                                 <div className="uploaded-files">
@@ -1111,27 +1110,27 @@ const [matrix , setMatrix]  = useState()
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
 
-                    {matrix.length > 0  ?
-                           <button className="leadtimematrixheadingbutton"  disabled={notifyCustomerLoading} onClick={() => handleToNotifyCustomer()}>{notifyCustomerLoading?<>Notify customer <SpinnerLoader size={10}/></>:"Notify customer"}</button>
-                    : null}
-             
+                    {matrix.length > 0 ?
+                      <button className="leadtimematrixheadingbutton" disabled={notifyCustomerLoading} onClick={() => handleToNotifyCustomer()}>{notifyCustomerLoading ? <>Notify customer <SpinnerLoader size={10} /></> : "Notify customer"}</button>
+                      : null}
+
 
                   </div>
                   <table className="matrix-table">
                     {items.length > 0 ?
-                    <thead>
-                      <tr>
-                        <th>Manufacturer Name</th>
-                        <th>Description</th>
-                        <th>TBD</th>
-                        <th>Expected Departure</th>
-                        <th>Expected Arrival</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    : null}
-                    
+                      <thead>
+                        <tr>
+                          <th>Manufacturer Name</th>
+                          <th>Description</th>
+                          <th>TBD</th>
+                          <th>Expected Departure</th>
+                          <th>Expected Arrival</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      : null}
+
 
                     <tbody>
                       {items.map((item, index) => {
@@ -1307,6 +1306,7 @@ const [matrix , setMatrix]  = useState()
                                 <option value="In Transit">In Transit</option>
                                 <option value="Delivered">Delivered</option>
                                 <option value="Installed">Installed</option>
+                                <option value="Arrived">Arrived</option>
                               </select>
                             </td>
                             <td>
@@ -1582,9 +1582,8 @@ const [matrix , setMatrix]  = useState()
                             <div className="punch-card-top">
                               <h4>{issue.title}</h4>
                               <span
-                                className={`status-badge ${
-                                  issue.status?.toLowerCase() || "pending"
-                                }`}
+                                className={`status-badge ${issue.status?.toLowerCase() || "pending"
+                                  }`}
                               >
                                 {issue.status || "Pending"}
                               </span>
@@ -1675,9 +1674,8 @@ const [matrix , setMatrix]  = useState()
                             <p>
                               <strong>Created By:</strong>{" "}
                               {issue.createdByType === "user"
-                                ? `${issue.creatorUser?.firstName || ""} ${
-                                    issue.creatorUser?.lastName || ""
-                                  }`
+                                ? `${issue.creatorUser?.firstName || ""} ${issue.creatorUser?.lastName || ""
+                                }`
                                 : issue.creatorCustomer?.full_name || "N/A"}
                             </p>
                             <button

@@ -77,7 +77,6 @@ const Projects = () => {
     )
     .join(", ");
   };
-  console.log(getAssignedUserNames())
 
   useEffect(() => {
     const fetchProjects = async () => {

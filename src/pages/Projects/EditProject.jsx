@@ -35,7 +35,9 @@ const EditProject = () => {
     cad: [],
     salesAggrement: [],
     acknowledgements: [],
+
     receivingReports: [],
+
   });
   console.log(formData?.clientId, "client id ");
 
@@ -126,11 +128,9 @@ const EditProject = () => {
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
-        estimatedCompletion: project.estimatedCompletion
-          ? project.estimatedCompletion.includes("_")
-            ? project.estimatedCompletion.split("_")[0]
-            : project.estimatedCompletion
-          : "",
+
+        estimatedCompletion: project.estimatedCompletion,
+
         proposals: JSON.parse(project.proposals || "[]"),
         floorPlans: JSON.parse(project.floorPlans || "[]"),
         otherDocuments: JSON.parse(project.otherDocuments || "[]"),
@@ -378,7 +378,9 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
+
           "receivingReports",
+
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -591,11 +593,13 @@ const EditProject = () => {
                       onChange={handleChange}
                       required
                     >
+
                       <option value="">Select Completion Time</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
                         <option key={week} value={`${week}_weeks`}>
                           {week} Week{week > 1 ? "s" : ""}
                         </option>
+
                       ))}
                     </select>
                   </div>
@@ -623,7 +627,16 @@ const EditProject = () => {
                       type="number"
                       name="totalValue"
                       value={formData.totalValue}
-                      onChange={handleChange}
+                      // onChange={handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 8 && /^\d*$/.test(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            totalValue: value,
+                          }));
+                        }
+                      }}
                       required
                       placeholder="Enter total value"
                     />
@@ -717,7 +730,7 @@ const EditProject = () => {
                 <div className="form-group-row">
                   {/* Proposals & Presentations */}
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Detailed Proposal  </label>
                     <input
                       type="file"
                       multiple
@@ -752,7 +765,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("proposals", url)
                                 }
                               >
-                                Remove
+                                X
                               </button>
                             </li>
                           );
@@ -763,7 +776,7 @@ const EditProject = () => {
 
                   {/* Floor Plans & CAD Files */}
                   <div className="form-group">
-                    <label>Floor Plan</label>
+                    <label>Floor Plans</label>
                     <input
                       type="file"
                       multiple
@@ -798,7 +811,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("floorPlans", url)
                                 }
                               >
-                                Remove
+                              X
                               </button>
                             </li>
                           );
@@ -809,7 +822,8 @@ const EditProject = () => {
 
                   {/* Other Documents */}
                   <div className="form-group">
-                    <label>Product Maintenance</label>
+                    <label>Product Maintenance
+                    </label>
                     <input
                       type="file"
                       multiple
@@ -852,7 +866,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -861,7 +875,7 @@ const EditProject = () => {
                       )}
                   </div>
                   <div className="form-group">
-                    <label>Presentation</label>
+                    <label>Options Presentation</label>
                     <input
                       type="file"
                       name="presentation"
@@ -905,7 +919,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -950,7 +964,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("cad", url)
                                 }
                               >
-                                Remove
+                              X
                               </button>
                             </li>
                           );
@@ -959,7 +973,8 @@ const EditProject = () => {
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Installation Docs</label>
+                    <label>Sales Aggrement
+                    </label>
                     <input
                       type="file"
                       name="salesAggrement"
@@ -1003,7 +1018,7 @@ const EditProject = () => {
                                     )
                                   }
                                 >
-                                  Remove
+                                  X
                                 </button>
                               </li>
                             );
@@ -1012,102 +1027,104 @@ const EditProject = () => {
                       )}
                   </div>
                 </div>
+                <div className="form-group-row">
                 <div className="form-group">
-                  <label>Acknowledgement</label>
+
+                  <label>Acknowledgements
+                  </label>
+
                   <input
                     type="file"
                     multiple
                     accept=".jpg,.jpeg,.png,.pdf"
                     onChange={(e) => handleFileChange("acknowledgements", e)}
                   />
-                  {formData.acknowledgements &&
-                    formData.acknowledgements.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.acknowledgements.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile(
-                                    "acknowledgements",
-                                    url
-                                  )
-                                }
+                  {formData.acknowledgements && formData.acknowledgements.length > 0 && (
+                    <ul className="file-preview-list">
+                      {formData.acknowledgements.map((url, idx) => {
+                        const fileName = url.split("/").pop();
+                        const fileExt = fileName.split(".").pop();
+                        const fileUrl = url.startsWith("uploads")
+                          ? `${url2}/${url}`
+                          : url;
+
+                        return (
+                          <li key={idx}>
+                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                              <img src={fileUrl} alt={fileName} width="100" />
+                            ) : (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
                               >
-                                Remove
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+                                {fileName}
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveExistingFile("acknowledgements", url)
+                              }
+                            >
+                            X
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
-
+               
                 <div className="form-group">
-                  <label>Receving Reports</label>
+                  <label>Receiving Reports
+                  </label>
+
                   <input
                     type="file"
                     multiple
                     accept=".jpg,.jpeg,.png,.pdf"
                     onChange={(e) => handleFileChange("receivingReports", e)}
                   />
-                  {formData.receivingReports &&
-                    formData.receivingReports.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.receivingReports.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile(
-                                    "receivingReports",
-                                    url
-                                  )
-                                }
+                  {formData.receivingReports && formData.receivingReports.length > 0 && (
+                    <ul className="file-preview-list">
+                      {formData.receivingReports.map((url, idx) => {
+                        const fileName = url.split("/").pop();
+                        const fileExt = fileName.split(".").pop();
+                        const fileUrl = url.startsWith("uploads")
+                          ? `${url2}/${url}`
+                          : url;
+
+                        return (
+                          <li key={idx}>
+                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                              <img src={fileUrl} alt={fileName} width="100" />
+                            ) : (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
                               >
-                                Remove
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+                                {fileName}
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveExistingFile("receivingReports", url)
+                              }
+                            >
+                              X
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+
                 </div>
                 <br />
 
@@ -1274,6 +1291,8 @@ const EditProject = () => {
                               <option value="In Transit">In Transit</option>
                               <option value="Delivered">Delivered</option>
                               <option value="Installed">Installed</option>
+                              <option value="Arrived">Arrived</option>
+                              
                             </select>
                           </td>
 
