@@ -35,7 +35,9 @@ const EditProject = () => {
     cad: [],
     salesAggrement: [],
     acknowledgements: [],
-    receivingReports: []
+
+    receivingReports: [],
+
   });
   console.log(formData?.clientId, "client id ");
 
@@ -126,7 +128,9 @@ const EditProject = () => {
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
+
         estimatedCompletion: project.estimatedCompletion,
+
         proposals: JSON.parse(project.proposals || "[]"),
         floorPlans: JSON.parse(project.floorPlans || "[]"),
         otherDocuments: JSON.parse(project.otherDocuments || "[]"),
@@ -237,7 +241,10 @@ const EditProject = () => {
   const fetchCustomers = async () => {
     try {
       const data = await getCustomers();
-      setCustomers(data || []);
+      const activeCustomers = (data || []).filter(
+        (customer) => customer.status === "active"
+      );
+      setCustomers(activeCustomers);
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
@@ -330,7 +337,7 @@ const EditProject = () => {
   useEffect(() => {
     const shouldEnableCheckbox =
       parseFloat(formData.advancePayment) !==
-      parseFloat(initialFinance.advancePayment) ||
+        parseFloat(initialFinance.advancePayment) ||
       parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue);
 
     // Only enable/disable the checkbox — do not set it to true
@@ -371,7 +378,9 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
-          "receivingReports"
+
+          "receivingReports",
+
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -513,32 +522,29 @@ const EditProject = () => {
                       Select Customer <span className="required-star">*</span>
                     </label>
                     <select
-                      name="clientName"
-                      value={formData.clientName}
+                      name="clientId"
+                      value={formData.clientId}
                       onChange={(e) => {
                         const selectedCustomer = customers.find(
-                          (customer) => customer.full_name === e.target.value
+                          (customer) => customer.id === e.target.value
                         );
 
                         setFormData((prev) => ({
                           ...prev,
-                          clientName: e.target.value,
+                          clientId: selectedCustomer?.id || "",
+                          clientName: selectedCustomer?.full_name || "",
                           deliveryAddress:
                             selectedCustomer?.delivery_address || "",
-                          clientId: selectedCustomer?.id || "",
                         }));
-
-                        setSelectedCustomerId(selectedCustomer?.id || "");
                       }}
                       required
                     >
                       <option value="">Select a customer</option>
-                      {customers.length > 0 &&
-                        customers.map((customer) => (
-                          <option key={customer.id} value={customer.full_name}>
-                            {customer.full_name} ({customer.email})
-                          </option>
-                        ))}
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.full_name} ({customer.email})
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
@@ -595,10 +601,7 @@ const EditProject = () => {
                         </option>
 
                       ))}
-
                     </select>
-
-
                   </div>
                 </div>
 
@@ -683,8 +686,9 @@ const EditProject = () => {
                   {allRoles.map((role) => (
                     <div
                       key={role}
-                      className={`role-card ${selectedRoles.includes(role) ? "active" : ""
-                        }`}
+                      className={`role-card ${
+                        selectedRoles.includes(role) ? "active" : ""
+                      }`}
                     >
                       <div className="role-header">
                         <label>
@@ -1025,14 +1029,17 @@ const EditProject = () => {
                 </div>
                 <div className="form-group-row">
                 <div className="form-group">
+
                   <label>Acknowledgements
                   </label>
+
                   <input
                     type="file"
                     multiple
                     accept=".jpg,.jpeg,.png,.pdf"
                     onChange={(e) => handleFileChange("acknowledgements", e)}
                   />
+
                   {formData.acknowledgements && formData.acknowledgements.length > 0 && (
                     <ul className="file-preview-list">
                       {formData.acknowledgements.map((url, idx) => {
@@ -1073,12 +1080,14 @@ const EditProject = () => {
                 <div className="form-group">
                   <label>Receiving Reports
                   </label>
+
                   <input
                     type="file"
                     multiple
                     accept=".jpg,.jpeg,.png,.pdf"
                     onChange={(e) => handleFileChange("receivingReports", e)}
                   />
+
                   {formData.receivingReports && formData.receivingReports.length > 0 && (
                     <ul className="file-preview-list">
                       {formData.receivingReports.map((url, idx) => {
@@ -1115,6 +1124,7 @@ const EditProject = () => {
                     </ul>
                   )}
                 </div>
+
                 </div>
                 <br />
 
