@@ -26,7 +26,10 @@ import Requestform from './pages/RequestForm/Requestform';
 import CustomerDocComment from './components/CustomerDocComment'
 import { useEffect } from 'react';
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getMessaging, onMessage } from "firebase/messaging";
+import { getMessaging, onMessage , isSupported} from "firebase/messaging";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 // Initialize Firebase App
 const firebaseConfig = {
   apiKey: "AIzaSyDblY3fqpz8K5KXDA3HacPUzHxBnZHT1o0",
@@ -42,80 +45,54 @@ const App = () => {
   const token = userData?.token;
   // Initialize App
   const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  const messaging = getMessaging(app);
-  // Check User has Permission
-  onMessage(messaging, (payload) => {
-      const title = payload.data.title || 'New Notification';
-      const body = payload.data.body || 'You have a new message';
-      if (Notification.permission === 'granted') {
-        new Notification(title, {
-          body,
-          icon: '/Svg/b-houseLogo.svg',
+  // Notification setup
+  useEffect(() => {
+    isSupported().then((supported) => {
+      if (supported) {
+        const messaging = getMessaging(app);
+        onMessage(messaging, (payload) => {
+          console.log(payload)
+          const { title, body } = payload?.data || {};
+          toast.info(
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img
+                src="https://b-house-v0-ten.vercel.app/Svg/Logo-Bhouse.svg"
+                alt="B-House"
+                style={{ width: 60, height: 60, marginRight: 10, borderRadius: 8 }}
+              />
+              <div>
+                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#333' }}>{title}</div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>{body}</div>
+              </div>
+            </div>,
+            {
+              position: "bottom-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              style: {
+                backgroundColor: '#fff',
+                border: '1px solid #ddd',
+                borderRadius: '10px',
+                padding: '10px 15px',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
+              }
+            }
+          );
         });
+      } else {
+        console.warn("Firebase Messaging not supported on this device.");
       }
+    }).catch((err) => {
+      console.error("Error checking messaging support:", err);
     });
-  // const requestPermission = async () => {
-  //   if (!isNewNotificationSupported()) {
-  //     console.warn('Notifications are not supported in this browser.');
-  //     return;
-  //   }
-
-  //   console.log('Requesting permission...');
-  //   try {
-  //     const permission = await Notification.requestPermission();
-  //     if (permission === 'granted') {
-  //       console.log('Notification permission granted.');
-  //     } else {
-  //       console.warn('Notification permission denied.');
-  //     }
-  //   } catch (error) {
-  //     console.error('An error occurred while requesting permission:', error);
-  //   }
-  // };
-  // function isNewNotificationSupported() {
-  //   if (!window.Notification || !Notification.requestPermission)
-  //     return false;
-  //   if (Notification.permission === 'granted')
-  //     throw new Error('You must only call this *before* calling Notification.requestPermission(), otherwise this feature detect would bug the user with an actual notification!');
-  //   try {
-  //     new Notification('');
-  //   } catch (e) {
-  //     if (e.name === 'TypeError') return false;
-  //   }
-  //   return true;
-  // }
-  //function lock
-  // useEffect(() => {
-  //   requestPermission();
-  //   // Foreground notification listener
-  //   onMessage(messaging, (payload) => {
-  //     const notificationTitle = payload.data.title || 'B-House Notification';
-  //     const notificationBody = payload.data.body || 'You have a new message';
-  //     const clickActionURL = payload.data.click_action || 'https://your-default-url.com/';
-
-  //     // Create a simple notification without actions
-  //     if (Notification.permission === 'granted') {
-  //       new Notification(notificationTitle, {
-  //         body: notificationBody,
-  //         icon: '/Svg/b-houseLogo.svg'
-  //       });
-  //     }
-  //   });
-
-  //   // Register the service worker
-  //   if ('serviceWorker' in navigator) {
-  //     navigator.serviceWorker.register('/firebase-messaging-sw.js')
-  //       .then((registration) => {
-  //         console.log('Service Worker registered with scope:', registration.scope);
-  //       })
-  //       .catch((error) => {
-  //         console.error('Service Worker registration failed:', error);
-  //       });
-  //   }
-  // }, [messaging]);
+  }, []);
 
   useSessionTimeOut(token);
   return (
+    <>
     <ThemeProvider>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -148,6 +125,8 @@ const App = () => {
 
       </Routes>
     </ThemeProvider>
+ <ToastContainer position="bottom-right" autoClose={5000} />
+    </>
   );
 };
 export default App;
