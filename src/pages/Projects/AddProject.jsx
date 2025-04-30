@@ -21,19 +21,19 @@ const AddProject = () => {
     return savedData
       ? JSON.parse(savedData)
       : {
-          name: "",
-          type: "Corporate Office",
-          clientName: "",
-          description: "",
-          startDate: "",
-          estimatedCompletion: "",
-          totalValue: "",
-          advancePayment: "",
-          deliveryAddress: "",
-          deliveryHours: "",
-          assignedTeamRoles: {},
-          clientId: "",
-        };
+        name: "",
+        type: "Corporate Office",
+        clientName: "",
+        description: "",
+        startDate: "",
+        estimatedCompletion: "",
+        totalValue: "",
+        advancePayment: "",
+        deliveryAddress: "",
+        deliveryHours: "",
+        assignedTeamRoles: {},
+        clientId: "",
+      };
   });
 
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -46,14 +46,14 @@ const AddProject = () => {
     return savedMatrix
       ? JSON.parse(savedMatrix)
       : [
-          {
-            itemName: "",
-            quantity: "",
-            expectedDeliveryDate: "",
-            expectedArrivalDate: "",
-            status: "Pending",
-          },
-        ];
+        {
+          itemName: "",
+          quantity: "",
+          expectedDeliveryDate: "",
+          expectedArrivalDate: "",
+          status: "Pending",
+        },
+      ];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -340,15 +340,15 @@ const AddProject = () => {
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
         ? new Date(item.expectedDeliveryDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       status: item.status || "Pending",
     }));
@@ -650,7 +650,16 @@ const AddProject = () => {
                       type="number"
                       name="totalValue"
                       value={formData.totalValue}
-                      onChange={handleChange}
+                      // onChange={handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= 8 && /^\d*$/.test(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            totalValue: value,
+                          }));
+                        }
+                      }}
                       maxLength={8}
                       required
                       placeholder="Enter total value"
@@ -678,9 +687,8 @@ const AddProject = () => {
                       {allRoles.map((role) => (
                         <div
                           key={role}
-                          className={`role-card ${
-                            selectedRoles.includes(role) ? "active" : ""
-                          }`}
+                          className={`role-card ${selectedRoles.includes(role) ? "active" : ""
+                            }`}
                         >
                           <div className="role-header">
                             <label>
@@ -714,8 +722,8 @@ const AddProject = () => {
                                         const updatedUsers = e.target.checked
                                           ? [...prevSelected, user.id]
                                           : prevSelected.filter(
-                                              (id) => id !== user.id
-                                            );
+                                            (id) => id !== user.id
+                                          );
 
                                         setFormData((prev) => ({
                                           ...prev,
@@ -749,23 +757,23 @@ const AddProject = () => {
                       disabled={(formData.proposals?.length || 0) >= 5}
                     />
 
-{formData.proposals && formData.proposals.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.proposals.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("proposals", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.proposals && formData.proposals.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("proposals", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -779,23 +787,23 @@ const AddProject = () => {
                       disabled={(formData.floorPlans?.length || 0) >= 5}
                     />
 
-{formData.floorPlans && formData.floorPlans.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.floorPlans.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("floorPlans", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.floorPlans && formData.floorPlans.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.floorPlans.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("floorPlans", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -813,23 +821,23 @@ const AddProject = () => {
 
                     {formData.otherDocuments?.length > 0 && (
                       <ul className="file-preview-list">
-                    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.otherDocuments.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("otherDocuments", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                        {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+                          <ul className="file-preview-list">
+                            {formData.otherDocuments.map((file, idx) => (
+                              <li key={idx}>
+                                <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                                  {file.name}
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFile("otherDocuments", idx)}
+                                >
+                                  &times;
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </ul>
                     )}
                   </div>
@@ -846,23 +854,23 @@ const AddProject = () => {
                       disabled={(formData.acknowledgements?.length || 0) >= 5}
                     />
 
-{formData.acknowledgements && formData.acknowledgements.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.acknowledgements.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("acknowledgements", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.acknowledgements && formData.acknowledgements.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.acknowledgements.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("acknowledgements", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Receiving Reports</label>
@@ -877,23 +885,23 @@ const AddProject = () => {
                       disabled={(formData.receivingReports?.length || 0) >= 5}
                     />
 
-{formData.receivingReports && formData.receivingReports.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.receivingReports.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("receivingReports", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.receivingReports && formData.receivingReports.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.receivingReports.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("receivingReports", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -905,24 +913,24 @@ const AddProject = () => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "presentation")}
                     />
-{formData.presentation && formData.presentation.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.presentation.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("presentation", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
-                 
+                    {formData.presentation && formData.presentation.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.presentation.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("presentation", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
                   </div>
                   <div className="form-group">
                     <label>CAD Files</label>
@@ -930,26 +938,26 @@ const AddProject = () => {
                       type="file"
                       name="cad"
                       multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
+                      accept=".pdf"
                       onChange={(e) => handleFileInputChange(e, "cad")}
                     />
-{formData.cad && formData.cad.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.cad.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("cad", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.cad && formData.cad.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.cad.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("cad", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -964,23 +972,23 @@ const AddProject = () => {
                       }
                     />
 
-{formData.salesAggrement && formData.salesAggrement.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.salesAggrement.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("salesAggrement", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.salesAggrement && formData.salesAggrement.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.salesAggrement.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("salesAggrement", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
                   </div>
                 </div>
@@ -1154,6 +1162,7 @@ const AddProject = () => {
                           <option value="In Transit">In Transit</option>
                           <option value="Delivered">Delivered</option>
                           <option value="Installed">Installed</option>
+                          <option value="Arrived">Arrived</option>
                         </select>
                       </div>
 
