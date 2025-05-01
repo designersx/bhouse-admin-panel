@@ -23,11 +23,8 @@ const ProjectDetails = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [punchListLoading, setPunchListLoading] = useState(false);
-  const [punchstatusLoading, setPunchStatusLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [items, setItems] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [activeTabing, setActiveTabing] = useState("Admin");
   const navigate = useNavigate();
   const [editableRows, setEditableRows] = useState({});
   const [punchList, setPunchList] = useState([]);
@@ -56,6 +53,18 @@ const ProjectDetails = () => {
   const [commentLoading, setCommentLoading] = useState(false);
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const scrollRef = useRef(null);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeTab") || "overview");
+const [activeTabing, setActiveTabing] = useState(() => localStorage.getItem("activeTabing") || "Admin");
+const handleTabChange = (tabKey) => {
+  setActiveTab(tabKey);
+  localStorage.setItem("activeTab", tabKey);
+};
+
+const handleSubTabChange = (subTabKey) => {
+  setActiveTabing(subTabKey);
+  localStorage.setItem("activeTabing", subTabKey);
+};
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
@@ -466,11 +475,17 @@ const ProjectDetails = () => {
   };
   const handleFileUpload = (e, category) => {
     const files = Array.from(e.target.files);
+    if (files.length > 1) {
+      toast.error("Only one file can be uploaded per category.");
+      return;
+    }
     setSelectedFiles((prev) => ({
       ...prev,
-      [category]: [...prev[category], ...files],
+      [category]: files, 
     }));
   };
+  
+  
   const removeSelectedFile = (category, index) => {
     setSelectedFiles((prev) => ({
       ...prev,
@@ -503,7 +518,15 @@ const ProjectDetails = () => {
 
       // Refresh project data
       const res = await axios.get(`${url}/projects/${projectId}`);
-      setProject(res.data);
+      const updatedProject = res.data;
+      ["proposals", "floorPlans", "otherDocuments", "presentation", "salesAggrement", "cad", "acknowledgements", "receivingReports"].forEach((key) => {
+        updatedProject[key] = Array.isArray(updatedProject[key])
+          ? updatedProject[key]
+          : JSON.parse(updatedProject[key] || "[]");
+      });
+      
+      setProject(updatedProject);
+      
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Upload failed.");
@@ -701,13 +724,14 @@ const ProjectDetails = () => {
                     (permissionKey && rolePermissions?.[permissionKey]?.view);
                   return hasPermission ? (
                     <button
-                      key={key}
-                      className={activeTab === key ? "tab active" : "tab"}
-                      onClick={() => setActiveTab(key)}
-                    >
-                      {label}
-                    </button>
-                  ) : null; // Hide tab if not allowed
+  key={key}
+  className={activeTab === key ? "tab active" : "tab"}
+  onClick={() => handleTabChange(key)}
+>
+  {label}
+</button>
+
+                  ) : null; 
                 }
               )}
             </div>
@@ -760,20 +784,19 @@ const ProjectDetails = () => {
                 <div className="project-info-card">
                   <div className="tabs-container">
                     <div className="tabs-header">
-                      <button
-                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""
-                          }`}
-                        onClick={() => setActiveTabing("Admin")}
-                      >
-                        BHOUSE
-                      </button>
-                      <button
-                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""
-                          }`}
-                        onClick={() => setActiveTabing("Customer")}
-                      >
-                        Customer
-                      </button>
+                    <button
+  className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`}
+  onClick={() => handleSubTabChange("Admin")}
+>
+  BHOUSE
+</button>
+<button
+  className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`}
+  onClick={() => handleSubTabChange("Customer")}
+>
+  CUSTOMER
+</button>
+
                     </div>
                   </div>
                   <div className="tab-content">
@@ -824,43 +847,37 @@ const ProjectDetails = () => {
                           },
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
-                            <h3>{docCategory.title}</h3>
+                            <h3>{docCategory.title.toUpperCase()}</h3>
                             {rolePermissions?.ProjectDocument?.add ? (
-                              <input
-                                type="file"
-                                multiple
-                                accept={docCategory.category === "cad" ? ".pdf" : "*/*"}
-                                onChange={(e) =>
-                                  handleFileUpload(e, docCategory.category)
-                                }
-                              />
+                            <input
+                            type="file"
+                            disabled={
+                              selectedFiles[docCategory.category]?.length > 0 ||
+                              (Array.isArray(project[docCategory.category]) &&
+                               project[docCategory.category].length > 0)
+                            }
+                            accept={docCategory.category === "cad" ? ".pdf" : "*/*"}
+                            onChange={(e) => handleFileUpload(e, docCategory.category)}
+                          />
+
                             ) : null}
 
-                            {selectedFiles[docCategory.category]?.length >
-                              0 && (
+{selectedFiles[docCategory.category]?.length > 0 && (
                                 <div className="file-preview-section">
                                   <h4>Files to be uploaded:</h4>
                                   <ul className="preview-list">
-                                    {selectedFiles[docCategory.category].map(
-                                      (file, i) => (
-                                        <li key={i} className="preview-item">
-                                          {file.name}
-
-                                          <span
-                                            className="remove-preview"
-                                            onClick={() =>
-                                              removeSelectedFile(
-                                                docCategory.category,
-                                                i
-                                              )
-                                            }
-                                          >
-                                            ×
-                                          </span>
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
+      {selectedFiles[docCategory.category].map((file, i) => (
+        <li key={i} className="preview-item">
+          {file.name}
+          <span
+            className="remove-preview"
+            onClick={() => removeSelectedFile(docCategory.category, i)}
+          >
+            ×
+          </span>
+        </li>
+      ))}
+    </ul>
                                   <button
                                     className="upload-btn"
                                     onClick={() =>
@@ -1011,7 +1028,7 @@ const ProjectDetails = () => {
                           const documentId = matchedDoc?.id;
                           return (
                             <div key={idx} className="doc-view-section">
-                              <h4>{docMap[key]}</h4>
+                              <h4>{docMap[key].toUpperCase()}</h4>
                               {filePath ? (
                                 <div className="file-item-enhanced">
                                   <span className="file-name-enhanced">
@@ -1429,7 +1446,7 @@ const ProjectDetails = () => {
                         <label>Upload Files</label>
                         <input
                           type="file"
-                          multiple
+                        
                           accept="image/*"
                           onChange={handleImageSelect}
                         />
@@ -1695,7 +1712,6 @@ const ProjectDetails = () => {
               {activeTab === "invoice" && (
                 <InvoiceManagement projectId={projectId} />
               )}
-
               {activeTab === "settings" && (
                 <div className="project-info-card">
                   <h2>Settings</h2>
