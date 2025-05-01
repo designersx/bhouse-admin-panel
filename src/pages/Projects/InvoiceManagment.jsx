@@ -9,6 +9,7 @@ import { url, url2 } from "../../lib/api";
 import "../../styles/Projects/InvoiceManagement.css";
 import { FaEye } from "react-icons/fa";
 import SpinnerLoader from "../../components/SpinnerLoader";
+import { useRef } from "react";
 const InvoiceManagement = ({ projectId }) => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,13 +23,15 @@ const InvoiceManagement = ({ projectId }) => {
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewURL, setPreviewURL] = useState(null);
+  const [isPdf, setIsPdf] = useState(false);
   const [projectDetails, setProjectDetails] = useState({
     totalValue: 0,
     advancePayment: 0,
   });
-
+  const fileInputRef = useRef(null); // for clearing input programmatically
   // Fetch invoices for the project
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -93,11 +96,14 @@ const InvoiceManagement = ({ projectId }) => {
 
   // Open modal for editing an invoice
   const handleOpenUpdateInvoiceModal = (invoice) => {
+    console.log(invoice, "invoice")
     setInvoiceData({
       totalAmount: invoice.totalAmount,
       advancePaid: invoice.advancePaid,
       status: invoice.status,
-      invoiceFile: null,
+      description: invoice.description,
+      invoiceFile: invoice.invoiceFilePath
+      ,
     });
     setSelectedInvoice(invoice);
     setShowUpdateInvoiceModal(true);
@@ -108,18 +114,48 @@ const InvoiceManagement = ({ projectId }) => {
     const { name, value } = e.target;
     setInvoiceData((prevState) => ({ ...prevState, [name]: value }));
   };
-
   // Handle file change (for invoice file upload)
   const handleFileChange = (e) => {
-    setInvoiceData((prevState) => ({
-      ...prevState,
-      invoiceFile: e.target.files[0],
-    }));
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileType = file.type;
+    const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedPdfType = "application/pdf";
+
+    if (allowedImageTypes.includes(fileType)) {
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewURL(imageUrl);
+      setIsPdf(false);
+      setInvoiceData(prev => ({ ...prev, invoiceFile: file }));
+    } else if (fileType === allowedPdfType) {
+      const pdfUrl = URL.createObjectURL(file);
+      setPreviewURL(pdfUrl);
+      setIsPdf(true);
+      setInvoiceData(prev => ({ ...prev, invoiceFile: file }));
+    } else {
+      alert("Only JPG, PNG, WEBP, or PDF files are allowed.");
+      e.target.value = ""; // clear input
+      setPreviewURL(null);
+      setIsPdf(false);
+      setInvoiceData(prev => ({ ...prev, invoiceFile: null }));
+    }
   };
 
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreviewURL(null);
+    setInvoiceData({ ...invoiceData, invoiceFile: null });
+
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   // Save the new invoice
   const handleSaveNewInvoice = async () => {
     try {
+      setIsLoading(true);
       const projectLimit =
         projectDetails.totalValue - projectDetails.advancePayment;
       const currentInvoiceTotal = invoices.reduce(
@@ -147,7 +183,7 @@ const InvoiceManagement = ({ projectId }) => {
       if (invoiceData.invoiceFile) {
         formData.append("invoice", invoiceData.invoiceFile);
       }
-      setIsLoading(true);
+
       const response = await axios.post(
         `${url}/projects/${projectId}/invoice`,
         formData
@@ -155,6 +191,9 @@ const InvoiceManagement = ({ projectId }) => {
       toast.success("Invoice added!");
       setInvoices((prevInvoices) => [...prevInvoices, response.data]);
       setShowAddInvoiceModal(false);
+      setIsLoading(false);
+      setPreviewURL('');
+      setSelectedFile("");
     } catch (err) {
       setIsLoading(false);
       console.error("Error adding invoice:", err);
@@ -163,10 +202,29 @@ const InvoiceManagement = ({ projectId }) => {
       setIsLoading(false);
     }
   };
-
   // Save the updated invoice
   const handleSaveUpdatedInvoice = async () => {
     try {
+
+      const projectLimit = projectDetails.totalValue - projectDetails.advancePayment;
+      console.log(projectDetails.totalValue,"projectDetails.totalValue")
+      console.log(projectDetails.advancePayment,"projectDetails.advancePayment")
+      const currentInvoiceTotal = invoices
+      .filter(invoice => invoice.status === "Paid"||invoice.status === "Partly Paid")
+      .reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
+      console.log(currentInvoiceTotal)
+      const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
+      const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
+
+      if (updatedTotal >= projectLimit) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invoice limit exceeded!",
+          text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
+        });
+        return;
+      }
+
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
       formData.append("advancePaid", invoiceData.advancePaid);
@@ -188,13 +246,13 @@ const InvoiceManagement = ({ projectId }) => {
         )
       ); // Update the existing invoice in the list
       setShowUpdateInvoiceModal(false); // Close the modal
+      setIsLoading(false);
     } catch (err) {
       setIsLoading(false);
       console.error("Error updating invoice:", err);
       toast.error("Error updating invoice.");
     }
   };
-
   // Handle deleting an invoice
   const handleDeleteInvoice = async (invoiceId) => {
     try {
@@ -206,18 +264,26 @@ const InvoiceManagement = ({ projectId }) => {
     } catch (err) {
       console.error("Error deleting invoice:", err);
       toast.error("Error deleting invoice.");
-    }finally {
+    } finally {
       setIsLoading(false);
     }
   };
-
   // Open invoice file
   const handleOpenFile = (filePath) => {
     window.open(`${url2}/${filePath}`, "_blank");
   };
-
+  //handleCancel
+  const handleCancel = () => {
+    setShowAddInvoiceModal(false)
+    setPreviewURL('');
+    setSelectedFile("");
+  }
+  const handleUpdateCancel = () => {
+    setShowUpdateInvoiceModal(false)
+    setPreviewURL('');
+    setSelectedFile("");
+  }
   if (loading) return <Loader />;
-
   return (
     <div className="invoice-management-container">
       <div className="project-finance-summary">
@@ -419,10 +485,98 @@ const InvoiceManagement = ({ projectId }) => {
             />
 
             <label>Invoice File</label>
-            <input type="file" onChange={handleFileChange} />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} />
+            {previewURL && (
+              <div style={{ position: "relative", marginTop: "10px", display: "inline-block" }}>
+                {isPdf ? (
+                  <>
+                    <a
+                      href={previewURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-block",
+                        padding: "10px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        backgroundColor: "#f5f5f5",
+                        textDecoration: "none",
+                        color: "#333",
+                      }}
+                    >
+                      View PDF Invoice
+                    </a>
+                    <button
+                      onClick={handleRemoveImage}
+                      style={{
+                        position: "absolute",
+                        top: "-5px",
+                        right: "-5px",
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        // borderRadius: "50%",
+                        cursor: "pointer",
+                        width: "20px",
+                        height: "20px",
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 2,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src={previewURL}
+                      alt="Invoice Preview"
+                      style={{
+                        width: "100%",
+                        maxWidth: "150px",
+                        height: "auto",
+                        borderRadius: "4px",
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                    <button
+                      onClick={handleRemoveImage}
+                      style={{
+                        position: "absolute",
+                        top: "-5px",
+                        right: "-5px",
+                        background: "red",
+                        color: "white",
+                        border: "none",
+                        // borderRadius: "50%",
+                        cursor: "pointer",
+                        width: "20px",
+                        height: "20px",
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 2,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+
+
             <div className="invoice-btn">
               {isLoading ? (
-                <SpinnerLoader size="30px" />
+                <button >
+                  <SpinnerLoader size="15px" />&nbsp;Save
+                </button>
+
               ) : (
                 <button onClick={handleSaveNewInvoice}>
                   <MdSave />
@@ -430,7 +584,7 @@ const InvoiceManagement = ({ projectId }) => {
                 </button>
               )}
 
-              <button onClick={() => setShowAddInvoiceModal(false)}>
+              <button onClick={handleCancel}>
                 Cancel
               </button>
             </div>
@@ -494,18 +648,74 @@ const InvoiceManagement = ({ projectId }) => {
             {/* File Upload */}
             <label>Invoice File</label>
             <input type="file" onChange={handleFileChange} />
+            {(invoiceData.invoiceFile) && (
+              <div
+                style={{
+                  position: "relative",
+                  marginTop: "10px",
+                  display: "inline-block",
+                  maxWidth: "150px",
+                }}
+              >
+                {(() => {
+                  const file = invoiceData.newInvoiceFile || invoiceData.invoiceFile;
+                  const isNewFile = file instanceof File;
+                  const fileName = isNewFile ? file.name : file;
+                  const fileURL = isNewFile ? URL.createObjectURL(file) : `${url2}/${file}`;
 
+                  if (fileName.toLowerCase().endsWith(".pdf")) {
+                    return (
+                      <>
+                        <a
+                          href={fileURL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-block",
+                            padding: "10px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            backgroundColor: "#f5f5f5",
+                            textDecoration: "none",
+                            color: "#333",
+                          }}
+                        >
+                          View PDF Invoice
+                        </a>
+
+                      </>
+                    );
+                  } else {
+                    return (
+                      <>
+                        <img
+                          src={fileURL}
+                          alt="Invoice Preview"
+                          style={{ maxWidth: "100px", height: "auto" }}
+                        />
+
+                      </>
+                    );
+                  }
+                })()}
+              </div>
+            )}
             {/* Action Buttons */}
             <div className="invoice-btn">
-            {isLoading ? (
-                <SpinnerLoader size="30px" />
+              {isLoading ? (
+                <button >
+                  <SpinnerLoader size="15px" />&nbsp;
+                  Save
+                </button>
+
               ) : (
-              <button onClick={handleSaveUpdatedInvoice}>
-                <MdSave />
-                Save
-              </button>
+                <button onClick={handleSaveUpdatedInvoice}>
+                  <MdSave />
+                  Save
+                </button>
               )}
-              <button onClick={() => setShowUpdateInvoiceModal(false)}>
+              <button
+                onClick={handleUpdateCancel}>
                 Cancel
               </button>
             </div>

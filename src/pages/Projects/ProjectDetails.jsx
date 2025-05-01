@@ -824,7 +824,7 @@ const ProjectDetails = () => {
                           },
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
-                            <h3>{docCategory.title}</h3>
+                            <h3>{docCategory.title.toUpperCase()}</h3>
                             {rolePermissions?.ProjectDocument?.add ? (
                               <input
                                 type="file"
@@ -1695,7 +1695,6 @@ const ProjectDetails = () => {
               {activeTab === "invoice" && (
                 <InvoiceManagement projectId={projectId} />
               )}
-
               {activeTab === "settings" && (
                 <div className="project-info-card">
                   <h2>Settings</h2>
