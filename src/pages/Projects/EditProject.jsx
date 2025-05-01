@@ -37,7 +37,6 @@ const EditProject = () => {
     acknowledgements: [],
 
     receivingReports: [],
-
   });
   console.log(formData?.clientId, "client id ");
 
@@ -369,8 +368,25 @@ const EditProject = () => {
         users,
       })
     );
+    if (
+      selectedRoles.includes("Account Manager") &&
+      (!formData.assignedTeamRoles["Account Manager"] ||
+        formData.assignedTeamRoles["Account Manager"].length === 0)
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Account Manager",
+        text: "You must assign at least one user under the 'Account Manager' role.",
+      });
+      return;
+    }
 
     Object.entries(formData).forEach(([key, val]) => {
+      if (key.includes("Date") || key.includes("At")) {
+        const isValidDate = val && !isNaN(new Date(val).getTime());
+        if (!isValidDate) return;
+      }
+
       if (
         ![
           "assignedTeamRoles",
@@ -378,9 +394,7 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
-
           "receivingReports",
-
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -523,12 +537,12 @@ const EditProject = () => {
                     </label>
                     <select
                       name="clientId"
-                      value={formData.clientId}
+                      value={String(formData.clientId)}
                       onChange={(e) => {
+                        const selectedId = Number(e.target.value); // fix type
                         const selectedCustomer = customers.find(
-                          (customer) => customer.id === e.target.value
+                          (c) => c.id === selectedId
                         );
-
                         setFormData((prev) => ({
                           ...prev,
                           clientId: selectedCustomer?.id || "",
@@ -593,13 +607,11 @@ const EditProject = () => {
                       onChange={handleChange}
                       required
                     >
-
                       <option value="">Select Completion Time</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
                         <option key={week} value={`${week}_weeks`}>
                           {week} Week{week > 1 ? "s" : ""}
                         </option>
-
                       ))}
                     </select>
                   </div>
@@ -730,7 +742,7 @@ const EditProject = () => {
                 <div className="form-group-row">
                   {/* Proposals & Presentations */}
                   <div className="form-group">
-                    <label>Detailed Proposal  </label>
+                    <label>Detailed Proposal </label>
                     <input
                       type="file"
                       multiple
@@ -811,7 +823,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("floorPlans", url)
                                 }
                               >
-                              X
+                                X
                               </button>
                             </li>
                           );
@@ -822,8 +834,7 @@ const EditProject = () => {
 
                   {/* Other Documents */}
                   <div className="form-group">
-                    <label>Product Maintenance
-                    </label>
+                    <label>Product Maintenance</label>
                     <input
                       type="file"
                       multiple
@@ -964,7 +975,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("cad", url)
                                 }
                               >
-                              X
+                                X
                               </button>
                             </li>
                           );
@@ -973,8 +984,7 @@ const EditProject = () => {
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Sales Aggrement
-                    </label>
+                    <label>Sales Aggrement</label>
                     <input
                       type="file"
                       name="salesAggrement"
@@ -1028,103 +1038,115 @@ const EditProject = () => {
                   </div>
                 </div>
                 <div className="form-group-row">
-                <div className="form-group">
+                  <div className="form-group">
+                    <label>Acknowledgements</label>
 
-                  <label>Acknowledgements
-                  </label>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("acknowledgements", e)}
+                    />
 
-                  <input
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => handleFileChange("acknowledgements", e)}
-                  />
+                    {formData.acknowledgements &&
+                      formData.acknowledgements.length > 0 && (
+                        <ul className="file-preview-list">
+                          {formData.acknowledgements.map((url, idx) => {
+                            const fileName = url.split("/").pop();
+                            const fileExt = fileName.split(".").pop();
+                            const fileUrl = url.startsWith("uploads")
+                              ? `${url2}/${url}`
+                              : url;
 
-                  {formData.acknowledgements && formData.acknowledgements.length > 0 && (
-                    <ul className="file-preview-list">
-                      {formData.acknowledgements.map((url, idx) => {
-                        const fileName = url.split("/").pop();
-                        const fileExt = fileName.split(".").pop();
-                        const fileUrl = url.startsWith("uploads")
-                          ? `${url2}/${url}`
-                          : url;
+                            return (
+                              <li key={idx}>
+                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                  <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    width="100"
+                                  />
+                                ) : (
+                                  <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {fileName}
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveExistingFile(
+                                      "acknowledgements",
+                                      url
+                                    )
+                                  }
+                                >
+                                  X
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                  </div>
 
-                        return (
-                          <li key={idx}>
-                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                              <img src={fileUrl} alt={fileName} width="100" />
-                            ) : (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {fileName}
-                              </a>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveExistingFile("acknowledgements", url)
-                              }
-                            >
-                            X
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-               
-                <div className="form-group">
-                  <label>Receiving Reports
-                  </label>
+                  <div className="form-group">
+                    <label>Receiving Reports</label>
 
-                  <input
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => handleFileChange("receivingReports", e)}
-                  />
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("receivingReports", e)}
+                    />
 
-                  {formData.receivingReports && formData.receivingReports.length > 0 && (
-                    <ul className="file-preview-list">
-                      {formData.receivingReports.map((url, idx) => {
-                        const fileName = url.split("/").pop();
-                        const fileExt = fileName.split(".").pop();
-                        const fileUrl = url.startsWith("uploads")
-                          ? `${url2}/${url}`
-                          : url;
+                    {formData.receivingReports &&
+                      formData.receivingReports.length > 0 && (
+                        <ul className="file-preview-list">
+                          {formData.receivingReports.map((url, idx) => {
+                            const fileName = url.split("/").pop();
+                            const fileExt = fileName.split(".").pop();
+                            const fileUrl = url.startsWith("uploads")
+                              ? `${url2}/${url}`
+                              : url;
 
-                        return (
-                          <li key={idx}>
-                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                              <img src={fileUrl} alt={fileName} width="100" />
-                            ) : (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {fileName}
-                              </a>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveExistingFile("receivingReports", url)
-                              }
-                            >
-                              X
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-
+                            return (
+                              <li key={idx}>
+                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                  <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    width="100"
+                                  />
+                                ) : (
+                                  <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {fileName}
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveExistingFile(
+                                      "receivingReports",
+                                      url
+                                    )
+                                  }
+                                >
+                                  X
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                  </div>
                 </div>
                 <br />
 
@@ -1292,7 +1314,6 @@ const EditProject = () => {
                               <option value="Delivered">Delivered</option>
                               <option value="Installed">Installed</option>
                               <option value="Arrived">Arrived</option>
-                              
                             </select>
                           </td>
 
