@@ -19,7 +19,7 @@ const EditProject = () => {
   const [formData, setFormData] = useState({
     name: "",
     type: "Corporate Office",
-    clientName: "",
+    email: "",
     description: "",
     clientId: "",
     advancePayment: "",
@@ -426,12 +426,12 @@ const EditProject = () => {
   };
 
   const validateStep = () => {
-    const { name, type, clientName, totalValue, advancePayment } = formData;
+    const { name, type, email, totalValue, advancePayment } = formData;
 
     if (step === 1) {
       if (!name.trim()) return "Project Name is required.";
       if (!type) return "Project Type is required.";
-      if (!clientName) return "Customer selection is required.";
+      if (!email) return "Customer selection is required.";
       if (!totalValue || isNaN(totalValue) || totalValue <= 0)
         return "Total Value must be a valid positive number.";
       if (
@@ -513,16 +513,16 @@ const EditProject = () => {
                       Select Customer <span className="required-star">*</span>
                     </label>
                     <select
-                      name="clientName"
-                      value={formData.clientName}
+                      name="email"
+                      value={formData.email}
                       onChange={(e) => {
                         const selectedCustomer = customers.find(
-                          (customer) => customer.full_name === e.target.value
+                          (customer) => customer.email === e.target.value
                         );
 
                         setFormData((prev) => ({
                           ...prev,
-                          clientName: e.target.value,
+                          email: e.target.value,
                           deliveryAddress:
                             selectedCustomer?.delivery_address || "",
                           clientId: selectedCustomer?.id || "",
@@ -535,7 +535,8 @@ const EditProject = () => {
                       <option value="">Select a customer</option>
                       {customers.length > 0 &&
                         customers.map((customer) => (
-                          <option key={customer.id} value={customer.full_name}>
+
+                          <option key={customer.id} value={customer.email}>
                             {customer.full_name} ({customer.email})
                           </option>
                         ))}
