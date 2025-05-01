@@ -19,7 +19,7 @@ const EditProject = () => {
   const [formData, setFormData] = useState({
     name: "",
     type: "Corporate Office",
-    email: "",
+    clientName: "",
     description: "",
     clientId: "",
     advancePayment: "",
@@ -35,7 +35,8 @@ const EditProject = () => {
     cad: [],
     salesAggrement: [],
     acknowledgements: [],
-    receivingReports: []
+
+    receivingReports: [],
   });
   console.log(formData?.clientId, "client id ");
 
@@ -126,7 +127,9 @@ const EditProject = () => {
         ...project,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
+
         estimatedCompletion: project.estimatedCompletion,
+
         proposals: JSON.parse(project.proposals || "[]"),
         floorPlans: JSON.parse(project.floorPlans || "[]"),
         otherDocuments: JSON.parse(project.otherDocuments || "[]"),
@@ -237,7 +240,10 @@ const EditProject = () => {
   const fetchCustomers = async () => {
     try {
       const data = await getCustomers();
-      setCustomers(data || []);
+      const activeCustomers = (data || []).filter(
+        (customer) => customer.status === "active"
+      );
+      setCustomers(activeCustomers);
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
@@ -330,7 +336,7 @@ const EditProject = () => {
   useEffect(() => {
     const shouldEnableCheckbox =
       parseFloat(formData.advancePayment) !==
-      parseFloat(initialFinance.advancePayment) ||
+        parseFloat(initialFinance.advancePayment) ||
       parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue);
 
     // Only enable/disable the checkbox — do not set it to true
@@ -362,8 +368,25 @@ const EditProject = () => {
         users,
       })
     );
+    if (
+      selectedRoles.includes("Account Manager") &&
+      (!formData.assignedTeamRoles["Account Manager"] ||
+        formData.assignedTeamRoles["Account Manager"].length === 0)
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Account Manager",
+        text: "You must assign at least one user under the 'Account Manager' role.",
+      });
+      return;
+    }
 
     Object.entries(formData).forEach(([key, val]) => {
+      if (key.includes("Date") || key.includes("At")) {
+        const isValidDate = val && !isNaN(new Date(val).getTime());
+        if (!isValidDate) return;
+      }
+
       if (
         ![
           "assignedTeamRoles",
@@ -371,7 +394,7 @@ const EditProject = () => {
           "floorPlans",
           "otherDocuments",
           "acknowledgements",
-          "receivingReports"
+          "receivingReports",
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -426,12 +449,12 @@ const EditProject = () => {
   };
 
   const validateStep = () => {
-    const { name, type, email, totalValue, advancePayment } = formData;
+    const { name, type, clientName, totalValue, advancePayment } = formData;
 
     if (step === 1) {
       if (!name.trim()) return "Project Name is required.";
       if (!type) return "Project Type is required.";
-      if (!email) return "Customer selection is required.";
+      if (!clientName) return "Customer selection is required.";
       if (!totalValue || isNaN(totalValue) || totalValue <= 0)
         return "Total Value must be a valid positive number.";
       if (
@@ -513,33 +536,29 @@ const EditProject = () => {
                       Select Customer <span className="required-star">*</span>
                     </label>
                     <select
-                      name="email"
-                      value={formData.email}
+                      name="clientId"
+                      value={String(formData.clientId)}
                       onChange={(e) => {
+                        const selectedId = Number(e.target.value); // fix type
                         const selectedCustomer = customers.find(
-                          (customer) => customer.email === e.target.value
+                          (c) => c.id === selectedId
                         );
-
                         setFormData((prev) => ({
                           ...prev,
-                          email: e.target.value,
+                          clientId: selectedCustomer?.id || "",
+                          clientName: selectedCustomer?.full_name || "",
                           deliveryAddress:
                             selectedCustomer?.delivery_address || "",
-                          clientId: selectedCustomer?.id || "",
                         }));
-
-                        setSelectedCustomerId(selectedCustomer?.id || "");
                       }}
                       required
                     >
                       <option value="">Select a customer</option>
-                      {customers.length > 0 &&
-                        customers.map((customer) => (
-
-                          <option key={customer.id} value={customer.email}>
-                            {customer.full_name} ({customer.email})
-                          </option>
-                        ))}
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.full_name} ({customer.email})
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
@@ -588,18 +607,13 @@ const EditProject = () => {
                       onChange={handleChange}
                       required
                     >
-
                       <option value="">Select Completion Time</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
                         <option key={week} value={`${week}_weeks`}>
                           {week} Week{week > 1 ? "s" : ""}
                         </option>
-
                       ))}
-
                     </select>
-
-
                   </div>
                 </div>
 
@@ -684,8 +698,9 @@ const EditProject = () => {
                   {allRoles.map((role) => (
                     <div
                       key={role}
-                      className={`role-card ${selectedRoles.includes(role) ? "active" : ""
-                        }`}
+                      className={`role-card ${
+                        selectedRoles.includes(role) ? "active" : ""
+                      }`}
                     >
                       <div className="role-header">
                         <label>
@@ -727,7 +742,7 @@ const EditProject = () => {
                 <div className="form-group-row">
                   {/* Proposals & Presentations */}
                   <div className="form-group">
-                    <label>Detailed Proposal  </label>
+                    <label>Detailed Proposal </label>
                     <input
                       type="file"
                       multiple
@@ -808,7 +823,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("floorPlans", url)
                                 }
                               >
-                              X
+                                X
                               </button>
                             </li>
                           );
@@ -819,8 +834,7 @@ const EditProject = () => {
 
                   {/* Other Documents */}
                   <div className="form-group">
-                    <label>Product Maintenance
-                    </label>
+                    <label>Product Maintenance</label>
                     <input
                       type="file"
                       multiple
@@ -961,7 +975,7 @@ const EditProject = () => {
                                   handleRemoveExistingFile("cad", url)
                                 }
                               >
-                              X
+                                X
                               </button>
                             </li>
                           );
@@ -970,8 +984,7 @@ const EditProject = () => {
                     )}
                   </div>
                   <div className="form-group">
-                    <label>Sales Aggrement
-                    </label>
+                    <label>Sales Aggrement</label>
                     <input
                       type="file"
                       name="salesAggrement"
@@ -1025,97 +1038,115 @@ const EditProject = () => {
                   </div>
                 </div>
                 <div className="form-group-row">
-                <div className="form-group">
-                  <label>Acknowledgements
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => handleFileChange("acknowledgements", e)}
-                  />
-                  {formData.acknowledgements && formData.acknowledgements.length > 0 && (
-                    <ul className="file-preview-list">
-                      {formData.acknowledgements.map((url, idx) => {
-                        const fileName = url.split("/").pop();
-                        const fileExt = fileName.split(".").pop();
-                        const fileUrl = url.startsWith("uploads")
-                          ? `${url2}/${url}`
-                          : url;
+                  <div className="form-group">
+                    <label>Acknowledgements</label>
 
-                        return (
-                          <li key={idx}>
-                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                              <img src={fileUrl} alt={fileName} width="100" />
-                            ) : (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {fileName}
-                              </a>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveExistingFile("acknowledgements", url)
-                              }
-                            >
-                            X
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-               
-                <div className="form-group">
-                  <label>Receiving Reports
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => handleFileChange("receivingReports", e)}
-                  />
-                  {formData.receivingReports && formData.receivingReports.length > 0 && (
-                    <ul className="file-preview-list">
-                      {formData.receivingReports.map((url, idx) => {
-                        const fileName = url.split("/").pop();
-                        const fileExt = fileName.split(".").pop();
-                        const fileUrl = url.startsWith("uploads")
-                          ? `${url2}/${url}`
-                          : url;
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("acknowledgements", e)}
+                    />
 
-                        return (
-                          <li key={idx}>
-                            {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                              <img src={fileUrl} alt={fileName} width="100" />
-                            ) : (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {fileName}
-                              </a>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleRemoveExistingFile("receivingReports", url)
-                              }
-                            >
-                              X
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
+                    {formData.acknowledgements &&
+                      formData.acknowledgements.length > 0 && (
+                        <ul className="file-preview-list">
+                          {formData.acknowledgements.map((url, idx) => {
+                            const fileName = url.split("/").pop();
+                            const fileExt = fileName.split(".").pop();
+                            const fileUrl = url.startsWith("uploads")
+                              ? `${url2}/${url}`
+                              : url;
+
+                            return (
+                              <li key={idx}>
+                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                  <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    width="100"
+                                  />
+                                ) : (
+                                  <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {fileName}
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveExistingFile(
+                                      "acknowledgements",
+                                      url
+                                    )
+                                  }
+                                >
+                                  X
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Receiving Reports</label>
+
+                    <input
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("receivingReports", e)}
+                    />
+
+                    {formData.receivingReports &&
+                      formData.receivingReports.length > 0 && (
+                        <ul className="file-preview-list">
+                          {formData.receivingReports.map((url, idx) => {
+                            const fileName = url.split("/").pop();
+                            const fileExt = fileName.split(".").pop();
+                            const fileUrl = url.startsWith("uploads")
+                              ? `${url2}/${url}`
+                              : url;
+
+                            return (
+                              <li key={idx}>
+                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                  <img
+                                    src={fileUrl}
+                                    alt={fileName}
+                                    width="100"
+                                  />
+                                ) : (
+                                  <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {fileName}
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveExistingFile(
+                                      "receivingReports",
+                                      url
+                                    )
+                                  }
+                                >
+                                  X
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                  </div>
                 </div>
                 <br />
 
@@ -1283,7 +1314,6 @@ const EditProject = () => {
                               <option value="Delivered">Delivered</option>
                               <option value="Installed">Installed</option>
                               <option value="Arrived">Arrived</option>
-                              
                             </select>
                           </td>
 
