@@ -277,7 +277,7 @@ const UserForm = () => {
         <BackButton/>
           <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
         </div>
-        {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit}>
+        {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit} autoComplete="off">
           <div className="user-form-row">
             <div className="user-form-group">
               <label>First Name <Required/></label>
@@ -288,6 +288,7 @@ const UserForm = () => {
                 value={newUser.firstName}
                 onChange={handleChange}
                 maxLength={20}
+                autocomplete="off"
               />
               <small style={{ fontSize: "0.8rem", color: "#777" }}>
   Must start with a capital letter and contain only letters.
@@ -321,6 +322,7 @@ const UserForm = () => {
                 value={newUser.email}
                 onChange={handleChange}
                 maxLength={40}
+                autocomplete="off"
               />
               {/* {errors.email && <p className="user-error">{errors.email}</p>} */}
             </div>
