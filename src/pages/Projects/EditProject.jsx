@@ -316,11 +316,20 @@ const EditProject = () => {
   };
 
   const handleFileChange = (category, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
     setFiles((prev) => ({
       ...prev,
-      [category]: [...(prev[category] || []), ...Array.from(e.target.files)],
+      [category]: [file], 
+    }));
+  
+    setFormData((prev) => ({
+      ...prev,
+      [category]: [],
     }));
   };
+  
   const handleRemoveExistingFile = (category, url) => {
     setRemovedFiles((prev) => [...prev, url]);
     setFormData((prev) => ({
@@ -745,7 +754,7 @@ const EditProject = () => {
                     <label>Detailed Proposal </label>
                     <input
                       type="file"
-                      multiple
+                   
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("proposals", e)}
                     />
@@ -791,7 +800,7 @@ const EditProject = () => {
                     <label>Floor Plans</label>
                     <input
                       type="file"
-                      multiple
+   
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("floorPlans", e)}
                     />
@@ -837,7 +846,7 @@ const EditProject = () => {
                     <label>Product Maintenance</label>
                     <input
                       type="file"
-                      multiple
+            
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("otherDocuments", e)}
                     />
@@ -890,7 +899,7 @@ const EditProject = () => {
                     <input
                       type="file"
                       name="presentation"
-                      multiple
+              
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("presentation", e)}
                     />
@@ -943,7 +952,7 @@ const EditProject = () => {
                     <input
                       type="file"
                       name="cad"
-                      multiple
+        
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("cad", e)}
                     />
@@ -988,7 +997,7 @@ const EditProject = () => {
                     <input
                       type="file"
                       name="salesAggrement"
-                      multiple
+         
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("salesAggrement", e)}
                     />
@@ -1043,7 +1052,7 @@ const EditProject = () => {
 
                     <input
                       type="file"
-                      multiple
+          
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("acknowledgements", e)}
                     />
@@ -1098,7 +1107,7 @@ const EditProject = () => {
 
                     <input
                       type="file"
-                      multiple
+      
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("receivingReports", e)}
                     />

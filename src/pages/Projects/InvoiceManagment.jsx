@@ -135,7 +135,7 @@ const InvoiceManagement = ({ projectId }) => {
       setInvoiceData(prev => ({ ...prev, invoiceFile: file }));
     } else {
       alert("Only JPG, PNG, WEBP, or PDF files are allowed.");
-      e.target.value = ""; // clear input
+      e.target.value = "";
       setPreviewURL(null);
       setIsPdf(false);
       setInvoiceData(prev => ({ ...prev, invoiceFile: null }));
@@ -163,16 +163,27 @@ const InvoiceManagement = ({ projectId }) => {
         0
       );
       const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
-      const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
-
-      if (updatedTotal > projectLimit) {
-        Swal.fire({
-          icon: "warning",
-          title: "Invoice limit exceeded!",
-          text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
-        });
-        return;
+      if (invoiceData.status !== "Pending") {
+        const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
+        if (updatedTotal > projectLimit) {
+          Swal.fire({
+            icon: "warning",
+            title: "Invoice limit exceeded!",
+            text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
+          });
+          return;
+        }
       }
+     
+if (getBalance() <= 0) {
+  Swal.fire({
+    icon: "info",
+    title: "No balance due",
+    text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
+  });
+  return;
+}
+
 
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
@@ -202,57 +213,57 @@ const InvoiceManagement = ({ projectId }) => {
       setIsLoading(false);
     }
   };
-  // Save the updated invoice
+
   const handleSaveUpdatedInvoice = async () => {
     try {
-
-      const projectLimit = projectDetails.totalValue - projectDetails.advancePayment;
-      console.log(projectDetails.totalValue,"projectDetails.totalValue")
-      console.log(projectDetails.advancePayment,"projectDetails.advancePayment")
-      const currentInvoiceTotal = invoices
-      .filter(invoice => invoice.status === "Paid"||invoice.status === "Partly Paid")
-      .reduce((sum, invoice) => sum + Number(invoice.totalAmount || 0), 0);
-      console.log(currentInvoiceTotal)
       const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
-      const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
-
-      if (updatedTotal >= projectLimit) {
+      const currentInvoiceAmount = Number(selectedInvoice.totalAmount || 0);
+      const balanceDue = getBalance();
+      const maxAllowed = balanceDue + currentInvoiceAmount;
+  
+      if (newInvoiceAmount > maxAllowed) {
         Swal.fire({
           icon: "warning",
-          title: "Invoice limit exceeded!",
+          title: "Amount exceeds allowed limit",
           text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
         });
         return;
       }
-
+  
+      // Proceed with update
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
       formData.append("advancePaid", invoiceData.advancePaid);
       formData.append("status", invoiceData.status);
+      formData.append("description", invoiceData.description || "");
+  
       if (invoiceData.invoiceFile) {
         formData.append("invoice", invoiceData.invoiceFile);
       }
-      formData.append("description", invoiceData.description || "");
+  
       setIsLoading(true);
-
       const response = await axios.put(
         `${url}/projects/${projectId}/invoice/${selectedInvoice.id}`,
         formData
       );
+  
       toast.success("Invoice updated!");
       setInvoices((prevInvoices) =>
         prevInvoices.map((invoice) =>
           invoice.id === selectedInvoice.id ? response.data : invoice
         )
-      ); // Update the existing invoice in the list
-      setShowUpdateInvoiceModal(false); // Close the modal
-      setIsLoading(false);
+      );
+      setShowUpdateInvoiceModal(false);
     } catch (err) {
-      setIsLoading(false);
       console.error("Error updating invoice:", err);
       toast.error("Error updating invoice.");
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  
+  
   // Handle deleting an invoice
   const handleDeleteInvoice = async (invoiceId) => {
     try {
