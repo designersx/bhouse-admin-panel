@@ -186,7 +186,7 @@ const UserForm = () => {
   
     fields.forEach((field) => validateField(field, user[field]));
   
-    setErrors(newErrors); // ✅ Ensure state is updated before checking errors
+    setErrors(newErrors); 
   
     return Object.values(newErrors).some((error) => error !== ""); 
   };
