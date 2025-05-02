@@ -204,12 +204,12 @@ const EditCustomer = () => {
                     </div>
 
                     <div className="checkbox-group">
-                        <label className="checkbox-label">
+                        {/* <label className="checkbox-label">
                             <input type="checkbox" name="send_login_credentials" checked={formData.send_login_credentials} onChange={handleChange} />
                             Send Login Credentials
-                        </label>
+                        </label> */}
 
-                        <label className="checkbox-label">
+                        {/* <label className="checkbox-label">
                             <input type="checkbox" name="enable_email_notifications" checked={formData.enable_email_notifications} onChange={handleChange} />
                             Enable Email Notifications
                         </label>
@@ -222,8 +222,8 @@ const EditCustomer = () => {
                         <label className="checkbox-label">
                             <input type="checkbox" name="require_coi" checked={formData.require_coi} onChange={handleChange} />
                             Require COI
-                        </label>
-                    </div>
+                        </label>*/}
+                    </div> 
 
                     <button type="submit" className="submit-btn">Update Customer</button>
                 </form>

@@ -105,7 +105,7 @@ const [isLoading , setIsLoading] = useState(true)
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "Something went wrong while deleting the user.",
+          text: "User is not deleted.",
         });
       }
     }
@@ -174,14 +174,14 @@ const [isLoading , setIsLoading] = useState(true)
           <thead>
             <tr>
               <th>Sr. No</th>
-              <th>Name</th>
-              <th>Email</th>
+              <th className="name">Name</th>
+              <th className="email">Email</th>
               <th className="pass">Password</th>
-              <th>Role</th>
-              <th>Created By:</th>
+              <th className="role">Role</th>
+              <th className="create">Created By:</th>
               <th>Status</th>
               {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
-                <th>Actions</th>
+                <th className="action">Actions</th>
               )}
             </tr>
           </thead>

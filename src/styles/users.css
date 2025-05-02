@@ -5,7 +5,21 @@
   .users h2 {
     margin-bottom: 20px;
   }
-  
+  .create{
+    width: 99px;
+  }
+  .role{
+    width: 120px;
+  }
+  .pass{
+    width: 110px;
+  }
+  .name{
+    width: 170px;
+  }
+  .action{
+    border: none;
+  }
   .add-user-btn {
     background-color: #004680;
     color: #fff;
@@ -26,9 +40,7 @@
     width: 100%;
     border-collapse: collapse;
   }
-  .pass{
-    width: 150px;
-  }
+ 
   
   th, td {
     padding: 12px;
