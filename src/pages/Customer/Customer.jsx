@@ -277,7 +277,7 @@ const Customer = () => {
                             onClick={() => navigate(`/view-customer/${customer.id}`)}
                           />
                         )}
-                        {rolePermissions?.CustomerComments?.view ?
+                        {/* {rolePermissions?.CustomerComments?.view ?
                           <FaCommentAlt style={{
                             color: "#004680",
                             fontSize: "19px"
@@ -290,7 +290,7 @@ const Customer = () => {
                             }
 
                             } />
-                          : null}
+                          : null} */}
 
                       </td>
                     )}

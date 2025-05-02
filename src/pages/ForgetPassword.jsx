@@ -234,7 +234,7 @@ const ForgotPassword = () => {
                 maxLength={15}
                 required
               />
-              <p className={`forget-error-text ${errors.confirmPassword ? 'show' : ''}`}>{errors.confirmPassword}</p>
+              <p className={`forget ${errors.confirmPassword ? 'show' : ''}`}>{errors.confirmPassword}</p>
 
               <button className='forget-btn' onClick={handleResetPassword} disabled={isLoading}>
                 {isLoading ? <div className="forget-spinner"></div> : 'Reset Password'}

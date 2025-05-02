@@ -4,11 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { getTokenExpiration } from "../utils/checkTokenExpiry";
 
 const useSessionTimeout = (token) => {
-  const navigate = useNavigate();
-// 
+  const navigate = useNavigate(); 
   useEffect(() => {
     if (!token) return;
-
     const expirationTime = getTokenExpiration(token);
     if (!expirationTime) return;
 

@@ -437,16 +437,16 @@ const AddProject = () => {
     }
   };
   const handleFileInputChange = (e, fieldName) => {
-    const file = e.target.files[0]; 
-  
+    const file = e.target.files[0];
+
     if (!file) return;
-  
+
     setFormData((prev) => ({
       ...prev,
-      [fieldName]: [file], 
+      [fieldName]: [file],
     }));
   };
-  
+
   // const validateLeadTimeMatrix = () => {
   //   const today = new Date().toISOString().split("T")[0];
 
@@ -539,10 +539,10 @@ const AddProject = () => {
 
                     <select
                       name="clientName"
-                      value={formData.clientName}
+                      value={formData.clientId}
                       onChange={(e) => {
                         const selectedCustomer = customers.find(
-                          (customer) => customer.full_name === e.target.value
+                          (customer) => String(customer.id) === e.target.value
                         );
 
                         setFormData({
@@ -558,7 +558,7 @@ const AddProject = () => {
                     >
                       <option value="">Select a customer</option>
                       {customers.map((customer) => (
-                        <option key={customer.id} value={customer.full_name}>
+                        <option key={customer.id} value={customer.id}>
                           {customer.full_name} ({customer.email})
                         </option>
                       ))}
@@ -588,7 +588,7 @@ const AddProject = () => {
                       required
                     >
                       <option value="In progress">In progress</option>
-                      <option value="Aproved">Aproved</option>
+                      <option value="Aproved">Approved</option>
                       <option value="Waiting on Advance">
                         Waiting on Advance
                       </option>
@@ -776,7 +776,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="proposals"
-               
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "proposals")}
                       disabled={!!formData.proposals?.length}
@@ -810,7 +809,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="floorPlans"
-    
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "floorPlans")}
                       disabled={!!formData.floorPlans?.length}
@@ -846,7 +844,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="otherDocuments"
-                
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "otherDocuments")
@@ -888,7 +885,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="acknowledgements"
-              
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "acknowledgements")
@@ -926,7 +922,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="receivingReports"
-                
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "receivingReports")
@@ -965,7 +960,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="presentation"
-        
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "presentation")}
                       disabled={!!formData.presentation?.length}
@@ -1001,7 +995,6 @@ const AddProject = () => {
                     <input
                       type="file"
                       name="cad"
-              
                       accept=".pdf"
                       onChange={(e) => handleFileInputChange(e, "cad")}
                     />
@@ -1034,7 +1027,6 @@ const AddProject = () => {
                       type="file"
                       name="salesAggrement"
                       disabled={!!formData.salesAggrement?.length}
-            
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "salesAggrement")

@@ -54,16 +54,16 @@ const ProjectDetails = () => {
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const scrollRef = useRef(null);
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeTab") || "overview");
-const [activeTabing, setActiveTabing] = useState(() => localStorage.getItem("activeTabing") || "Admin");
-const handleTabChange = (tabKey) => {
-  setActiveTab(tabKey);
-  localStorage.setItem("activeTab", tabKey);
-};
+  const [activeTabing, setActiveTabing] = useState(() => localStorage.getItem("activeTabing") || "Admin");
+  const handleTabChange = (tabKey) => {
+    setActiveTab(tabKey);
+    localStorage.setItem("activeTab", tabKey);
+  };
 
-const handleSubTabChange = (subTabKey) => {
-  setActiveTabing(subTabKey);
-  localStorage.setItem("activeTabing", subTabKey);
-};
+  const handleSubTabChange = (subTabKey) => {
+    setActiveTabing(subTabKey);
+    localStorage.setItem("activeTabing", subTabKey);
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -257,7 +257,7 @@ const handleSubTabChange = (subTabKey) => {
     await fetchUserComments(user.id);
     setIsOffcanvasOpen(true);
   };
-
+//Add Team COmment
   const handleAddComment = async () => {
     setCommentLoading(true);
     const stored = JSON.parse(localStorage.getItem("user"));
@@ -270,6 +270,7 @@ const handleSubTabChange = (subTabKey) => {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
+        commentType:"customer"
       });
 
       setNewCommentText("");
@@ -481,11 +482,11 @@ const handleSubTabChange = (subTabKey) => {
     }
     setSelectedFiles((prev) => ({
       ...prev,
-      [category]: files, 
+      [category]: files,
     }));
   };
-  
-  
+
+
   const removeSelectedFile = (category, index) => {
     setSelectedFiles((prev) => ({
       ...prev,
@@ -524,9 +525,9 @@ const handleSubTabChange = (subTabKey) => {
           ? updatedProject[key]
           : JSON.parse(updatedProject[key] || "[]");
       });
-      
+
       setProject(updatedProject);
-      
+
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Upload failed.");
@@ -724,14 +725,14 @@ const handleSubTabChange = (subTabKey) => {
                     (permissionKey && rolePermissions?.[permissionKey]?.view);
                   return hasPermission ? (
                     <button
-  key={key}
-  className={activeTab === key ? "tab active" : "tab"}
-  onClick={() => handleTabChange(key)}
->
-  {label}
-</button>
+                      key={key}
+                      className={activeTab === key ? "tab active" : "tab"}
+                      onClick={() => handleTabChange(key)}
+                    >
+                      {label}
+                    </button>
 
-                  ) : null; 
+                  ) : null;
                 }
               )}
             </div>
@@ -784,18 +785,18 @@ const handleSubTabChange = (subTabKey) => {
                 <div className="project-info-card">
                   <div className="tabs-container">
                     <div className="tabs-header">
-                    <button
-  className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`}
-  onClick={() => handleSubTabChange("Admin")}
->
-  BHOUSE
-</button>
-<button
-  className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`}
-  onClick={() => handleSubTabChange("Customer")}
->
-  CUSTOMER
-</button>
+                      <button
+                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`}
+                        onClick={() => handleSubTabChange("Admin")}
+                      >
+                        BHOUSE
+                      </button>
+                      <button
+                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`}
+                        onClick={() => handleSubTabChange("Customer")}
+                      >
+                        CUSTOMER
+                      </button>
 
                     </div>
                   </div>
@@ -849,45 +850,45 @@ const handleSubTabChange = (subTabKey) => {
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title.toUpperCase()}</h3>
                             {rolePermissions?.ProjectDocument?.add ? (
-                            <input
-                            type="file"
-                            disabled={
-                              selectedFiles[docCategory.category]?.length > 0 ||
-                              (Array.isArray(project[docCategory.category]) &&
-                               project[docCategory.category].length > 0)
-                            }
-                            accept={docCategory.category === "cad" ? ".pdf" : "*/*"}
-                            onChange={(e) => handleFileUpload(e, docCategory.category)}
-                          />
+                              <input
+                                type="file"
+                                disabled={
+                                  selectedFiles[docCategory.category]?.length > 0 ||
+                                  (Array.isArray(project[docCategory.category]) &&
+                                    project[docCategory.category].length > 0)
+                                }
+                                accept={docCategory.category === "cad" ? ".pdf" : "*/*"}
+                                onChange={(e) => handleFileUpload(e, docCategory.category)}
+                              />
 
                             ) : null}
 
-{selectedFiles[docCategory.category]?.length > 0 && (
-                                <div className="file-preview-section">
-                                  <h4>Files to be uploaded:</h4>
-                                  <ul className="preview-list">
-      {selectedFiles[docCategory.category].map((file, i) => (
-        <li key={i} className="preview-item">
-          {file.name}
-          <span
-            className="remove-preview"
-            onClick={() => removeSelectedFile(docCategory.category, i)}
-          >
-            ×
-          </span>
-        </li>
-      ))}
-    </ul>
-                                  <button
-                                    className="upload-btn"
-                                    onClick={() =>
-                                      uploadSelectedFiles(docCategory.category)
-                                    }
-                                  >
-                                    Upload
-                                  </button>
-                                </div>
-                              )}
+                            {selectedFiles[docCategory.category]?.length > 0 && (
+                              <div className="file-preview-section">
+                                <h4>Files to be uploaded:</h4>
+                                <ul className="preview-list">
+                                  {selectedFiles[docCategory.category].map((file, i) => (
+                                    <li key={i} className="preview-item">
+                                      {file.name}
+                                      <span
+                                        className="remove-preview"
+                                        onClick={() => removeSelectedFile(docCategory.category, i)}
+                                      >
+                                        ×
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <button
+                                  className="upload-btn"
+                                  onClick={() =>
+                                    uploadSelectedFiles(docCategory.category)
+                                  }
+                                >
+                                  Upload
+                                </button>
+                              </div>
+                            )}
                             {(() => {
                               const files = Array.isArray(docCategory?.files)
                                 ? docCategory.files
@@ -1035,7 +1036,7 @@ const handleSubTabChange = (subTabKey) => {
                                     {fileName}
                                   </span>
                                   <button
-                                    className="file-action-btn"
+                                    className="file-action-btn eye"
                                     onClick={() =>
                                       window.open(`${fileUrl}`, "_blank")
                                     }
@@ -1446,7 +1447,7 @@ const handleSubTabChange = (subTabKey) => {
                         <label>Upload Files</label>
                         <input
                           type="file"
-                        
+
                           accept="image/*"
                           onChange={handleImageSelect}
                         />
