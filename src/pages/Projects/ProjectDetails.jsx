@@ -1035,7 +1035,7 @@ const handleSubTabChange = (subTabKey) => {
                                     {fileName}
                                   </span>
                                   <button
-                                    className="file-action-btn"
+                                    className="file-action-btn eye"
                                     onClick={() =>
                                       window.open(`${fileUrl}`, "_blank")
                                     }
