@@ -106,7 +106,8 @@ const ArchivedProjects = () => {
                   <td>{project.status}</td>
                   <td>{project.assignedTeam}</td>
                   <td>{project.type}</td>
-                  <td>{project.completionDateFormatted}</td>
+                  <td>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
+
                   <td>
                     <button
                       className="add-user-btna"
