@@ -38,8 +38,6 @@ const EditProject = () => {
 
     receivingReports: [],
   });
-  console.log(formData?.clientId, "client id ");
-
   const [isLoading, setIsLoading] = useState(false);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
