@@ -21,19 +21,19 @@ const AddProject = () => {
     return savedData
       ? JSON.parse(savedData)
       : {
-          name: "",
-          type: "Corporate Office",
-          clientName: "",
-          description: "",
-          startDate: "",
-          estimatedCompletion: "",
-          totalValue: "",
-          advancePayment: "",
-          deliveryAddress: "",
-          deliveryHours: "",
-          assignedTeamRoles: {},
-          clientId: "",
-        };
+        name: "",
+        type: "Corporate Office",
+        clientName: "",
+        description: "",
+        startDate: "",
+        estimatedCompletion: "",
+        totalValue: "",
+        advancePayment: "",
+        deliveryAddress: "",
+        deliveryHours: "",
+        assignedTeamRoles: {},
+        clientId: "",
+      };
   });
 
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -46,14 +46,14 @@ const AddProject = () => {
     return savedMatrix
       ? JSON.parse(savedMatrix)
       : [
-          {
-            itemName: "",
-            quantity: "",
-            expectedDeliveryDate: "",
-            expectedArrivalDate: "",
-            status: "Pending",
-          },
-        ];
+        {
+          itemName: "",
+          quantity: "",
+          expectedDeliveryDate: "",
+          expectedArrivalDate: "",
+          status: "Pending",
+        },
+      ];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -358,15 +358,15 @@ const AddProject = () => {
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
         ? new Date(item.expectedDeliveryDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate)
-            .toISOString()
-            .slice(0, 19)
-            .replace("T", " ")
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ")
         : null,
       status: item.status || "Pending",
     }));
@@ -700,9 +700,8 @@ const AddProject = () => {
                       {allRoles.map((role) => (
                         <div
                           key={role}
-                          className={`role-card ${
-                            selectedRoles.includes(role) ? "active" : ""
-                          }`}
+                          className={`role-card ${selectedRoles.includes(role) ? "active" : ""
+                            }`}
                         >
                           <div className="role-header">
                             <label>
@@ -736,8 +735,8 @@ const AddProject = () => {
                                         const updatedUsers = e.target.checked
                                           ? [...prevSelected, user.id]
                                           : prevSelected.filter(
-                                              (id) => id !== user.id
-                                            );
+                                            (id) => id !== user.id
+                                          );
 
                                         setFormData((prev) => ({
                                           ...prev,
