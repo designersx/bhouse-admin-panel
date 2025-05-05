@@ -1145,7 +1145,17 @@ const AddProject = () => {
 
                       {/* ✅ TBD Checkbox */}
                       <div className="form-group1">
-                        <label>TBD</label>
+                      <label>
+  <span
+    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+    style={{
+      cursor: "pointer",  
+    }}
+  >
+    TBD
+  </span>
+</label>
+
                         <div
                           style={{
                             display: "flex",
