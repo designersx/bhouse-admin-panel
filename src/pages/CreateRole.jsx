@@ -29,7 +29,6 @@ const CreateRole = () => {
   const [title, setTitle] = useState("");
   const [description, setDesc] = useState("");
   const [permissions, setPermissions] = useState({});
-  const [suggestions, setSuggestions] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { rolePermissions } = useRolePermissions(24);
@@ -112,7 +111,6 @@ const CreateRole = () => {
   };
 
 
-
   const handleCheckboxChange = (module, action) => {
     const formattedModule = module.replace(/\s+/g, "");
   
@@ -145,29 +143,32 @@ const CreateRole = () => {
       }
   
       // If full Access is manually checked, check everything
-      if (action === "full Access" && updatedValue) {
-        actions.forEach(act => {
+      if (action === "fullAccess" && updatedValue) {
+        // Check all actions for this module
+        actions.forEach((act) => {
           newPermissions[formattedModule][act] = true;
         });
       }
   
       // If full Access is manually unchecked, uncheck everything
-      if (action === "full Access" && !updatedValue) {
-        actions.forEach(act => {
+      if (action === "fullAccess" && !updatedValue) {
+        // Uncheck all actions for this module
+        actions.forEach((act) => {
           newPermissions[formattedModule][act] = false;
         });
       }
   
       // Auto-manage full Access if all basic actions are true
       const allBasicChecked = actions
-        .filter(a => a !== "full Access")
-        .every(a => newPermissions[formattedModule]?.[a]);
+        .filter((a) => a !== "fullAccess")
+        .every((a) => newPermissions[formattedModule]?.[a]);
   
-      newPermissions[formattedModule]["full Access"] = allBasicChecked;
+      newPermissions[formattedModule]["fullAccess"] = allBasicChecked;
   
       return newPermissions;
     });
   };
+  
   
   const handleSubmit = async () => {
     if (!title.trim()) {

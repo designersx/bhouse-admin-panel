@@ -629,7 +629,7 @@ const EditProject = () => {
                 <div className="form-group-row">
                   <div className="form-group">
                     <label>
-                      Advance Payment <span className="required-star">*</span>
+                      Advance Payment
                     </label>
                     <input
                       type="number"
@@ -1219,7 +1219,18 @@ const EditProject = () => {
                       <tr>
                         <th>Manufacturer Name</th>
                         <th>Description</th>
-                        <th>TBD</th> {/* NEW COLUMN */}
+                        <th>
+  <span
+    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+    style={{
+      cursor: "pointer",
+    }}
+  >
+    TBD
+  </span>
+</th>
+
+
                         <th>Expected Departure</th>
                         <th>Expected Arrival</th>
                         <th>Status</th>
