@@ -257,7 +257,7 @@ const ProjectDetails = () => {
     await fetchUserComments(user.id);
     setIsOffcanvasOpen(true);
   };
-//Add Team COmment
+  //Add Team COmment
   const handleAddComment = async () => {
     setCommentLoading(true);
     const stored = JSON.parse(localStorage.getItem("user"));
@@ -270,7 +270,7 @@ const ProjectDetails = () => {
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
-        commentType:"customer"
+        commentType: "customer"
       });
 
       setNewCommentText("");
@@ -701,6 +701,9 @@ const ProjectDetails = () => {
       }
     });
   };
+
+  //Comment Count View Functionlaity
+ //Document 
   return (
     <Layout>
       <ToastContainer />
@@ -736,7 +739,7 @@ const ProjectDetails = () => {
                 }
               )}
             </div>
-
+{/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
                 <div className="project-details-container">
@@ -1073,7 +1076,6 @@ const ProjectDetails = () => {
                   </div>
                 </div>
               )}
-
               {activeTab === "team" && (
                 <div className="project-info-card">
                   <h2>Assigned Team</h2>
@@ -1122,7 +1124,6 @@ const ProjectDetails = () => {
                   )}
                 </div>
               )}
-
               {activeTab === "leadTimeMatrix" && (
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">

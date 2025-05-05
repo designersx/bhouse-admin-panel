@@ -77,6 +77,7 @@ const App = () => {
                 border: '1px solid #ddd',
                 borderRadius: '10px',
                 padding: '10px 15px',
+                border: '1px solid #004680',
                 boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
               }
             }

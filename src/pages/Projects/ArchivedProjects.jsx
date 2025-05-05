@@ -19,11 +19,11 @@ const ArchivedProjects = () => {
   useEffect(() => {
     const fetchArchivedProjects = async () => {
       try {
-        const res = await axios.get(`${url}/projects/archived`);
+        const res = await axios.get(${url}/projects/archived);
         const formatted = res.data.map((project) => ({
           ...project,
           assignedTeam: Array.isArray(project.assignedTeamRoles)
-            ? project.assignedTeamRoles.map((role) => `${role.role}`).join(", ")
+            ? project.assignedTeamRoles.map((role) => ${role.role}).join(", ")
             : "N/A",
           startDateFormatted: new Date(project.startDate).toLocaleDateString(),
           completionDateFormatted: project.estimatedCompletion
@@ -57,7 +57,7 @@ const ArchivedProjects = () => {
 
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.patch(`${url}/projects/${projectId}/unarchive`);
+        const res = await axios.patch(${url}/projects/${projectId}/unarchive);
         if (res.status === 200) {
           toast.success("Project unarchived successfully!");
           setArchivedProjects((prev) => prev.filter((p) => p.id !== projectId));
@@ -173,7 +173,7 @@ const ArchivedProjects = () => {
                   ).map((page, index) => (
                     <div
                       key={index}
-                      className={`page-btn ${currentPage === page ? "active" : ""}`}
+                      className={page-btn ${currentPage === page ? "active" : ""}}
                       onClick={() => typeof page === "number" && setCurrentPage(page)}
                     >
                       {page}
