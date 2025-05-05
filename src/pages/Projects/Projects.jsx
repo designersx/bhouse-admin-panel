@@ -352,7 +352,7 @@ const Projects = () => {
                               onChange={(e) => handleStatusChange(project.id, e.target.value)}
                             >
                               <option value="In progress">In progress</option>
-                              <option value="Aproved">Aproved</option>
+                              <option value="Aproved">Approved</option>
                               <option value="Waiting on Advance">Waiting on Advance</option>
                               <option value="Advance Paid">Advance Paid</option>
                               <option value="Order Processed">Order Processed</option>
