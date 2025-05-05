@@ -100,6 +100,40 @@ const ArchivedProjects = () => {
           <h2>Archived Projects</h2>
         </div>
 
+<<<<<<< HEAD
+      <div className="projects-table-container">
+        {loading ? (
+          <Loader/>
+        ) : filteredProjects.length === 0 ? (
+          <p>No archived projects found.</p>
+        ) : (
+          <table className="projects-table">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Client Name</th>
+                <th>Status</th>
+                <th>Assigned Roles</th>
+                <th>Type</th>
+                <th>Est. Completion</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProjects.map(project => (
+                <tr key={project.id}>
+                  <td>{project.name}</td>
+                  <td>{project.clientName}</td>
+                  <td>{project.status}</td>
+                  <td>{project.assignedTeam}</td>
+                  <td>{project.type}</td>
+                  <td>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
+
+                  <td>
+                    <button
+                      className="add-user-btna"
+                      onClick={() => handleUnarchive(project.id)}
+=======
         <div className="user-roles-header">
           <div className="user-roles-headerb">
             <input
@@ -175,6 +209,7 @@ const ArchivedProjects = () => {
                       key={index}
                       className={page-btn ${currentPage === page ? "active" : ""}}
                       onClick={() => typeof page === "number" && setCurrentPage(page)}
+>>>>>>> bhouse/main
                     >
                       {page}
                     </div>
