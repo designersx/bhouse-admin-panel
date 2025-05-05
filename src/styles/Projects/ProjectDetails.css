@@ -2,7 +2,9 @@
 .project-details-page .project-details-header {
   text-align: center;
 }
-
+.eye{
+  margin-left: 600px;
+}
 .project-details-page .project-details-header h1 {
   font-size: 3rem;
   font-weight: bold;

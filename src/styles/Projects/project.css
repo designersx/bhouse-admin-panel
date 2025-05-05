@@ -17,7 +17,12 @@
   /* flex-direction: column; */
   justify-content: space-between;
 }
-
+.sticky-header thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f9f9f9;
+  z-index: 10;
+}
 .projects-page .table-header {
   font-size: 1.8rem;
   font-weight: 600;

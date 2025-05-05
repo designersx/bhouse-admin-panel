@@ -37,15 +37,12 @@
     right: 15px;
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 2rem;
     cursor: pointer;
     color: #666;
     transition: color 0.3s;
 }
 
-.close-btn:hover {
-    color: rgb(248, 241, 241);
-}
 
 .submit-btn {
     background: #4f46e5;

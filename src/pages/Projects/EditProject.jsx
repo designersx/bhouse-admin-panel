@@ -591,7 +591,7 @@ const EditProject = () => {
                       onChange={handleChange}
                     >
                       <option value="In progress">In progress</option>
-                      <option value="Aproved">Aproved</option>
+                      <option value="Aproved">Approved</option>
                       <option value="Waiting on Advance">
                         Waiting on Advance
                       </option>
