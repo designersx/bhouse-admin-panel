@@ -1270,9 +1270,7 @@ const ProjectDetails = () => {
                                   }}
                                 />
                                 TBD
-                                <span title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized.">
-          &#8505;
-        </span>
+                  
                               </label>
                             </td>
 
