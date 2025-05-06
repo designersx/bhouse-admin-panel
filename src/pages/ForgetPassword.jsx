@@ -17,14 +17,12 @@ const ForgotPassword = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const [errors, setErrors] = useState({
     email: '',
     otp: '',
     newPassword: '',
     confirmPassword: ''
   });
-
   const navigate = useNavigate();
   const query = useQuery();
 
@@ -88,21 +86,25 @@ const ForgotPassword = () => {
       Swal.fire('Error', ' Please enter a valid email address.', 'error');
       return;
     }
-    setIsLoading(true);
+    
     try {
+      setIsLoading(true);
       const response = await forgetPassword(email);
-      if (response.success) {
+      console.log(response,"response")
+      if (response) {
         setOtpSent(true);
         Swal.fire('Success', 'OTP sent successfully!', 'success');
+        setIsLoading(false);
       } else {
         Swal.fire('Error', ' Failed to send OTP.', 'error');
+        setIsLoading(false);
       }
     } catch {
       Swal.fire('Error', ' Error generating OTP.', 'error');
+      setIsLoading(false);
     }
-    setIsLoading(false);
+   
   };
-
   const handleVerifyOtp = async () => {
     if (!otp || errors.otp) {
       Swal.fire('Error', ' Please enter a valid OTP.', 'error');
@@ -122,12 +124,12 @@ const ForgotPassword = () => {
     }
     setIsLoading(false);
   };
-
   const handleResetPassword = async () => {
     if (!newPassword || !confirmPassword || errors.newPassword || errors.confirmPassword) {
       Swal.fire('Error', 'New Password and Confirm Password must be same.', 'error');
       return;
     }
+    console.log("hELLO")
     setIsLoading(true);
     try {
       const response = await resetPassword(email, newPassword);

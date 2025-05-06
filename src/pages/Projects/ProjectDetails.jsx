@@ -290,7 +290,7 @@ if(data){
     await fetchUserComments(user.id);
     setIsOffcanvasOpen(true);
   };
-//Add Team COmment
+  //Add Team COmment
   const handleAddComment = async () => {
     setCommentLoading(true);
     const stored = JSON.parse(localStorage.getItem("user"));
@@ -303,7 +303,7 @@ if(data){
         fromUserId,
         toUserId: selectedUser.id,
         comment: newCommentText,
-        commentType:"customer"
+        commentType: "customer"
       });
 
       setNewCommentText("");
@@ -925,6 +925,7 @@ useEffect(()=>{
     });
   };
 
+
   const getCommentCountByUserId = (userId) => {
     const entry = read?.find((c) => c.id === userId);
     return entry ? entry.commentCount : 0;
@@ -948,6 +949,7 @@ useEffect(()=>{
 
    }
   }
+
 
 
   return (
@@ -985,7 +987,7 @@ useEffect(()=>{
                 }
               )}
             </div>
-
+{/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
                 <div className="project-details-container">
@@ -1343,7 +1345,6 @@ useEffect(()=>{
                   </div>
                 </div>
               )}
-
               {activeTab === "team" && (
                 <div className="project-info-card">
                   <h2>Assigned Team</h2>
@@ -1399,7 +1400,6 @@ useEffect(()=>{
                   )}
                 </div>
               )}
-
               {activeTab === "leadTimeMatrix" && (
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
@@ -1417,7 +1417,16 @@ useEffect(()=>{
                         <tr>
                           <th>Manufacturer Name</th>
                           <th>Description</th>
-                          <th>TBD</th>
+                          <th>
+  <span
+    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+    style={{
+      cursor: "pointer",
+    }}
+  >
+    TBD
+  </span>
+</th>
                           <th>Expected Departure</th>
                           <th>Expected Arrival</th>
                           <th>Status</th>
@@ -1537,6 +1546,7 @@ useEffect(()=>{
                                   }}
                                 />
                                 TBD
+                  
                               </label>
                             </td>
 
