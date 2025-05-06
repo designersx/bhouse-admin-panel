@@ -668,10 +668,26 @@ const ProjectDetails = () => {
     console.log({ newCommentCounts })
     setCommentCounts(newCommentCounts);
 
+
   };
-  useEffect(() => {
-    fetchAllComments()
-  }, [project, projectId])
+
+};
+const documentMarkCommentsAsRead = async (filePath) => {
+  try {
+      const res = await axios.put(`${url}/documentMarkCommentsAsRead`, {}, {
+          params: { filePath }
+      });
+
+      setCommentCounts({})
+  } catch (error) {
+      console.log("Error updating comments:", error);
+  }
+};
+
+useEffect(()=>{
+  fetchAllComments()
+},[project , projectId])
+
 
 
 
@@ -1237,6 +1253,7 @@ const ProjectDetails = () => {
                                           >
                                             <MdDelete />
                                           </button>
+                                          <div onClick={()=>documentMarkCommentsAsRead(filePath)}>
                                           <button
                                             className="file-action-btn"
                                             title="Comment"
@@ -1258,6 +1275,9 @@ const ProjectDetails = () => {
                                               <span style={{ color: 'red', fontWeight: 'bold' }}> ({commentCounts[filePath]})</span>
                                             )}
                                           </button>
+
+                                          </div>
+                                        
                                         </div>
                                       </div>
                                     );
