@@ -143,10 +143,17 @@
   max-width: 100%;
   overflow: hidden;
 }
+.add-project-container .file-preview-list li a {
+  display: inline-block;
+  max-width: calc(100% - 32px); 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .add-project-container .file-preview-list li button {
-  position: absolute; 
-  top: 6px; 
+  position: absolute;
+  top: 6px;
   right: 6px;
   background-color: #ff4d4f;
   color: #fff;
@@ -159,9 +166,9 @@
   line-height: 14px;
   text-align: center;
   cursor: pointer;
-  flex-shrink: 0;
   transition: background-color 0.2s ease-in-out;
 }
+
 
 .add-project-container .file-preview-list li button:hover {
   background-color: #e04345;

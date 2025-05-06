@@ -6,19 +6,19 @@ import Swal from "sweetalert2";
 import "../styles/users.css";
 import Loader from "../components/Loader";
 import Required from "../components/Required";
-import { toast, ToastContainer} from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BackButton from "../components/BackButton";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const roleLevels = {
-  "Admin" : 1 , 
+  "Admin": 1,
   "Super Admin": 1,
   "Account Manager": 2,
   "Sr. Designer": 3,
   "Operation": 4,
   "Junior Designer": 5,
-  "Lead Installer" : 6
+  "Lead Installer": 6
 };
 
 const UserForm = () => {
@@ -72,13 +72,13 @@ const UserForm = () => {
     try {
       const response = await getRoles();
       const allRoles = response.data;
-  
+
       const userRole = createdBYId.user.userRole;
       const userId = createdBYId.user.id;
       const userLevel = roleLevels[userRole];
-  
+
       let filteredRoles = [];
-  
+
       if (userRole === "Super Admin") {
         filteredRoles = allRoles;
       }
@@ -91,78 +91,75 @@ const UserForm = () => {
           return isPredefinedAndAbove || isCustomAndCreatedByUser;
         });
       }
-  
+
       setAvailableRoles(filteredRoles);
     } catch (error) {
       console.error("❌ Error fetching roles:", error);
     }
   };
-   
+
 
   const validateField = (name, value) => {
     const newErrors = { ...errors };
-  
     const nameRegex = /^[A-Za-z\s]+$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobileRegex = /^\d{10}$/;
     const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
-  
     switch (name) {
       case "firstName":
         newErrors.firstName = !value
           ? "First Name is required"
           : !nameRegex.test(value)
-          ? "First Name must contain only letters"
-          : !/^[A-Z]/.test(value)
-          ? "First Name must start with a capital letter"
-          : "";
+            ? "First Name must contain only letters"
+            : !/^[A-Z]/.test(value)
+              ? "First Name must start with a capital letter"
+              : "";
         break;
-  
+
       case "lastName":
         newErrors.lastName = !value
           ? "Last Name is required"
           : !nameRegex.test(value)
-          ? "Last Name must contain only letters"
-          : !/^[A-Z]/.test(value)
-          ? "Last Name must start with a capital letter"
-          : "";
+            ? "Last Name must contain only letters"
+            : !/^[A-Z]/.test(value)
+              ? "Last Name must start with a capital letter"
+              : "";
         break;
-  
+
       case "email":
         newErrors.email = !value
           ? "Email is required"
           : !emailRegex.test(value)
-          ? "Enter a valid email address"
-          : "";
+            ? "Enter a valid email address"
+            : "";
         break;
-  
+
       case "mobileNumber":
         newErrors.mobileNumber = !value
           ? "Mobile Number is required"
           : !mobileRegex.test(value)
-          ? "Enter a valid 10-digit number"
-          : "";
+            ? "Enter a valid 10-digit number"
+            : "";
         break;
-  
+
       case "password":
         newErrors.password = !value
           ? "Password is required"
           : !strongPasswordRegex.test(value)
-          ? "Password must be 6–20 characters and include uppercase, lowercase, number and special character"
-          : "";
+            ? "Password must be 6–20 characters and include uppercase, lowercase, number and special character"
+            : "";
         break;
-  
+
       case "userRole":
         newErrors.userRole = !value ? "Role is required" : "";
         break;
-  
+
       default:
         break;
     }
-  
     setErrors(newErrors);
   };
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -183,12 +180,12 @@ const UserForm = () => {
     const newErrors = {};
     const fields = ["firstName", "lastName", "email", "mobileNumber", "userRole"];
     if (!isEditMode) fields.push("password");
-  
+
     fields.forEach((field) => validateField(field, user[field]));
-  
-    setErrors(newErrors); 
-  
-    return Object.values(newErrors).some((error) => error !== ""); 
+
+    setErrors(newErrors);
+
+    return Object.values(newErrors).some((error) => error !== "");
   };
 
   const handleSubmit = async (e) => {
@@ -218,6 +215,36 @@ const UserForm = () => {
 
     if (!newUser.userRole) return toast.error("Role is required", { toastId: "userRole" });
 
+    // if (!isEditMode) {
+    //   if (!newUser.password) {
+    //     return Swal.fire({
+    //       icon: "warning",
+    //       title: "Password Required",
+    //       text: "Please enter a password to proceed.",
+    //     });
+    //   }
+
+    //   if (!strongPasswordRegex.test(newUser.password)) {
+    //     return Swal.fire({
+    //       icon: "error",
+    //       title: "Weak Password",
+    //       html: `
+    //         <div style="text-align: left;">
+    //           Your password must meet the following requirements:
+    //           <ul style="margin-top: 8px;">
+    //             <li>✅ 6–20 characters long</li>
+    //             <li>✅ At least one uppercase letter (A–Z)</li>
+    //             <li>✅ At least one lowercase letter (a–z)</li>
+    //             <li>✅ At least one number (0–9)</li>
+    //             <li>✅ At least one special character (@, $, !, %, *, ?, &)</li>
+    //           </ul>
+    //         </div>
+    //       `,
+    //     });
+    //   }
+
+
+    // }
     if (!isEditMode) {
       if (!newUser.password) {
         return Swal.fire({
@@ -226,7 +253,7 @@ const UserForm = () => {
           text: "Please enter a password to proceed.",
         });
       }
-      
+  
       if (!strongPasswordRegex.test(newUser.password)) {
         return Swal.fire({
           icon: "error",
@@ -245,42 +272,60 @@ const UserForm = () => {
           `,
         });
       }
-      
-
+    } else {
+      // In edit mode, validate password only if it's provided
+      if (newUser.password && !strongPasswordRegex.test(newUser.password)) {
+        return Swal.fire({
+          icon: "error",
+          title: "Weak Password",
+          html: `
+            <div style="text-align: left;">
+              Your password must meet the following requirements:
+              <ul style="margin-top: 8px;">
+                <li>✅ 6–20 characters long</li>
+                <li>✅ At least one uppercase letter (A–Z)</li>
+                <li>✅ At least one lowercase letter (a–z)</li>
+                <li>✅ At least one number (0–9)</li>
+                <li>✅ At least one special character (@, $, !, %, *, ?, &)</li>
+              </ul>
+            </div>
+          `,
+        });
+      }
     }
-
+  
     try {
-        setLoading(true);
-        if (isEditMode) {
-            await editUser(id, newUser);
-            toast.success("User updated successfully!", { toastId: "success" });
-        } else {
-          await registerUser({ ...newUser, sendCredentials });
-            toast.success("User added successfully!", { toastId: "success" });
-        }
-        navigate("/users");
+      setLoading(true);
+      if (isEditMode) {
+        await editUser(id, newUser);
+        toast.success("User updated successfully!", { toastId: "success" });
+      } else {
+        await registerUser({ ...newUser, sendCredentials });
+        toast.success("User added successfully!", { toastId: "success" });
+      }
+      navigate("/users");
     } catch (err) {
-        toast.error(err.message || "Something went wrong!", { toastId: "error" });
+      toast.error(err.message || "Something went wrong!", { toastId: "error" });
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
 
-  console.log({newUser})
+  console.log({ newUser })
 
   return (
     <Layout>
       <div className="user-form-wrapper">
-      <ToastContainer position="top-right" autoClose={3000} />
+        <ToastContainer position="top-right" autoClose={3000} />
         <div className="user-form-header">
-        <BackButton/>
+          <BackButton />
           <h2 className="user-form-title">{isEditMode ? "Edit User" : "Add User"}</h2>
         </div>
-        {loading ? <Loader/> :  <form className="user-form-container user-form" onSubmit={handleSubmit} autoComplete="off">
+        {loading ? <Loader /> : <form className="user-form-container user-form" onSubmit={handleSubmit} autoComplete="off">
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>First Name <Required/></label>
+              <label>First Name <Required /></label>
               <input
                 type="text"
                 name="firstName"
@@ -291,12 +336,12 @@ const UserForm = () => {
                 autocomplete="off"
               />
               <small style={{ fontSize: "0.8rem", color: "#777" }}>
-  Must start with a capital letter and contain only letters.
-</small>
+                Must start with a capital letter and contain only letters.
+              </small>
               {/* {errors.firstName && <p className="user-error">{errors.firstName}</p>} */}
             </div>
             <div className="user-form-group">
-              <label>Last Name <Required/></label>
+              <label>Last Name <Required /></label>
               <input
                 type="text"
                 name="lastName"
@@ -306,15 +351,15 @@ const UserForm = () => {
                 maxLength={20}
               />
               <small style={{ fontSize: "0.8rem", color: "#777" }}>
-  Must start with a capital letter and contain only letters.
-</small>
+                Must start with a capital letter and contain only letters.
+              </small>
               {/* {errors.lastName && <p className="user-error">{errors.lastName}</p>} */}
             </div>
           </div>
 
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>Email <Required/></label>
+              <label>Email <Required /></label>
               <input
                 type="email"
                 name="email"
@@ -326,63 +371,63 @@ const UserForm = () => {
               />
               {/* {errors.email && <p className="user-error">{errors.email}</p>} */}
             </div>
-          {/* </div> */}
+            {/* </div> */}
 
-          {/* <div className="user-form-row"> */}
+            {/* <div className="user-form-row"> */}
             <div className="user-form-group">
-              <label>Password <Required/></label>
+              <label>Password <Required /></label>
               <input
-  type={showPassword ? "text" : "password"}
-  name="password"
-  placeholder="Password"
-  maxLength={20}
-  value={newUser.password}
-  onChange={(e) => {
-    const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
-    setNewUser({ ...newUser, password: noSpaceEmojiValue });
-  }}
-  onKeyDown={(e) => {
-    if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
-      e.preventDefault();
-    }
-  }}
-/>
-<span
-    onClick={() => setShowPassword(!showPassword)}
-    style={{
-      position: "absolute",
-      top: "41%",
-      right: "280px",
-      transform: "translateY(-50%)",
-      cursor: "pointer",
-      fontSize: "1.1rem",
-      color: "#666"
-    }}
-  >
-    {showPassword ? <FaEyeSlash /> : <FaEye />}
-  </span>
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                maxLength={20}
+                value={newUser.password}
+                onChange={(e) => {
+                  const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
+                  setNewUser({ ...newUser, password: noSpaceEmojiValue });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  top: "41%",
+                  right: "280px",
+                  transform: "translateY(-50%)",
+                  cursor: "pointer",
+                  fontSize: "1.1rem",
+                  color: "#666"
+                }}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
 
               {/* {errors.password && <p className="user-error">{errors.password}</p>} */}
             </div>
           </div>
 
 
-            <div className="user-form-group mobnumber">
-              <label>Mobile Number <Required/></label>
-              <input
-                type="text"
-                name="mobileNumber"
-                placeholder="Mobile Number"
-                value={newUser.mobileNumber}
-                onChange={handleChange}
-                maxLength={10}
-              />
-              {errors.mobileNumber && <p className="user-error">{errors.mobileNumber}</p>}
-            </div>
+          <div className="user-form-group mobnumber">
+            <label>Mobile Number <Required /></label>
+            <input
+              type="text"
+              name="mobileNumber"
+              placeholder="Mobile Number"
+              value={newUser.mobileNumber}
+              onChange={handleChange}
+              maxLength={10}
+            />
+            {errors.mobileNumber && <p className="user-error">{errors.mobileNumber}</p>}
+          </div>
 
           <div className="user-form-row">
             <div className="user-form-group">
-              <label>Select a Role <Required/></label>
+              <label>Select a Role <Required /></label>
               <select
                 name="userRole"
                 value={newUser.userRole}
@@ -412,22 +457,22 @@ const UserForm = () => {
             </div>
           </div>
           <div className="user-form-row">
-  <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-    <input
-      type="checkbox"
-      checked={sendCredentials}
-      onChange={(e) => setSendCredentials(e.target.checked)}
-    />
-    Send credentials to user via email
-  </label>
-</div>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input
+                type="checkbox"
+                checked={sendCredentials}
+                onChange={(e) => setSendCredentials(e.target.checked)}
+              />
+              Send credentials to user via email
+            </label>
+          </div>
 
 
           <button type="submit" className="user-submit-btn">
             {isEditMode ? "Update User" : "Add User"}
           </button>
-        </form>} 
-       
+        </form>}
+
       </div>
     </Layout>
   );

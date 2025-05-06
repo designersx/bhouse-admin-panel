@@ -130,7 +130,7 @@ const Login = () => {
 
       <div className="login-container">
         <form className="login-form" onSubmit={handleLogin}>
-          <h2>Welcome Back 👋</h2>
+          <h2>Welcome Back</h2>
 
           <div className="input-group">
             <input
