@@ -19,7 +19,7 @@ function CustomerDocComment() {
   const stateDocumentId = location.state?.documentId;
 
   const filePathz = location.state.filePath
-console.log(filePathz , "hjjj")
+
   const fileName = stateFileName || decodeURIComponent(docName);
   const documentId = stateDocumentId || parseInt(docId);
  
@@ -38,10 +38,15 @@ console.log(filePathz , "hjjj")
   const scrollRef = useRef(null);
 
   const fetchComments = async () => {
+    const counts = {};
     if (!documentId) return;
     try {
       const res = await axios.get(`${url}/customerDoc/comments/${documentId}`);
       setComments(res.data);
+      const unreadComments = res.data.filter(comment => comment.User
+      == null);
+    
+      
     } catch (err) {
       console.error('Failed to fetch comments:', err);
     }
