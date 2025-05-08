@@ -156,15 +156,30 @@ const InvoiceManagement = ({ projectId }) => {
   const handleSaveNewInvoice = async () => {
     try {
       setIsLoading(true);
+  
       const projectLimit =
         projectDetails.totalValue - projectDetails.advancePayment;
+  
       const currentInvoiceTotal = invoices.reduce(
         (sum, invoice) => sum + Number(invoice.totalAmount || 0),
         0
       );
+  
       const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
+      const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
+  
+      // Always prevent invoice from exceeding balance due
+      if (newInvoiceAmount > getBalance()) {
+        Swal.fire({
+          icon: "info",
+          title: "Exceeds balance due",
+          text: "The new invoice amount exceeds the balance due. Please reduce the invoice amount.",
+        });
+        return;
+      }
+  
+      // Apply original validation only for non-pending status
       if (invoiceData.status !== "Pending") {
-        const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
         if (updatedTotal > projectLimit) {
           Swal.fire({
             icon: "warning",
@@ -174,31 +189,22 @@ const InvoiceManagement = ({ projectId }) => {
           return;
         }
       }
-     
-if (getBalance() <= 0) {
-  Swal.fire({
-    icon: "info",
-    title: "No balance due",
-    text: "Your invoice total value has exceeded the allowed limit. Please update the project value to proceed.",
-  });
-  return;
-}
-
-
+  
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
       formData.append("advancePaid", invoiceData.advancePaid);
       formData.append("status", invoiceData.status);
       formData.append("description", invoiceData.description || "");
-
+  
       if (invoiceData.invoiceFile) {
         formData.append("invoice", invoiceData.invoiceFile);
       }
-
+  
       const response = await axios.post(
         `${url}/projects/${projectId}/invoice`,
         formData
       );
+  
       toast.success("Invoice added!");
       setInvoices((prevInvoices) => [...prevInvoices, response.data]);
       setShowAddInvoiceModal(false);
@@ -213,6 +219,7 @@ if (getBalance() <= 0) {
       setIsLoading(false);
     }
   };
+  
 
   const handleSaveUpdatedInvoice = async () => {
     try {
