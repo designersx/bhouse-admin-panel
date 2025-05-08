@@ -86,7 +86,7 @@ const ProjectDetails = () => {
     "Sales Agreement": "Sales Agreement",
   };
   const normalize = (str) => str.trim().toLowerCase();
-  const [data, setData] = useState()
+const [data , setData] = useState()
   const fetchDocuments = async () => {
     try {
       const res = await axios.get(`${url}/customerDoc/document/${projectId}`);
@@ -98,7 +98,7 @@ const ProjectDetails = () => {
       docsArray.forEach((doc) => {
         docMapData[doc.documentType] = doc.filePath;
       });
-
+   
       setDocsData(docMapData);
     } catch (error) {
       console.error("Failed to fetch documents", error);
@@ -112,24 +112,24 @@ const ProjectDetails = () => {
     if (!userId) return;
 
     const counts = {};
-    if (data) {
-      await Promise?.all(
-        data?.map(async (doc) => {
-          try {
-            const res = await axios.get(`${url}/customerDoc/comments/${doc.id}?userId=${userId}`);
-            console.log(res, "res")
-            const unreadComments = res.data.filter(comment => comment.User
-              == null);
-            const isReadFalse = unreadComments.filter(comment => comment.isRead === false)
-            counts[doc.id] = isReadFalse.length || 0;
-          } catch (err) {
-            console.error(`Error fetching comments for doc ID ${doc.id}`, err);
-          }
-        })
-      );
-    }
-
-    console.log({ counts })
+if(data){
+  await Promise?.all(
+    data?.map(async (doc) => {
+      try {
+        const res = await axios.get(`${url}/customerDoc/comments/${doc.id}?userId=${userId}`);
+        console.log(res , "res")
+        const unreadComments = res.data.filter(comment => comment.User
+          == null);
+        const isReadFalse = unreadComments.filter(comment => comment.isRead === false)
+        counts[doc.id] = isReadFalse.length || 0;
+      } catch (err) {
+        console.error(`Error fetching comments for doc ID ${doc.id}`, err);
+      }
+    })
+  );
+}
+ 
+    console.log({counts})
 
     setUnreadCounts(counts);
   };
@@ -406,27 +406,27 @@ const ProjectDetails = () => {
       },
     ]);
   };
-  const [read, unread] = useState()
+const [read , unread] = useState()
   const fetchVisibleUserComments = async (users) => {
-
+ 
     try {
       const commentCounts = await Promise.all(
         users.map(async (user) => {
           const { data } = await axios.get(
             `${url}/projects/${projectId}/user-comments/${user.id}`
           );
-
+  
           const unreadComments = data.filter(
             (comment) => comment.createdByType === "customer"
           );
           const filterIsReadFalse = unreadComments.filter(
             (comment) => comment.isRead === false
           );
-
+          
           return { id: user.id, commentCount: filterIsReadFalse.length };
         })
       );
-
+     
       // Do something with commentCounts if needed
       // setVisibleUserComments(commentCounts);
       unread(commentCounts)
@@ -437,7 +437,7 @@ const ProjectDetails = () => {
   const markCommentsAsRead = async (toUserId) => {
     try {
       const response = await axios.put(`${url}/projects/${projectId}/teamMarkCommentsAsRead/${toUserId}`);
-      unread()
+   unread()
     } catch (error) {
       console.log(error)
     }
@@ -445,7 +445,7 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (project && project.assignedTeamRoles && allUsers.length > 0) {
       const extractedUsers = [];
-
+  
       project?.assignedTeamRoles?.forEach(roleGroup => {
         roleGroup.users.forEach(userId => {
           const user = allUsers.find(u => u.id.toString() === userId.toString());
@@ -454,10 +454,10 @@ const ProjectDetails = () => {
           }
         });
       });
-
+  
       fetchVisibleUserComments(extractedUsers);
     }
-  }, [allUsers]);
+  }, [ allUsers  ]);
 
 
   const [commentCountsByManufacturerId, setCommentCountsByManufacturerId] = useState({});
@@ -465,28 +465,28 @@ const ProjectDetails = () => {
     try {
       const commentCounts = {};
 
-      for (const manuId in itemsByManufacturerId) {
-        const itemIds = itemsByManufacturerId[manuId].map(item => item.id);
+    for (const manuId in itemsByManufacturerId) {
+      const itemIds = itemsByManufacturerId[manuId].map(item => item.id);
 
-        const commentPromises = itemIds.map(id =>
-          axios.get(`${url}/items/${id}/comments`).catch(() => ({ data: [] }))
-        );
+      const commentPromises = itemIds.map(id =>
+        axios.get(`${url}/items/${id}/comments`).catch(() => ({ data: [] }))
+      );
 
-        const results = await Promise.all(commentPromises);
-        const allComments = results.flatMap(res => res.data || []);
-        const userComments = allComments.filter(cmt => cmt.createdByType === "customer");
-        const isReadFalse = userComments.filter((item) => item.isRead == false)
-        commentCounts[manuId] = isReadFalse.length;
-      }
-      setCommentCountsByManufacturerId(commentCounts);
-
+      const results = await Promise.all(commentPromises);
+      const allComments = results.flatMap(res => res.data || []);
+      const userComments = allComments.filter(cmt => cmt.createdByType === "customer");
+      const isReadFalse = userComments.filter((item) => item.isRead == false)
+      commentCounts[manuId] = isReadFalse.length;
+    }
+    setCommentCountsByManufacturerId(commentCounts);
+      
     } catch (error) {
       console.log("Error fetching comments:", error);
     }
   };
   useEffect(() => {
 
-    fetchItemsComments();
+      fetchItemsComments();
 
   }, [items]);
   const [matrix, setMatrix] = useState()
@@ -586,13 +586,13 @@ const ProjectDetails = () => {
   const [commentCountsByIssueId, setCommentCountsByIssueId] = useState({});
   const fetchCommentsForIssues = async () => {
     const counts = {};
-    console.log({ punchList })
+  console.log({punchList})
     await Promise.all(
       punchList.map(async (issue) => {
         try {
           const res = await axios.get(`${url}/punchlist/${issue.id}/comments`);
           const unreadUserComments = res.data.filter(
-            (comment) => comment.isRead === false && comment.createdByType == "customer"
+            (comment) => comment.isRead === false&&comment.createdByType=="customer"
           );
           counts[issue.id] = unreadUserComments.length;
         } catch (err) {
@@ -607,7 +607,7 @@ const ProjectDetails = () => {
   const markPunchListItemCommentsAsRead = async (punchListItemId) => {
     try {
       const response = await axios.put(`${url}/projects/markPunchListItemCommentsAsRead/${punchListItemId}`)
-      if (response) {
+      if(response){
         setCommentCountsByIssueId({})
       }
     } catch (error) {
@@ -619,57 +619,54 @@ const ProjectDetails = () => {
   const [commentCounts, setCommentCounts] = useState({});
   const fetchAllComments = async () => {
     const allFileFields = [
-      'proposals',
-      'floorPlans',
-      'cad',
-      'salesAggrement',
-      'presentation',
-      'otherDocuments',
-      'acknowledgements',
-      'receivingReports'
+        'proposals',
+        'floorPlans',
+        'cad',
+        'salesAggrement',
+        'presentation',
+        'otherDocuments',
+        'acknowledgements',
+        'receivingReports'
     ];
 
-
+  
     const newCommentCounts = {};
-    if (allFileFields) {
-      var res = await axios.get(`${url}/projects/${projectId}`)
-      let project = res.data
-      console.log({ project })
-      for (const field of allFileFields) {
-        const files = JSON.parse(project[field] || '[]');
+if(allFileFields){
+  var res = await axios.get(`${url}/projects/${projectId}`)
+  let project = res.data
+  console.log({project})
+  for (const field of allFileFields) {
+    const files = JSON.parse(project[field] || '[]');
 
-        for (const file of files) {
-          let filePath = file.url || file.filePath || file; // adjust based on your file object structure
+    for (const file of files) {
+        let filePath = file.url || file.filePath || file; // adjust based on your file object structure
 
-          if (filePath.startsWith("/")) {
+        if (filePath.startsWith("/")) {
             filePath = filePath.substring(1);
-          }
-          console.log(filePath)
+        }
+console.log(filePath)
 
-          try {
+        try {
             const res = await axios.get(`${url}/projects/${projectId}/file-comments`, {
-              params: { filePath }
+                params: { filePath }
             });
-            console.log(res, "res")
+          console.log(res , "res")
 
             // Filter comments where isRead is false
             const unreadComments = res.data.filter(comment => comment.isRead === false && comment.user
-              == null);
-            console.log({ unreadComments })
+                == null);
+                console.log({unreadComments})
             newCommentCounts[filePath] = unreadComments.length || 0;
-          } catch (err) {
+        } catch (err) {
             console.error(`Failed to fetch comments for ${filePath}:`, err);
             newCommentCounts[filePath] = 0;
-          }
         }
-      }
     }
+}
+}
 
-    console.log({ newCommentCounts })
+console.log({newCommentCounts})
     setCommentCounts(newCommentCounts);
-
-
-  };
 
 };
 const documentMarkCommentsAsRead = async (filePath) => {
@@ -690,10 +687,9 @@ useEffect(()=>{
 
 
 
-
-  useEffect(() => {
-    fetchCommentsForIssues()
-  }, [punchList])
+useEffect(()=>{
+  fetchCommentsForIssues()
+} ,[punchList])
 
 
 
@@ -950,21 +946,20 @@ useEffect(()=>{
     console.log(itemId, "itemId")
     try {
       const response = await axios.put(`${url}/projects/itemMarkItemCommentsAsRead/${itemId}`)
-      if (response) {
+      if(response){
         setCommentCountsByManufacturerId({})
-        
       }
     } catch (error) {
       console.log(error)
     }
   }
 
-  const markReadCustomerDocComment = async (id) => {
-    let res = await axios.put(`${url}/customerDoc/updateCommentsIsReadByDocumentId/${id}`);
-    if (res) {
-      setUnreadCounts({})
+  const markReadCustomerDocComment =async (id)=>{
+   let res =  await axios.put(`${url}/customerDoc/updateCommentsIsReadByDocumentId/${id}`);
+   if(res){
+    setUnreadCounts({})
 
-    }
+   }
   }
 
 
@@ -1004,7 +999,7 @@ useEffect(()=>{
                 }
               )}
             </div>
-            {/* Project Tabing View */}
+{/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
                 <div className="project-details-container">
@@ -1118,20 +1113,20 @@ useEffect(()=>{
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title.toUpperCase()}</h3>
                             {rolePermissions?.ProjectDocument?.add ? (
-                              <input
-                                type="file"
-                                disabled={
-                                  selectedFiles[docCategory.category]?.length > 0 ||
-                                  (Array.isArray(project[docCategory.category]) &&
-                                    project[docCategory.category].length > 0)
-                                }
-                                accept={
-                                  docCategory.category === "cad"
-                                    ? ".dwg,.dxf,.cad" // Only CAD formats allowed
-                                    : "*/*"            // All formats allowed for other categories
-                                }
-                                onChange={(e) => handleFileUpload(e, docCategory.category)}
-                              />
+                             <input
+                             type="file"
+                             disabled={
+                               selectedFiles[docCategory.category]?.length > 0 ||
+                               (Array.isArray(project[docCategory.category]) &&
+                                 project[docCategory.category].length > 0)
+                             }
+                             accept={
+                               docCategory.category === "cad"
+                                 ? ".dwg,.dxf,.cad" // Only CAD formats allowed
+                                 : "*/*"            // All formats allowed for other categories
+                             }
+                             onChange={(e) => handleFileUpload(e, docCategory.category)}
+                           />
 
                             ) : null}
 
@@ -1209,19 +1204,19 @@ useEffect(()=>{
                                           {fileName}
                                         </span>
                                         <div className="file-actions">
-                                          {![".dwg", ".dxf", ".cad"].includes(
-                                            fileUrl?.split(".").pop()?.toLowerCase().startsWith(".")
-                                              ? fileUrl.split(".").pop().toLowerCase()
-                                              : `.${fileUrl.split(".").pop().toLowerCase()}`
-                                          ) && (
-                                              <button
-                                                className="file-action-btn"
-                                                onClick={() => window.open(fileUrl, "_blank")}
-                                                title="View"
-                                              >
-                                                <FaEye />
-                                              </button>
-                                            )}
+                                        {![".dwg", ".dxf", ".cad"].includes(
+  fileUrl?.split(".").pop()?.toLowerCase().startsWith(".") 
+    ? fileUrl.split(".").pop().toLowerCase()
+    : `.${fileUrl.split(".").pop().toLowerCase()}`
+) && (
+  <button
+    className="file-action-btn"
+    onClick={() => window.open(fileUrl, "_blank")}
+    title="View"
+  >
+    <FaEye />
+  </button>
+)}
                                           <button
                                             className="file-action-btn"
                                             onClick={handleDownload}
@@ -1272,8 +1267,8 @@ useEffect(()=>{
                                           >
                                             <FaComment />
                                             {commentCounts[filePath] > 0 && (
-                                              <span style={{ color: 'red', fontWeight: 'bold' }}> ({commentCounts[filePath]})</span>
-                                            )}
+                                    <span style={{ color: 'red', fontWeight: 'bold' }}> ({commentCounts[filePath]})</span>
+                                )}
                                           </button>
 
                                           </div>
@@ -1327,33 +1322,33 @@ useEffect(()=>{
                                   >
                                     <FaEye />
                                   </button>
-                                  <div onClick={() => markReadCustomerDocComment(documentId)}>
-                                    <button
-                                      className="file-action-btn"
-                                      onClick={() =>
-                                        navigate(
-                                          `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
-                                          {
-                                            state: {
-                                              data: dataDoc,
-                                              fileName: fileEntry[0],
-                                            },
-                                          }
-                                        )
-                                      }
-                                      title="View"
-                                    >
-                                      <FaComment />
-
-
-                                    </button>
-                                    {unreadCounts[documentId] > 0 && (
-                                      <span style={{ color: 'red', fontWeight: 'bold' }}>
-                                        ({unreadCounts[documentId]})
-                                      </span>
-                                    )}
+                                  <div onClick={()=>markReadCustomerDocComment(documentId)}>
+                                  <button
+                                    className="file-action-btn"
+                                    onClick={() =>
+                                      navigate(
+                                        `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
+                                        {
+                                          state: {
+                                            data: dataDoc,
+                                            fileName: fileEntry[0],
+                                          },
+                                        }
+                                      )
+                                    }
+                                    title="View"
+                                  >
+                                    <FaComment />
+                            
+                   
+                                  </button>
+                                  {unreadCounts[documentId] > 0 && (
+                        <span style={{ color: 'red', fontWeight: 'bold' }}>
+                          ({unreadCounts[documentId]})
+                        </span>
+                      )}
                                   </div>
-
+                                 
                                 </div>
                               ) : (
                                 <p>No document uploaded.</p>
@@ -1396,18 +1391,18 @@ useEffect(()=>{
                                   <span className="user-name-horizontal">
                                     {user.firstName} {user.lastName}
                                   </span>
-                                  <div onClick={() => markCommentsAsRead(user.id)}>
-                                    <button
-                                      className="comment-btna"
-                                      onClick={() => handleOpenComments(user)}
-                                    >
-                                      <FaCommentAlt />
-                                      {getCommentCountByUserId(user.id) > 0 && (
-                                        <span style={{ fontSize: "20px", color: "red", padding: "2px" }}>
-                                          ({getCommentCountByUserId(user.id)})
-                                        </span>
-                                      )}
-                                    </button>
+                            <div onClick={()=>markCommentsAsRead(user.id)}>
+                                  <button
+                                    className="comment-btna"
+                                    onClick={() => handleOpenComments(user)}
+                                  >
+                                    <FaCommentAlt />
+                                    {getCommentCountByUserId(user.id) > 0 && (
+                                    <span style={{fontSize: "20px" , color: "red" , padding: "2px"}}>
+                                      ({getCommentCountByUserId(user.id)})
+                                    </span>
+                                  )}
+                                  </button>
                                   </div>
                                 </div>
                               </div>
@@ -1439,15 +1434,15 @@ useEffect(()=>{
                           <th>Manufacturer Name</th>
                           <th>Description</th>
                           <th>
-                            <span
-                              title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-                              style={{
-                                cursor: "pointer",
-                              }}
-                            >
-                              TBD
-                            </span>
-                          </th>
+  <span
+    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+    style={{
+      cursor: "pointer",
+    }}
+  >
+    TBD
+  </span>
+</th>
                           <th>Expected Departure</th>
                           <th>Expected Arrival</th>
                           <th>Status</th>
@@ -1567,7 +1562,7 @@ useEffect(()=>{
                                   }}
                                 />
                                 TBD
-
+                  
                               </label>
                             </td>
 
@@ -1659,19 +1654,19 @@ useEffect(()=>{
                                       <MdDelete />
                                     </button>
                                     <div onClick={() => itemMarkItemCommentsAsRead(item?.id)}>
-                                      <button
-                                        onClick={() => openItemComment(item.id)}
-                                        title="Comment"
-                                      >
-                                        <FaCommentAlt />
-                                        {commentCountsByManufacturerId[item.id] > 0 && (
-                                          <span style={{ color: 'red', fontWeight: 'bold' }}>
-                                            ({commentCountsByManufacturerId[item.id]})
-                                          </span>
-                                        )}
-                                      </button>
+                                    <button
+                                      onClick={() => openItemComment(item.id)}
+                                      title="Comment"
+                                    >
+                                      <FaCommentAlt />
+                                      {commentCountsByManufacturerId[item.id] > 0 && (
+                        <span  style={{ color: 'red', fontWeight: 'bold' }}>
+                          ({commentCountsByManufacturerId[item.id]})
+                        </span>
+                      )}
+                                    </button>
                                     </div>
-
+                                  
                                   </>
                                 )
                               ) : (
@@ -2012,22 +2007,22 @@ useEffect(()=>{
                                 }`
                                 : issue.creatorCustomer?.full_name || "N/A"}
                             </p>
-                            <div onClick={() => markPunchListItemCommentsAsRead(issue.id)}>
-                              <button
-                                className="comment-btna"
-                                onClick={() => openPunchComment(issue.id)}
-                                title="Comment"
-                              >
-                                <FaCommentAlt />
-                                {commentCountsByIssueId[issue.id] > 0 && (
-                                  <span style={{ color: 'red', fontWeight: 'bold' }}>
-                                    ({commentCountsByIssueId[issue.id]})
-                                  </span>
-                                )}
-                              </button>
+                            <div onClick={()=>markPunchListItemCommentsAsRead(issue.id)}>
+                            <button
+                              className="comment-btna"
+                              onClick={() => openPunchComment(issue.id)}
+                              title="Comment"
+                            >
+                              <FaCommentAlt />
+                              {commentCountsByIssueId[issue.id] > 0 && (
+                  <span style={{ color: 'red', fontWeight: 'bold' }}>
+                    ({commentCountsByIssueId[issue.id]})
+                  </span>
+                )}
+                            </button>
 
                             </div>
-
+                            
                           </div>
                         );
                       })}
@@ -2293,3 +2288,4 @@ useEffect(()=>{
 };
 
 export default ProjectDetails;
+

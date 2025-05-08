@@ -2,84 +2,105 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { getAllUsers } from "../lib/api";
 import { url } from "../lib/api";
-import '../../src/styles/CustomerProjects.css'
+import "../../src/styles/CustomerProjects.css";
+import { useNavigate } from "react-router-dom";
+
 function CustomerProjects({ customerId, customerName }) {
-    const [projects, setProjects] = useState([]);
-    const [users, setUsers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const projectRes = await axios.get(`${url}/projects`);
-                const userRes = await getAllUsers();
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const projectRes = await axios.get(`${url}/projects`);
+        const userRes = await getAllUsers();
 
-                const filteredProjects = projectRes.data.filter(
-                    project => Number(project?.clientId) === Number(customerId)
-                );
+        const filteredProjects = projectRes.data.filter(
+          (project) => Number(project?.clientId) === Number(customerId)
+        );
 
-                setUsers(userRes);
-                setProjects(filteredProjects);
-            } catch (error) {
-                console.error("Error fetching projects:", error);
-            }
-        };
-
-        fetchProjects();
-    }, [customerId]);
-
-    const getUserFullName = (userId) => {
-        const user = users.find(user => user.id === userId);
-        return user ? `${user.firstName} ${user.lastName}` : null;
+        setUsers(userRes);
+        setProjects(filteredProjects);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
     };
 
-    return (
-        <div className="projects-container">
-            <h2 className="title">Projects for {customerName}</h2>
+    fetchProjects();
+  }, [customerId]);
 
-            {projects.length > 0 ? (
-                <div className="project-grid">
-                    {projects.map(project => (
-                        <div key={project.id} className="project-card">
-                            <h3 className="project-title">{project.name}</h3>
-                            <p className="project-info"><strong>Type:</strong> {project.type}</p>
-                            <p className="project-info"><strong>Description:</strong> {project.description}</p>
-                            <p className="project-info">
-                                <strong>Estimated Completion:</strong>{" "}
-                                {parseInt(project.estimatedCompletion)} Weeks
-                            </p>
+  const getUserFullName = (userId) => {
+    const user = users.find((user) => user.id === userId);
+    return user ? `${user.firstName} ${user.lastName}` : null;
+  };
 
-                            <p className="project-info"><strong>Total Value:</strong> ${project.totalValue}</p>
-                            <p className="project-info"><strong>Delivery Address:</strong> {project.deliveryAddress}</p>
+  return (
+    <div className="projects-container">
+      <h2 className="title">Projects for {customerName}</h2>
 
-                            {/* Status Badge */}
-                            <p className={`project-status ${project.status.toLowerCase().replace(/\s/g, '')}`}>
-                                {project.status}
-                            </p>
+      {projects.length > 0 ? (
+        <div className="project-grid">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="project-card"
+              onClick={() => navigate(`/project-details/${project.id}`)}
+              style={{ cursor: "pointer" }}
+            >
+              <h3 className="project-title">{project.name}</h3>
+              <p className="project-info">
+                <strong>Type:</strong> {project.type}
+              </p>
+              <p className="project-info">
+                <strong>Description:</strong> {project.description}
+              </p>
+              <p className="project-info">
+                <strong>Estimated Completion:</strong>{" "}
+                {parseInt(project.estimatedCompletion)} Weeks
+              </p>
+              <p className="project-info">
+                <strong>Total Value:</strong> ${project.totalValue}
+              </p>
+              <p className="project-info">
+                <strong>Delivery Address:</strong> {project.deliveryAddress}
+              </p>
 
-                            {/* Assigned Roles */}
-                            <div className="assigned-roles">
-                                <strong>Assigned Roles:</strong>
-                                {project.assignedTeamRoles.map((role, index) => {
-                                    const validUsers = role.users.map(userId => getUserFullName(userId)).filter(Boolean);
-                                    if (validUsers.length === 0) return null;
-                                    return (
-                                        <div key={index} className="role-container">
-                                            <span className="role-title">{role.role}:</span>
-                                            {validUsers.map((userName, idx) => (
-                                                <span key={idx} className="user-name">{userName}</span>
-                                            ))}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <p className="no-projects">No projects found for this customer.</p>
-            )}
+              <p
+                className={`project-status ${project.status
+                  .toLowerCase()
+                  .replace(/\s/g, "")}`}
+              >
+                {project.status}
+              </p>
+
+              <div className="assigned-roles">
+                <strong>Assigned Roles:</strong>
+                {project.assignedTeamRoles.map((role, index) => {
+                  const validUsers = role.users
+                    .map((userId) => getUserFullName(userId))
+                    .filter(Boolean);
+                  if (validUsers.length === 0) return null;
+                  return (
+                    <div key={index} className="role-container">
+                      <span className="role-title">{role.role}:</span>
+                      {validUsers.map((userName, idx) => (
+                        <span key={idx} className="user-name">
+                          {userName}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-    );
+      ) : (
+        <p className="no-projects">No projects found for this customer.</p>
+      )}
+    </div>
+  );
 }
 
 export default CustomerProjects;
