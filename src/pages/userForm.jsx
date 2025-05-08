@@ -375,40 +375,38 @@ const UserForm = () => {
 
             {/* <div className="user-form-row"> */}
             <div className="user-form-group">
-              <label>Password <Required /></label>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                maxLength={20}
-                value={newUser.password}
-                onChange={(e) => {
-                  const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
-                  setNewUser({ ...newUser, password: noSpaceEmojiValue });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: "absolute",
-                  top: "41%",
-                  right: "280px",
-                  transform: "translateY(-50%)",
-                  cursor: "pointer",
-                  fontSize: "1.1rem",
-                  color: "#666"
-                }}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
+  <label>
+    Password <Required />
+  </label>
+  
+  <div className="password-input-wrapper">
+    <input
+      type={showPassword ? "text" : "password"}
+      name="password"
+      placeholder="Password"
+      maxLength={20}
+      value={newUser.password}
+      onChange={(e) => {
+        const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
+        setNewUser({ ...newUser, password: noSpaceEmojiValue });
+      }}
+      onKeyDown={(e) => {
+        if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
+          e.preventDefault();
+        }
+      }}
+      className="user-password-input"
+    />
 
-              {/* {errors.password && <p className="user-error">{errors.password}</p>} */}
-            </div>
+    <span
+      className="toggle-password-icon"
+      onClick={() => setShowPassword(!showPassword)}
+    >
+      {showPassword ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+</div>
+
           </div>
 
 

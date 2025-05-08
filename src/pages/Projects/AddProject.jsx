@@ -273,7 +273,7 @@ const AddProject = () => {
         }));
       } catch (err) {
         console.error(`Error fetching users for role ${role}`, err);
-        toast.error("Something went wrong while fetching users.");
+        toast.error("Please try again later.");
       }
     }
   };
@@ -357,19 +357,15 @@ const AddProject = () => {
       itemName: item.itemName,
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
-        ? new Date(item.expectedDeliveryDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+        ? new Date(item.expectedDeliveryDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
-        ? new Date(item.expectedArrivalDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+        ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       status: item.status || "Pending",
+      tbd: !!item.tbd, 
     }));
+    
     console.log(sanitizedMatrix);
     if (sanitizedMatrix[0].itemName !== "") {
       formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
@@ -422,7 +418,7 @@ const AddProject = () => {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: `Error: ${data.error}`,
+          text: "Something went wrong, Please contact admin!",
         });
       }
     } catch (error) {

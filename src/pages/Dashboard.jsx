@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import "../styles/dashboard.css";
@@ -12,6 +10,7 @@ import ReactEcharts from 'echarts-for-react';
 import moment from "moment";
 import { CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 import Loader from "../components/Loader";
+import NoProject from "./Projects/NoProject";
 ChartJS?.register(CategoryScale, LinearScale, PointElement, LineElement);
 ChartJS?.register(ArcElement, Tooltip, Legend);
 
@@ -156,14 +155,24 @@ const Dashboard = () => {
     return Object.values(weeks).reduce((sum, value) => sum + value, 0);
   };
 
-  // Loading state while stats are being fetched
-  if (!stats)
+  if (!stats) {
     return (
       <Layout>
-        <div className="dashboard-container"><Loader /></div>
+        <div className="dashboard-container">
+          <Loader />
+        </div>
       </Layout>
     );
-
+  }
+  
+  if (stats.totalProjects === 0) {
+    return (
+      <Layout>
+        <NoProject />
+      </Layout>
+    );
+  }
+  
   return (
     <Layout>
       <div className="dashboard-container">

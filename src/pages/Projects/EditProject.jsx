@@ -68,7 +68,13 @@ const EditProject = () => {
   const fetchLeadTimeItems = async (projectId) => {
     try {
       const res = await axios.get(`${url}/items/${projectId}`);
-      setLeadTimeItems(res.data || []);
+      setLeadTimeItems(
+        (res.data || []).map((item) => ({
+          ...item,
+          tbd: typeof item.tbd === "boolean" ? item.tbd : false,
+        }))
+      );
+      
     } catch (error) {
       console.error("Error fetching lead time items:", error);
     }
@@ -445,7 +451,7 @@ const EditProject = () => {
         navigate(`/project-details/${projectId}`);
       } else {
         const data = await res.json();
-        Swal.fire(`Error: ${data.error}`);
+        Swal.fire('Something went wrong please try again later!');
       }
     } catch (err) {
       setIsLoading(false);
@@ -1213,7 +1219,7 @@ const EditProject = () => {
                 <div className="form-card">
                   <h3>Project Lead Time Matrix</h3>
                   <table className="lead-time-table">
-                    <thead>
+                    <thead className="lead-time">
                       <tr>
                         <th>Manufacturer Name</th>
                         <th>Description</th>
@@ -1281,7 +1287,7 @@ const EditProject = () => {
 
                           <td>
                             <input
-                              className="user-search-inputa"
+                              className="edd"
                               type="date"
                               value={
                                 item.expectedDeliveryDate?.slice(0, 10) || ""
@@ -1299,7 +1305,7 @@ const EditProject = () => {
 
                           <td>
                             <input
-                              className="user-search-inputa"
+                              className="edd"
                               type="date"
                               value={
                                 item.expectedArrivalDate?.slice(0, 10) || ""
@@ -1317,7 +1323,7 @@ const EditProject = () => {
 
                           <td>
                             <select
-                              className="user-search-inputa"
+                              className="select-status"
                               value={item.status}
                               onChange={(e) =>
                                 handleItemChange(

@@ -1,6 +1,29 @@
 .users {
     padding: 20px;
   }
+  .password-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  .user-password-input {
+    width: 100%;
+    padding: 8px 40px 8px 10px; 
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  
+  .toggle-password-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #666;
+  }
   
   .users h2 {
     margin-bottom: 20px;
