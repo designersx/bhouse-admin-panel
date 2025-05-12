@@ -69,8 +69,13 @@
   display: flex;
   gap: 10px;
   justify-content: center;
+  align-items: center;
+  white-space: nowrap; 
 }
-
+.roles-table td.actions {
+  width: 80px;
+  text-align: center;
+}
 .edit-icon, .delete-icon {
   cursor: pointer;
   font-size: 18px;

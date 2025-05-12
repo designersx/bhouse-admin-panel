@@ -47,3 +47,6 @@
 .delete-icon{
   background-color: #1f2937;
 }
+body {
+  overflow-x: hidden; 
+}
