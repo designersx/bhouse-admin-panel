@@ -273,7 +273,7 @@ const AddProject = () => {
         }));
       } catch (err) {
         console.error(`Error fetching users for role ${role}`, err);
-        toast.error("Something went wrong while fetching users.");
+        toast.error("Please try again later.");
       }
     }
   };
@@ -312,10 +312,32 @@ const AddProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: checked }));
-  };
+const isLeadMatrixValid = () => {
+  for (let index = 1; index < leadTimeMatrix.length; index++) {
+    const item = leadTimeMatrix[index];
+
+    if (!item.tbd) {
+      if (
+        !item.itemName?.trim() ||
+        !item.quantity?.trim() ||
+        !item.expectedDeliveryDate ||
+        !item.expectedArrivalDate ||
+        !item.status
+      ) {
+        return false;
+      }
+    } else {
+      if (
+        !item.itemName?.trim() ||
+        !item.quantity?.trim() ||
+        !item.status
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -357,19 +379,15 @@ const AddProject = () => {
       itemName: item.itemName,
       quantity: item.quantity,
       expectedDeliveryDate: item.expectedDeliveryDate
-        ? new Date(item.expectedDeliveryDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+        ? new Date(item.expectedDeliveryDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       expectedArrivalDate: item.expectedArrivalDate
-        ? new Date(item.expectedArrivalDate)
-          .toISOString()
-          .slice(0, 19)
-          .replace("T", " ")
+        ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       status: item.status || "Pending",
+      tbd: !!item.tbd, 
     }));
+    
     console.log(sanitizedMatrix);
     if (sanitizedMatrix[0].itemName !== "") {
       formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
@@ -402,7 +420,14 @@ const AddProject = () => {
     for (let file of formData.acknowledgements || []) {
       formDataToSend.append("acknowledgements", file);
     }
-
+if (!isLeadMatrixValid()) {
+  Swal.fire({
+    icon: "warning",
+    title: "Incomplete Lead Time Matrix Row",
+    text: "Please fill the newly added Lead Time Matrix rows before submitting.",
+  });
+  return;
+}
     try {
       setIsLoading(true);
       const response = await fetch(`${url}/projects`, {
@@ -422,7 +447,7 @@ const AddProject = () => {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: `Error: ${data.error}`,
+          text: "Something went wrong, Please contact admin!",
         });
       }
     } catch (error) {
@@ -446,28 +471,6 @@ const AddProject = () => {
       [fieldName]: [file],
     }));
   };
-
-  // const validateLeadTimeMatrix = () => {
-  //   const today = new Date().toISOString().split("T")[0];
-
-  //   for (let i = 0; i < leadTimeMatrix.length; i++) {
-  //     const item = leadTimeMatrix[i];
-
-  //     if (!item.itemName.trim()) return `Manufacturer name is required at row ${i + 1}`;
-  //     if (!/^[a-zA-Z\s]+$/.test(item.itemName)) return `Manufacturer name must contain only letters at row ${i + 1}`;
-
-  //     if (!item.quantity.trim()) return `Description is required at row ${i + 1}`;
-  //     if (!/^[\w\s]+$/.test(item.quantity)) return `Description must be alphanumeric at row ${i + 1}`;
-
-  //     if (!item.expectedDeliveryDate) return `Expected delivery date is required at row ${i + 1}`;
-  //     if (!item.expectedArrivalDate) return `Expected arrival date is required at row ${i + 1}`;
-
-  //     if (item.expectedDeliveryDate < today) return `Expected delivery date cannot be in the past at row ${i + 1}`;
-  //     if (item.expectedArrivalDate < item.expectedDeliveryDate) return `Arrival date cannot be before delivery date at row ${i + 1}`;
-  //   }
-
-  //   return null;
-  // };
   const handleRemoveFile = (field, index) => {
     setFormData((prev) => {
       const updatedFiles = prev[field]?.filter((_, idx) => idx !== index) || [];
@@ -601,24 +604,6 @@ const AddProject = () => {
                       <option value="Completed">Balance Owed</option>
                     </select>
                   </div>
-                  {/* <div className="form-group">
-                    <label>
-                      Estimated Occupancy Date{" "}
-                      <span className="required-star">*</span>
-                    </label>
-
-                    <input
-                      type="date"
-                      name="estimatedCompletion"
-                      value={formData.estimatedCompletion}
-                      min={
-                        formData.startDate ||
-                        new Date().toISOString().split("T")[0]
-                      }
-                      onChange={handleChange}
-                      required
-                    />
-                  </div> */}
                   <div className="form-group">
                     <label>
                       Estimated Occupancy Date{" "}

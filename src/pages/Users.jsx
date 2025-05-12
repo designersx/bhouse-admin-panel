@@ -178,7 +178,7 @@ const Users = () => {
                 <th className="email">Email</th>
                 <th className="pass">Password</th>
                 <th className="role">Role</th>
-                <th className="create">Created By:</th>
+                <th className="create">Created By</th>
                 <th>Status</th>
                 {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) && (
                   <th className="action">Actions</th>

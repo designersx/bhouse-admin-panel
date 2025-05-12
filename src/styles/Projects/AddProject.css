@@ -354,7 +354,7 @@
 }
 /* General table styling */
 .lead-time-table {
-  width: 100%;
+  width: 70%;
   border-collapse: collapse;
   margin-top: 1rem;
   font-family: 'Segoe UI', sans-serif;
@@ -367,27 +367,76 @@
   border-bottom: 1px solid #ddd;
   vertical-align: middle;
 }
+/* Table Styles */
+.lead-time-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: sans-serif;
+  font-size: 14px;
+}
 
-/* Input styles inside table */
+.lead-time-table thead th {
+  background-color: #f0f4f8;
+  font-weight: 600;
+  border-bottom: 2px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+/* Zebra stripe effect */
+.lead-time-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Input Styles */
 .user-search-inputa,
-.user-search-inputa[type="date"],
-.user-search-inputa[type="text"],
-.user-search-inputa select {
+.edd,
+.select-status {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 14px;
   background-color: #fdfdfd;
-  transition: border 0.2s;
+  transition: border 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
-.user-search-inputa:focus {
+.user-search-inputa:focus,
+.edd:focus,
+.select-status:focus {
   border-color: #4a90e2;
   outline: none;
 }
 
-/* Button styles inside table */
+/* Specific override for date input size */
+.edd {
+  width: 90%;
+}
+
+/* Status dropdown */
+.select-status {
+  width: 100%;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fdfdfd;
+  transition: border 0.2s ease-in-out;
+  box-sizing: border-box;
+  white-space: nowrap; /* Prevent text wrap */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Checkbox alignment */
+td input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Button Styles */
 .add-user-btna {
   background-color: #004680;
   color: white;
@@ -396,28 +445,30 @@
   font-size: 13px;
   border-radius: 5px;
   cursor: pointer;
-  margin-right: 6px;
-  transition: background-color 0.2s;
-margin-bottom: 5px;
-
+  margin: 2px 6px 5px 0;
+  transition: background-color 0.2s ease;
 }
 
 .add-user-btna:hover {
   background-color: #3a7bd5;
 }
 
-/* Zebra stripe effect */
-.lead-time-table tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
+/* Button container */
+.btn-up {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* Header style */
-.lead-time-table thead th {
-  background-color: #f0f4f8;
-  font-weight: 600;
-  border-bottom: 2px solid #ccc;
+/* Header with tooltip */
+.lead-time-table thead span[title] {
+  text-decoration: underline dotted;
+  cursor: help;
 }
+
+/* Optional: Required star styling */
 .required-star {
   color: red;
   margin-left: 4px;
 }
+
