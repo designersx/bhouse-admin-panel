@@ -29,6 +29,15 @@ const UserForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [sendCredentials, setSendCredentials] = useState(false);
+  const [passwordRules, setPasswordRules] = useState({
+  length: false,
+  uppercase: false,
+  lowercase: false,
+  number: false,
+  specialChar: false,
+});
+const [showPasswordModal, setShowPasswordModal] = useState(false);
+
 
   const createdBYId = JSON.parse(localStorage.getItem("user"));
   const defaultUserState = {
@@ -214,37 +223,6 @@ const UserForm = () => {
     if (!mobileRegex.test(newUser.mobileNumber)) return toast.error("Enter a valid 10-digit mobile number", { toastId: "mobileNumber" });
 
     if (!newUser.userRole) return toast.error("Role is required", { toastId: "userRole" });
-
-    // if (!isEditMode) {
-    //   if (!newUser.password) {
-    //     return Swal.fire({
-    //       icon: "warning",
-    //       title: "Password Required",
-    //       text: "Please enter a password to proceed.",
-    //     });
-    //   }
-
-    //   if (!strongPasswordRegex.test(newUser.password)) {
-    //     return Swal.fire({
-    //       icon: "error",
-    //       title: "Weak Password",
-    //       html: `
-    //         <div style="text-align: left;">
-    //           Your password must meet the following requirements:
-    //           <ul style="margin-top: 8px;">
-    //             <li>✅ 6–20 characters long</li>
-    //             <li>✅ At least one uppercase letter (A–Z)</li>
-    //             <li>✅ At least one lowercase letter (a–z)</li>
-    //             <li>✅ At least one number (0–9)</li>
-    //             <li>✅ At least one special character (@, $, !, %, *, ?, &)</li>
-    //           </ul>
-    //         </div>
-    //       `,
-    //     });
-    //   }
-
-
-    // }
     if (!isEditMode) {
       if (!newUser.password) {
         return Swal.fire({
@@ -386,10 +364,34 @@ const UserForm = () => {
       placeholder="Password"
       maxLength={20}
       value={newUser.password}
-      onChange={(e) => {
-        const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
-        setNewUser({ ...newUser, password: noSpaceEmojiValue });
-      }}
+     onChange={(e) => {
+  const noSpaceEmojiValue = e.target.value.replace(/[\s\p{Extended_Pictographic}]/gu, '');
+  setNewUser({ ...newUser, password: noSpaceEmojiValue });
+
+  // Update password rules state
+  const updatedRules = {
+    length: noSpaceEmojiValue.length >= 6 && noSpaceEmojiValue.length <= 20,
+    uppercase: /[A-Z]/.test(noSpaceEmojiValue),
+    lowercase: /[a-z]/.test(noSpaceEmojiValue),
+    number: /\d/.test(noSpaceEmojiValue),
+    specialChar: /[@$!%*?&]/.test(noSpaceEmojiValue),
+  };
+  setPasswordRules(updatedRules);
+
+  // Show/Hide Modal based on password field being non-empty
+  if (noSpaceEmojiValue.length > 0) {
+    setShowPasswordModal(true);
+  } else {
+    setShowPasswordModal(false);
+  }
+
+  // Auto hide if all rules met
+  const allValid = Object.values(updatedRules).every(Boolean);
+  if (allValid) {
+    setShowPasswordModal(false);
+  }
+}}
+
       onKeyDown={(e) => {
         if (e.key === " " || e.key.match(/[\p{Extended_Pictographic}]/u)) {
           e.preventDefault();
@@ -470,6 +472,18 @@ const UserForm = () => {
             {isEditMode ? "Update User" : "Add User"}
           </button>
         </form>}
+{showPasswordModal && (
+  <div className="password-modal">
+    <h3>Password Requirements</h3>
+    <ul>
+      <li>{passwordRules.length ? "✅" : "❌"} 6–20 characters long</li>
+      <li>{passwordRules.uppercase ? "✅" : "❌"} At least one uppercase letter (A–Z)</li>
+      <li>{passwordRules.lowercase ? "✅" : "❌"} At least one lowercase letter (a–z)</li>
+      <li>{passwordRules.number ? "✅" : "❌"} At least one number (0–9)</li>
+      <li>{passwordRules.specialChar ? "✅" : "❌"} At least one special character (@, $, !, %, *, ?, &)</li>
+    </ul>
+  </div>
+)}
 
       </div>
     </Layout>

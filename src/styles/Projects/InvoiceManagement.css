@@ -1,6 +1,4 @@
 
-
-/* Invoice Management Container */
 .invoice-management-container {
   background-color: #f8f9fa;
   padding: 20px;
@@ -8,7 +6,6 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Add Invoice Button */
 .ledbutton {
   background-color: #004680;
   color: white;
@@ -20,9 +17,6 @@
   transition: all 0.3s ease;
 }
 
-
-
-/* Table Styles */
 .invoice-management-table {
   width: 100%;
   border-collapse: collapse;
@@ -65,15 +59,13 @@
 }
 
 .modal-overlay {
-  /* position: fixed;
-  top: 0;
-  left: 0; */
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
+    overflow: hidden;
 }
 
 
@@ -104,14 +96,6 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
-/* @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-} */
 
 .modal-content h3 {
   font-size: 24px;
