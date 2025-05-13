@@ -185,17 +185,7 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     validateField(name, value);
   };
-  const validateForm = (user) => {
-    const newErrors = {};
-    const fields = ["firstName", "lastName", "email", "mobileNumber", "userRole"];
-    if (!isEditMode) fields.push("password");
 
-    fields.forEach((field) => validateField(field, user[field]));
-
-    setErrors(newErrors);
-
-    return Object.values(newErrors).some((error) => error !== "");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

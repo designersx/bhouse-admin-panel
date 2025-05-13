@@ -121,7 +121,7 @@ const Navbar = ({ isLogin }) => {
       </div>
 
       <div className="right-menu">
-        <p><FiGlobe style={{ marginRight: "5px" }} /><strong>(EN)</strong></p>
+        {/* <p><FiGlobe style={{ marginRight: "5px" }} /><strong>(EN)</strong></p> */}
         {!isLogin && (
           <>
             <li onClick={handleOpenOffcanvas} style={{ position: 'relative' }}>

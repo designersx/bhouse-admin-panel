@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createCustomer } from "../../lib/api";
 import Layout from "../../components/Layout";
-import "./style.css"; // Import External CSS
+import "./style.css";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import BackButton from "../../components/BackButton";
@@ -23,12 +23,20 @@ const CustomerForm = () => {
     send_login_credentials: false,
     createdBy: "admin",
   });
+  const [passwordRules, setPasswordRules] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    specialChar: false,
+  });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [sameAsAddress, setSameAsAddress] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Regex patterns
   const patterns = {
     full_name: /^[A-Za-z\s]{3,}$/,
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -37,65 +45,64 @@ const CustomerForm = () => {
   };
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/;
-    const validateField = (name, value) => {
-        const trimmedValue = value.trim();
-      
-        switch (name) {
-          case "full_name":
-            if (!trimmedValue) return "Full Name is required.";
-            if (!/^[A-Za-z\s]{3,}$/.test(trimmedValue))
-              return "Full Name must be at least 3 characters and contain only letters and spaces.";
-            if (!/^[A-Z]/.test(trimmedValue))
-              return "Full Name must start with a capital letter.";
-            return "";
-      
-          case "email":
-            if (!trimmedValue) return "Email is required.";
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue))
-              return "Enter a valid email (e.g., user@example.com).";
-            return "";
-      
-          case "phone":
-            if (!trimmedValue) return "Phone number is required.";
-            if (!/^[0-9]{10,15}$/.test(trimmedValue))
-              return "Phone number must be 10–15 digits long.";
-            return "";
-      
-          case "password":
-            if (!trimmedValue) return "Password is required.";
-            if (trimmedValue.length < 6)
-              return "Password must be at least 6 characters long.";
-            return "";
-      
-          case "company_name":
-            if (!trimmedValue) return "Company Name is required.";
-            if (!/^[A-Za-z0-9\s]+$/.test(trimmedValue))
-              return "Company Name should not contain special characters or emojis.";
-            if (/^\d+$/.test(trimmedValue))
-              return "Company Name cannot contain only numbers.";
-            return "";
-      
-          case "address":
-            if (!trimmedValue) return "Address cannot be empty.";
-            if (!/^[A-Za-z0-9\s,.-]+$/.test(trimmedValue))
-              return "Address cannot contain special characters or emojis.";
-            if (/^\d+$/.test(trimmedValue))
-              return "Address cannot contain only numbers.";
-            return "";
-      
-          case "delivery_address":
-            if (!trimmedValue) return "Delivery Address cannot be empty.";
-            if (!/^[A-Za-z0-9\s,.-]+$/.test(trimmedValue))
-              return "Delivery Address cannot contain special characters or emojis.";
-            if (/^\d+$/.test(trimmedValue))
-              return "Delivery Address cannot contain only numbers.";
-            return "";
-      
-          default:
-            return "";
-        }
-      };
-      
+  const validateField = (name, value) => {
+    const trimmedValue = value.trim();
+
+    switch (name) {
+      case "full_name":
+        if (!trimmedValue) return "Full Name is required.";
+        if (!/^[A-Za-z\s]{3,}$/.test(trimmedValue))
+          return "Full Name must be at least 3 characters and contain only letters and spaces.";
+        if (!/^[A-Z]/.test(trimmedValue))
+          return "Full Name must start with a capital letter.";
+        return "";
+
+      case "email":
+        if (!trimmedValue) return "Email is required.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue))
+          return "Enter a valid email (e.g., user@example.com).";
+        return "";
+
+      case "phone":
+        if (!trimmedValue) return "Phone number is required.";
+        if (!/^[0-9]{10,15}$/.test(trimmedValue))
+          return "Phone number must be 10–15 digits long.";
+        return "";
+
+      case "password":
+        if (!trimmedValue) return "Password is required.";
+        if (trimmedValue.length < 6)
+          return "Password must be at least 6 characters long.";
+        return "";
+
+      case "company_name":
+        // if (!trimmedValue) return "Company Name is required.";
+        if (!/^[A-Za-z0-9\s]+$/.test(trimmedValue))
+          return "Company Name should not contain special characters or emojis.";
+        if (/^\d+$/.test(trimmedValue))
+          return "Company Name cannot contain only numbers.";
+        return "";
+
+      case "address":
+        if (!trimmedValue) return "Address cannot be empty.";
+        if (!/^[A-Za-z0-9\s,.-]+$/.test(trimmedValue))
+          return "Address cannot contain special characters or emojis.";
+        if (/^\d+$/.test(trimmedValue))
+          return "Address cannot contain only numbers.";
+        return "";
+
+      case "delivery_address":
+        if (!trimmedValue) return "Delivery Address cannot be empty.";
+        if (!/^[A-Za-z0-9\s,.-]+$/.test(trimmedValue))
+          return "Delivery Address cannot contain special characters or emojis.";
+        if (/^\d+$/.test(trimmedValue))
+          return "Delivery Address cannot contain only numbers.";
+        return "";
+
+      default:
+        return "";
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -111,7 +118,36 @@ const CustomerForm = () => {
 
       // Password: Remove spaces & emojis
       if (name === "password") {
-        newValue = value.replace(/[\s\p{Extended_Pictographic}]/gu, "");
+        const noSpaceEmojiValue = value.replace(
+          /[\s\p{Extended_Pictographic}]/gu,
+          ""
+        );
+
+        // Update password rules state
+        const updatedRules = {
+          length:
+            noSpaceEmojiValue.length >= 6 && noSpaceEmojiValue.length <= 20,
+          uppercase: /[A-Z]/.test(noSpaceEmojiValue),
+          lowercase: /[a-z]/.test(noSpaceEmojiValue),
+          number: /\d/.test(noSpaceEmojiValue),
+          specialChar: /[@$!%*?&]/.test(noSpaceEmojiValue),
+        };
+        setPasswordRules(updatedRules);
+
+        // Show/Hide Modal based on password field being non-empty
+        if (noSpaceEmojiValue.length > 0) {
+          setShowPasswordModal(true);
+        } else {
+          setShowPasswordModal(false);
+        }
+
+        // Auto hide if all rules met
+        const allValid = Object.values(updatedRules).every(Boolean);
+        if (allValid) {
+          setShowPasswordModal(false);
+        }
+
+        newValue = noSpaceEmojiValue;
       }
 
       setFormData((prev) => ({
@@ -172,7 +208,7 @@ const CustomerForm = () => {
                 `,
       });
     }
-    const requiredFields = [...Object.keys(patterns), "company_name"];
+    const requiredFields = [...Object.keys(patterns)];
 
     for (const key of requiredFields) {
       const error = validateField(key, formData[key]);
@@ -324,7 +360,16 @@ const CustomerForm = () => {
                 value={formData.password}
                 maxLength={20}
                 onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === " " ||
+                    e.key.match(/[\p{Extended_Pictographic}]/u)
+                  ) {
+                    e.preventDefault();
+                  }
+                }}
               />
+
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
@@ -368,6 +413,31 @@ const CustomerForm = () => {
               Save Customer
             </button>
           </form>
+          {showPasswordModal && (
+            <div className="password-modal">
+              <h3>Password Requirements</h3>
+              <ul>
+                <li>
+                  {passwordRules.length ? "✅" : "❌"} 6–20 characters long
+                </li>
+                <li>
+                  {passwordRules.uppercase ? "✅" : "❌"} At least one uppercase
+                  letter (A–Z)
+                </li>
+                <li>
+                  {passwordRules.lowercase ? "✅" : "❌"} At least one lowercase
+                  letter (a–z)
+                </li>
+                <li>
+                  {passwordRules.number ? "✅" : "❌"} At least one number (0–9)
+                </li>
+                <li>
+                  {passwordRules.specialChar ? "✅" : "❌"} At least one special
+                  character (@, $, !, %, *, ?, &)
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </Layout>
