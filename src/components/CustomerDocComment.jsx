@@ -14,6 +14,7 @@ function CustomerDocComment() {
   const navigate = useNavigate();
   const { docName, docId } = useParams();
 
+
   const stateFileName = location.state?.fileName;
   const stateData = location.state?.data;
   const stateDocumentId = location.state?.documentId;
@@ -98,7 +99,7 @@ const [loader , setLoader] = useState(false)
     if (!groupedComments[date]) groupedComments[date] = [];
     groupedComments[date].push(c);
   });
-
+const effectiveFilePath = filePathz || filePath;
   return (
     <Layout>
       <div className="file-comments-split-container">
@@ -108,21 +109,21 @@ const [loader , setLoader] = useState(false)
           </button>
           <h2 className="title">{fileName}</h2>
 
-          <div className="file-preview">
-            {filePath?.endsWith('.pdf') || filePathz?.endsWith('.pdf') ? (
-              <iframe
-              src={filePath?.length > 0 ? `${url2}/${filePath}` : `${url2}/${filePathz}`}
-                title="File Preview"
-                className="preview-frame"
-              />
-            ) : (
-              <img
-              src={filePath?.length > 0 ? `${url2}/${filePath}` : `${url2}/${filePathz}`}
-                alt="Preview"
-                className="preview-img"
-              />
-            )}
-          </div>
+         <div className="file-preview">
+  {effectiveFilePath?.endsWith('.pdf') ? (
+    <iframe
+      src={`${url2}/${effectiveFilePath}`}
+      title="File Preview"
+      className="preview-frame"
+    />
+  ) : (
+    <img
+      src={`${url2}/${effectiveFilePath}`}
+      alt="Preview"
+      className="preview-img1"
+    />
+  )}
+</div>
         </div>
 
         <button className="view-doc" onClick={openOffcanvas}>

@@ -101,7 +101,7 @@ comments.forEach((comment) => {
   <div className="comments-list">
     {Object.keys(groupedComments).map((date) => (
       <div key={date}>
-        <p className="whatsapp-comment-date">{date}</p> {/* Date appears only once */}
+        <p className="whatsapp-comment-date">{date}</p> 
         
         {groupedComments[date].map((c) => (
           <div key={c.id} className="whatsapp-comment-box">
