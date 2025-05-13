@@ -53,8 +53,12 @@ const ProjectDetails = () => {
   const [commentLoading, setCommentLoading] = useState(false);
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const scrollRef = useRef(null);
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("activeTab") || "overview");
-  const [activeTabing, setActiveTabing] = useState(() => localStorage.getItem("activeTabing") || "Admin");
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem("activeTab") || "overview"
+  );
+  const [activeTabing, setActiveTabing] = useState(
+    () => localStorage.getItem("activeTabing") || "Admin"
+  );
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
     localStorage.setItem("activeTab", tabKey);
@@ -86,19 +90,19 @@ const ProjectDetails = () => {
     "Sales Agreement": "Sales Agreement",
   };
   const normalize = (str) => str.trim().toLowerCase();
-const [data , setData] = useState()
+  const [data, setData] = useState();
   const fetchDocuments = async () => {
     try {
       const res = await axios.get(`${url}/customerDoc/document/${projectId}`);
       const docsArray = res.data || [];
-      setData(res.data)
+      setData(res.data);
       console.log(docsArray, "docArray");
       const docMapData = {};
       setDataDoc(docsArray);
       docsArray.forEach((doc) => {
         docMapData[doc.documentType] = doc.filePath;
       });
-   
+
       setDocsData(docMapData);
     } catch (error) {
       console.error("Failed to fetch documents", error);
@@ -106,30 +110,35 @@ const [data , setData] = useState()
   };
   const [unreadCounts, setUnreadCounts] = useState({});
   const fetchUnreadCountsForAllDocs = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?.user?.id;
 
     if (!userId) return;
 
     const counts = {};
-if(data){
-  await Promise?.all(
-    data?.map(async (doc) => {
-      try {
-        const res = await axios.get(`${url}/customerDoc/comments/${doc.id}?userId=${userId}`);
-        console.log(res , "res")
-        const unreadComments = res.data.filter(comment => comment.User
-          == null);
-        const isReadFalse = unreadComments.filter(comment => comment.isRead === false)
-        counts[doc.id] = isReadFalse.length || 0;
-      } catch (err) {
-        console.error(`Error fetching comments for doc ID ${doc.id}`, err);
-      }
-    })
-  );
-}
- 
-    console.log({counts})
+    if (data) {
+      await Promise?.all(
+        data?.map(async (doc) => {
+          try {
+            const res = await axios.get(
+              `${url}/customerDoc/comments/${doc.id}?userId=${userId}`
+            );
+            console.log(res, "res");
+            const unreadComments = res.data.filter(
+              (comment) => comment.User == null
+            );
+            const isReadFalse = unreadComments.filter(
+              (comment) => comment.isRead === false
+            );
+            counts[doc.id] = isReadFalse.length || 0;
+          } catch (err) {
+            console.error(`Error fetching comments for doc ID ${doc.id}`, err);
+          }
+        })
+      );
+    }
+
+    console.log({ counts });
 
     setUnreadCounts(counts);
   };
@@ -156,34 +165,51 @@ if(data){
       console.error("Error fetching punch list comments:", err);
     }
   };
-  const handleAddPunchComment = async () => {
-    setCommentLoading(true);
-    const user = JSON.parse(localStorage.getItem("user"))?.user;
-    const customer = JSON.parse(localStorage.getItem("customer"));
+const handleAddPunchComment = async () => {
+  if (!punchCommentText.trim()) return;
 
-    const createdById = user?.id || customer?.id;
-    const createdByType = user ? "user" : "customer";
+  const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const customer = JSON.parse(localStorage.getItem("customer"));
+  const creator = user || customer;
+  const creatorType = user ? "user" : "customer";
 
-    if (!punchCommentText.trim()) return;
-
-    try {
-      await axios.post(
-        `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
-        {
-          comment: punchCommentText,
-          userId: createdByType === "user" ? createdById : null,
-          clientId: createdByType === "customer" ? createdById : null,
-        }
-      );
-
-      setPunchCommentText("");
-      openPunchComment(selectedPunchItemId); // refresh
-    } catch (err) {
-      console.error("Failed to add punch comment:", err);
-    } finally {
-      setCommentLoading(false);
-    }
+  const tempComment = {
+    id: `temp-${Date.now()}`,
+    comment: punchCommentText,
+    createdAt: new Date().toISOString(),
+    createdByType: creatorType,
+    name: creator.firstName || creator.full_name,
+    userRole: user ? creator.userRole : null,
+    profileImage: creator.profileImage || null,
   };
+
+  const today = new Date().toLocaleDateString();
+  setGroupedPunchComments((prev) => ({
+    ...prev,
+    [today]: [...(prev[today] || []), tempComment],
+  }));
+
+  setPunchCommentText("");
+  setCommentLoading(true);
+
+  try {
+    await axios.post(
+      `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
+      {
+        comment: tempComment.comment,
+        userId: creatorType === "user" ? creator.id : null,
+        clientId: creatorType === "customer" ? creator.id : null,
+      }
+    );
+
+    await openPunchComment(selectedPunchItemId); 
+  } catch (err) {
+    console.error("Failed to add punch comment:", err);
+  } finally {
+    setCommentLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchDocuments();
@@ -209,32 +235,48 @@ if(data){
     }
   };
 
-  const handleAddItemComment = async () => {
-    setCommentLoading(true);
-    const user = JSON.parse(localStorage.getItem("user"))?.user;
-    const customer = JSON.parse(localStorage.getItem("customer"));
+const handleAddItemComment = async () => {
+  if (!itemCommentText.trim()) return;
 
-    const creatorId = user?.id || customer?.id;
-    const creatorType = user ? "user" : "customer";
+  const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const customer = JSON.parse(localStorage.getItem("customer"));
+  const creator = user || customer;
+  const creatorType = user ? "user" : "customer";
 
-    if (!itemCommentText.trim()) return;
-
-    try {
-      await axios.post(`${url}/items/${selectedItemId}/comments`, {
-        comment: itemCommentText,
-        createdById: creatorId,
-        createdByType: creatorType,
-        projectId: projectId,
-      });
-
-      setItemCommentText("");
-      openItemComment(selectedItemId);
-    } catch (err) {
-      console.error("Failed to add comment:", err);
-    } finally {
-      setCommentLoading(false);
-    }
+  const tempComment = {
+    id: `temp-${Date.now()}`,
+    comment: itemCommentText,
+    createdAt: new Date().toISOString(),
+    createdByName: creator.firstName || creator.full_name,
+    userRole: user ? creator.userRole : null,
+    profileImage: creator.profileImage || null,
   };
+
+  const today = new Date().toLocaleDateString();
+  setGroupedItemComments((prev) => ({
+    ...prev,
+    [today]: [...(prev[today] || []), tempComment],
+  }));
+
+  setItemCommentText("");
+  setCommentLoading(true);
+
+  try {
+    await axios.post(`${url}/items/${selectedItemId}/comments`, {
+      comment: tempComment.comment,
+      createdById: creator.id,
+      createdByType: creatorType,
+      projectId,
+    });
+
+    await openItemComment(selectedItemId); // Sync after
+  } catch (err) {
+    console.error("Failed to add item comment:", err);
+  } finally {
+    setCommentLoading(false);
+  }
+};
+
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -290,30 +332,48 @@ if(data){
     await fetchUserComments(user.id);
     setIsOffcanvasOpen(true);
   };
-  //Add Team COmment
-  const handleAddComment = async () => {
-    setCommentLoading(true);
-    const stored = JSON.parse(localStorage.getItem("user"));
-    const fromUserId = stored?.user?.id;
 
-    if (!newCommentText.trim()) return;
+ const handleAddComment = async () => {
+  if (!newCommentText.trim()) return;
 
-    try {
-      await axios.post(`${url}/projects/${projectId}/user-comments`, {
-        fromUserId,
-        toUserId: selectedUser.id,
-        comment: newCommentText,
-        commentType: "customer"
-      });
+  const storedUser = JSON.parse(localStorage.getItem("user"))?.user;
+  const fromUserId = storedUser?.id;
 
-      setNewCommentText("");
-      await fetchUserComments(selectedUser.id);
-    } catch (err) {
-      console.error("Error posting comment:", err);
-    } finally {
-      setCommentLoading(false);
-    }
+  const tempComment = {
+    id: `temp-${Date.now()}`,
+    comment: newCommentText,
+    createdAt: new Date().toISOString(),
+    name: storedUser.firstName,
+    userRole: storedUser.userRole,
+    profileImage: storedUser.profileImage || null,
   };
+
+  // Optimistic UI update
+  const today = new Date().toLocaleDateString();
+  setGroupedComments((prev) => ({
+    ...prev,
+    [today]: [...(prev[today] || []), tempComment],
+  }));
+
+  setNewCommentText("");
+  setCommentLoading(true);
+
+  try {
+    await axios.post(`${url}/projects/${projectId}/user-comments`, {
+      fromUserId,
+      toUserId: selectedUser.id,
+      comment: tempComment.comment,
+      commentType: "customer",
+    });
+
+    await fetchUserComments(selectedUser.id); // Sync after
+  } catch (err) {
+    console.error("Error posting comment:", err);
+  } finally {
+    setCommentLoading(false);
+  }
+};
+;
 
   useEffect(() => {
     axios
@@ -330,8 +390,8 @@ if(data){
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-              ? issue.productImages
-              : [],
+            ? issue.productImages
+            : [],
       }));
       setPunchList(parsed);
       const initialStatus = {};
@@ -382,7 +442,7 @@ if(data){
       const updated = [...items];
       updated[index] = res.data;
       setItems(updated);
-      setMatrix(updated)
+      setMatrix(updated);
 
       toast.success("Item added!");
     } catch (err) {
@@ -406,91 +466,93 @@ if(data){
       },
     ]);
   };
-const [read , unread] = useState()
+  const [read, unread] = useState();
   const fetchVisibleUserComments = async (users) => {
- 
     try {
       const commentCounts = await Promise.all(
         users.map(async (user) => {
           const { data } = await axios.get(
             `${url}/projects/${projectId}/user-comments/${user.id}`
           );
-  
+
           const unreadComments = data.filter(
             (comment) => comment.createdByType === "customer"
           );
           const filterIsReadFalse = unreadComments.filter(
             (comment) => comment.isRead === false
           );
-          
+
           return { id: user.id, commentCount: filterIsReadFalse.length };
         })
       );
-     
+
       // Do something with commentCounts if needed
       // setVisibleUserComments(commentCounts);
-      unread(commentCounts)
+      unread(commentCounts);
     } catch (err) {
       console.error("Error fetching visible user comment counts", err);
     }
   };
   const markCommentsAsRead = async (toUserId) => {
     try {
-      const response = await axios.put(`${url}/projects/${projectId}/teamMarkCommentsAsRead/${toUserId}`);
-   unread()
+      const response = await axios.put(
+        `${url}/projects/${projectId}/teamMarkCommentsAsRead/${toUserId}`
+      );
+      unread();
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
   useEffect(() => {
     if (project && project.assignedTeamRoles && allUsers.length > 0) {
       const extractedUsers = [];
-  
-      project?.assignedTeamRoles?.forEach(roleGroup => {
-        roleGroup.users.forEach(userId => {
-          const user = allUsers.find(u => u.id.toString() === userId.toString());
+
+      project?.assignedTeamRoles?.forEach((roleGroup) => {
+        roleGroup.users.forEach((userId) => {
+          const user = allUsers.find(
+            (u) => u.id.toString() === userId.toString()
+          );
           if (user) {
             extractedUsers.push(user);
           }
         });
       });
-  
+
       fetchVisibleUserComments(extractedUsers);
     }
-  }, [ allUsers  ]);
+  }, [allUsers]);
 
-
-  const [commentCountsByManufacturerId, setCommentCountsByManufacturerId] = useState({});
+  const [commentCountsByManufacturerId, setCommentCountsByManufacturerId] =
+    useState({});
   const fetchItemsComments = async () => {
     try {
       const commentCounts = {};
 
-    for (const manuId in itemsByManufacturerId) {
-      const itemIds = itemsByManufacturerId[manuId].map(item => item.id);
+      for (const manuId in itemsByManufacturerId) {
+        const itemIds = itemsByManufacturerId[manuId].map((item) => item.id);
 
-      const commentPromises = itemIds.map(id =>
-        axios.get(`${url}/items/${id}/comments`).catch(() => ({ data: [] }))
-      );
+        const commentPromises = itemIds.map((id) =>
+          axios.get(`${url}/items/${id}/comments`).catch(() => ({ data: [] }))
+        );
 
-      const results = await Promise.all(commentPromises);
-      const allComments = results.flatMap(res => res.data || []);
-      const userComments = allComments.filter(cmt => cmt.createdByType === "customer");
-      const isReadFalse = userComments.filter((item) => item.isRead == false)
-      commentCounts[manuId] = isReadFalse.length;
-    }
-    setCommentCountsByManufacturerId(commentCounts);
-      
+        const results = await Promise.all(commentPromises);
+        const allComments = results.flatMap((res) => res.data || []);
+        const userComments = allComments.filter(
+          (cmt) => cmt.createdByType === "customer"
+        );
+        const isReadFalse = userComments.filter((item) => item.isRead == false);
+        commentCounts[manuId] = isReadFalse.length;
+      }
+      setCommentCountsByManufacturerId(commentCounts);
     } catch (error) {
       console.log("Error fetching comments:", error);
     }
   };
   useEffect(() => {
-
-      fetchItemsComments();
-
+    fetchItemsComments();
   }, [items]);
-  const [matrix, setMatrix] = useState()
-  const [itemsByManufacturerId, setItemsByManufacturerId] = useState({})
+  const [matrix, setMatrix] = useState();
+  const [itemsByManufacturerId, setItemsByManufacturerId] = useState({});
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -503,7 +565,7 @@ const [read , unread] = useState()
         }, {});
         setItemsByManufacturerId(grouped);
         setItems(res.data);
-        setMatrix(res.data)
+        setMatrix(res.data);
       } catch (error) {
         console.error("Error fetching items:", error);
       }
@@ -581,18 +643,17 @@ const [read , unread] = useState()
     fetchProjectDetails();
   }, [projectId]);
 
-
-
   const [commentCountsByIssueId, setCommentCountsByIssueId] = useState({});
   const fetchCommentsForIssues = async () => {
     const counts = {};
-  console.log({punchList})
+    console.log({ punchList });
     await Promise.all(
       punchList.map(async (issue) => {
         try {
           const res = await axios.get(`${url}/punchlist/${issue.id}/comments`);
           const unreadUserComments = res.data.filter(
-            (comment) => comment.isRead === false&&comment.createdByType=="customer"
+            (comment) =>
+              comment.isRead === false && comment.createdByType == "customer"
           );
           counts[issue.id] = unreadUserComments.length;
         } catch (err) {
@@ -606,92 +667,95 @@ const [read , unread] = useState()
   };
   const markPunchListItemCommentsAsRead = async (punchListItemId) => {
     try {
-      const response = await axios.put(`${url}/projects/markPunchListItemCommentsAsRead/${punchListItemId}`)
-      if(response){
-        setCommentCountsByIssueId({})
+      const response = await axios.put(
+        `${url}/projects/markPunchListItemCommentsAsRead/${punchListItemId}`
+      );
+      if (response) {
+        setCommentCountsByIssueId({});
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
-
+  };
 
   const [commentCounts, setCommentCounts] = useState({});
   const fetchAllComments = async () => {
     const allFileFields = [
-        'proposals',
-        'floorPlans',
-        'cad',
-        'salesAggrement',
-        'presentation',
-        'otherDocuments',
-        'acknowledgements',
-        'receivingReports'
+      "proposals",
+      "floorPlans",
+      "cad",
+      "salesAggrement",
+      "presentation",
+      "otherDocuments",
+      "acknowledgements",
+      "receivingReports",
     ];
 
-  
     const newCommentCounts = {};
-if(allFileFields){
-  var res = await axios.get(`${url}/projects/${projectId}`)
-  let project = res.data
-  console.log({project})
-  for (const field of allFileFields) {
-    const files = JSON.parse(project[field] || '[]');
+    if (allFileFields) {
+      var res = await axios.get(`${url}/projects/${projectId}`);
+      let project = res.data;
+      console.log({ project });
+      for (const field of allFileFields) {
+        const files = JSON.parse(project[field] || "[]");
 
-    for (const file of files) {
-        let filePath = file.url || file.filePath || file; // adjust based on your file object structure
+        for (const file of files) {
+          let filePath = file.url || file.filePath || file; // adjust based on your file object structure
 
-        if (filePath.startsWith("/")) {
+          if (filePath.startsWith("/")) {
             filePath = filePath.substring(1);
-        }
-console.log(filePath)
+          }
+          console.log(filePath);
 
-        try {
-            const res = await axios.get(`${url}/projects/${projectId}/file-comments`, {
-                params: { filePath }
-            });
-          console.log(res , "res")
+          try {
+            const res = await axios.get(
+              `${url}/projects/${projectId}/file-comments`,
+              {
+                params: { filePath },
+              }
+            );
+            console.log(res, "res");
 
             // Filter comments where isRead is false
-            const unreadComments = res.data.filter(comment => comment.isRead === false && comment.user
-                == null);
-                console.log({unreadComments})
+            const unreadComments = res.data.filter(
+              (comment) => comment.isRead === false && comment.user == null
+            );
+            console.log({ unreadComments });
             newCommentCounts[filePath] = unreadComments.length || 0;
-        } catch (err) {
+          } catch (err) {
             console.error(`Failed to fetch comments for ${filePath}:`, err);
             newCommentCounts[filePath] = 0;
+          }
         }
+      }
     }
-}
-}
 
-console.log({newCommentCounts})
+    console.log({ newCommentCounts });
     setCommentCounts(newCommentCounts);
+  };
+  const documentMarkCommentsAsRead = async (filePath) => {
+    try {
+      const res = await axios.put(
+        `${url}/documentMarkCommentsAsRead`,
+        {},
+        {
+          params: { filePath },
+        }
+      );
 
-};
-const documentMarkCommentsAsRead = async (filePath) => {
-  try {
-      const res = await axios.put(`${url}/documentMarkCommentsAsRead`, {}, {
-          params: { filePath }
-      });
-
-      setCommentCounts({})
-  } catch (error) {
+      setCommentCounts({});
+    } catch (error) {
       console.log("Error updating comments:", error);
-  }
-};
+    }
+  };
 
-useEffect(()=>{
-  fetchAllComments()
-},[project , projectId])
+  useEffect(() => {
+    fetchAllComments();
+  }, [project, projectId]);
 
-
-
-useEffect(()=>{
-  fetchCommentsForIssues()
-} ,[punchList])
-
-
+  useEffect(() => {
+    fetchCommentsForIssues();
+  }, [punchList]);
 
   if (loading) {
     return (
@@ -707,7 +771,7 @@ useEffect(()=>{
   }
   const removeRow = (index) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
-    setMatrix((prev) => prev.filter((_, i) => i !== index))
+    setMatrix((prev) => prev.filter((_, i) => i !== index));
   };
   const handleFileUpload = (e, category) => {
     const files = Array.from(e.target.files);
@@ -720,7 +784,6 @@ useEffect(()=>{
       [category]: files,
     }));
   };
-
 
   const removeSelectedFile = (category, index) => {
     setSelectedFiles((prev) => ({
@@ -755,14 +818,22 @@ useEffect(()=>{
       // Refresh project data
       const res = await axios.get(`${url}/projects/${projectId}`);
       const updatedProject = res.data;
-      ["proposals", "floorPlans", "otherDocuments", "presentation", "salesAggrement", "cad", "acknowledgements", "receivingReports"].forEach((key) => {
+      [
+        "proposals",
+        "floorPlans",
+        "otherDocuments",
+        "presentation",
+        "salesAggrement",
+        "cad",
+        "acknowledgements",
+        "receivingReports",
+      ].forEach((key) => {
         updatedProject[key] = Array.isArray(updatedProject[key])
           ? updatedProject[key]
           : JSON.parse(updatedProject[key] || "[]");
       });
 
       setProject(updatedProject);
-
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Upload failed.");
@@ -850,8 +921,8 @@ useEffect(()=>{
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-              ? issue.productImages
-              : [],
+            ? issue.productImages
+            : [],
       }));
       setPunchList(parsed);
     } catch (err) {
@@ -937,32 +1008,32 @@ useEffect(()=>{
     });
   };
 
-
   const getCommentCountByUserId = (userId) => {
     const entry = read?.find((c) => c.id === userId);
     return entry ? entry.commentCount : 0;
   };
   const itemMarkItemCommentsAsRead = async (itemId) => {
-    console.log(itemId, "itemId")
+    console.log(itemId, "itemId");
     try {
-      const response = await axios.put(`${url}/projects/itemMarkItemCommentsAsRead/${itemId}`)
-      if(response){
-        setCommentCountsByManufacturerId({})
+      const response = await axios.put(
+        `${url}/projects/itemMarkItemCommentsAsRead/${itemId}`
+      );
+      if (response) {
+        setCommentCountsByManufacturerId({});
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
-  const markReadCustomerDocComment =async (id)=>{
-   let res =  await axios.put(`${url}/customerDoc/updateCommentsIsReadByDocumentId/${id}`);
-   if(res){
-    setUnreadCounts({})
-
-   }
-  }
-
-
+  const markReadCustomerDocComment = async (id) => {
+    let res = await axios.put(
+      `${url}/customerDoc/updateCommentsIsReadByDocumentId/${id}`
+    );
+    if (res) {
+      setUnreadCounts({});
+    }
+  };
 
   return (
     <Layout>
@@ -994,12 +1065,11 @@ useEffect(()=>{
                     >
                       {label}
                     </button>
-
                   ) : null;
                 }
               )}
             </div>
-{/* Project Tabing View */}
+            {/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
                 <div className="project-details-container">
@@ -1049,18 +1119,21 @@ useEffect(()=>{
                   <div className="tabs-container">
                     <div className="tabs-header">
                       <button
-                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""}`}
+                        className={`tab-button ${
+                          activeTabing === "Admin" ? "active" : ""
+                        }`}
                         onClick={() => handleSubTabChange("Admin")}
                       >
                         BHOUSE
                       </button>
                       <button
-                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""}`}
+                        className={`tab-button ${
+                          activeTabing === "Customer" ? "active" : ""
+                        }`}
                         onClick={() => handleSubTabChange("Customer")}
                       >
                         CUSTOMER
                       </button>
-
                     </div>
                   </div>
                   <div className="tab-content">
@@ -1113,38 +1186,50 @@ useEffect(()=>{
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title.toUpperCase()}</h3>
                             {rolePermissions?.ProjectDocument?.add ? (
-                             <input
-                             type="file"
-                             disabled={
-                               selectedFiles[docCategory.category]?.length > 0 ||
-                               (Array.isArray(project[docCategory.category]) &&
-                                 project[docCategory.category].length > 0)
-                             }
-                             accept={
-                               docCategory.category === "cad"
-                                 ? ".dwg,.dxf,.cad" // Only CAD formats allowed
-                                 : "*/*"            // All formats allowed for other categories
-                             }
-                             onChange={(e) => handleFileUpload(e, docCategory.category)}
-                           />
-
+                              <input
+                                type="file"
+                                disabled={
+                                  selectedFiles[docCategory.category]?.length >
+                                    0 ||
+                                  (Array.isArray(
+                                    project[docCategory.category]
+                                  ) &&
+                                    project[docCategory.category].length > 0)
+                                }
+                                accept={
+                                  docCategory.category === "cad"
+                                    ? ".dwg,.dxf,.cad" // Only CAD formats allowed
+                                    : "*/*" // All formats allowed for other categories
+                                }
+                                onChange={(e) =>
+                                  handleFileUpload(e, docCategory.category)
+                                }
+                              />
                             ) : null}
 
-                            {selectedFiles[docCategory.category]?.length > 0 && (
+                            {selectedFiles[docCategory.category]?.length >
+                              0 && (
                               <div className="file-preview-section">
                                 <h4>Files to be uploaded:</h4>
                                 <ul className="preview-list">
-                                  {selectedFiles[docCategory.category].map((file, i) => (
-                                    <li key={i} className="preview-item">
-                                      {file.name}
-                                      <span
-                                        className="remove-preview"
-                                        onClick={() => removeSelectedFile(docCategory.category, i)}
-                                      >
-                                        ×
-                                      </span>
-                                    </li>
-                                  ))}
+                                  {selectedFiles[docCategory.category].map(
+                                    (file, i) => (
+                                      <li key={i} className="preview-item">
+                                        {file.name}
+                                        <span
+                                          className="remove-preview"
+                                          onClick={() =>
+                                            removeSelectedFile(
+                                              docCategory.category,
+                                              i
+                                            )
+                                          }
+                                        >
+                                          ×
+                                        </span>
+                                      </li>
+                                    )
+                                  )}
                                 </ul>
                                 <button
                                   className="upload-btn"
@@ -1160,8 +1245,8 @@ useEffect(()=>{
                               const files = Array.isArray(docCategory?.files)
                                 ? docCategory.files
                                 : typeof docCategory.files === "string"
-                                  ? JSON.parse(docCategory.files)
-                                  : [];
+                                ? JSON.parse(docCategory.files)
+                                : [];
 
                               return files.length > 0 ? (
                                 <div className="uploaded-files">
@@ -1204,19 +1289,31 @@ useEffect(()=>{
                                           {fileName}
                                         </span>
                                         <div className="file-actions">
-                                        {![".dwg", ".dxf", ".cad"].includes(
-  fileUrl?.split(".").pop()?.toLowerCase().startsWith(".") 
-    ? fileUrl.split(".").pop().toLowerCase()
-    : `.${fileUrl.split(".").pop().toLowerCase()}`
-) && (
-  <button
-    className="file-action-btn"
-    onClick={() => window.open(fileUrl, "_blank")}
-    title="View"
-  >
-    <FaEye />
-  </button>
-)}
+                                          {![".dwg", ".dxf", ".cad"].includes(
+                                            fileUrl
+                                              ?.split(".")
+                                              .pop()
+                                              ?.toLowerCase()
+                                              .startsWith(".")
+                                              ? fileUrl
+                                                  .split(".")
+                                                  .pop()
+                                                  .toLowerCase()
+                                              : `.${fileUrl
+                                                  .split(".")
+                                                  .pop()
+                                                  .toLowerCase()}`
+                                          ) && (
+                                            <button
+                                              className="file-action-btn"
+                                              onClick={() =>
+                                                window.open(fileUrl, "_blank")
+                                              }
+                                              title="View"
+                                            >
+                                              <FaEye />
+                                            </button>
+                                          )}
                                           <button
                                             className="file-action-btn"
                                             onClick={handleDownload}
@@ -1248,31 +1345,43 @@ useEffect(()=>{
                                           >
                                             <MdDelete />
                                           </button>
-                                          <div onClick={()=>documentMarkCommentsAsRead(filePath)}>
-                                          <button
-                                            className="file-action-btn"
-                                            title="Comment"
+                                          <div
                                             onClick={() =>
-                                              navigate(
-                                                `/project/${projectId}/file-comments`,
-                                                {
-                                                  state: {
-                                                    filePath,
-                                                    category:
-                                                      docCategory.category,
-                                                  },
-                                                }
+                                              documentMarkCommentsAsRead(
+                                                filePath
                                               )
                                             }
                                           >
-                                            <FaComment />
-                                            {commentCounts[filePath] > 0 && (
-                                    <span style={{ color: 'red', fontWeight: 'bold' }}> ({commentCounts[filePath]})</span>
-                                )}
-                                          </button>
-
+                                            <button
+                                              className="file-action-btn"
+                                              title="Comment"
+                                              onClick={() =>
+                                                navigate(
+                                                  `/project/${projectId}/file-comments`,
+                                                  {
+                                                    state: {
+                                                      filePath,
+                                                      category:
+                                                        docCategory.category,
+                                                    },
+                                                  }
+                                                )
+                                              }
+                                            >
+                                              <FaComment />
+                                              {commentCounts[filePath] > 0 && (
+                                                <span
+                                                  style={{
+                                                    color: "red",
+                                                    fontWeight: "bold",
+                                                  }}
+                                                >
+                                                  {" "}
+                                                  ({commentCounts[filePath]})
+                                                </span>
+                                              )}
+                                            </button>
                                           </div>
-                                        
                                         </div>
                                       </div>
                                     );
@@ -1322,33 +1431,41 @@ useEffect(()=>{
                                   >
                                     <FaEye />
                                   </button>
-                                  <div onClick={()=>markReadCustomerDocComment(documentId)}>
-                                <button
-  className="file-action-btn"
-  onClick={() =>
-    navigate(
-      `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
-      {
-        state: {
-          data: dataDoc,
-          fileName: fileEntry[0],
-          filePath: filePath 
-        },
-      }
-    )
-  }
-  title="View"
->
-  <FaComment />
-</button>
+                                  <div
+                                    onClick={() =>
+                                      markReadCustomerDocComment(documentId)
+                                    }
+                                  >
+                                    <button
+                                      className="file-action-btn"
+                                      onClick={() =>
+                                        navigate(
+                                          `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
+                                          {
+                                            state: {
+                                              data: dataDoc,
+                                              fileName: fileEntry[0],
+                                              filePath: filePath,
+                                            },
+                                          }
+                                        )
+                                      }
+                                      title="View"
+                                    >
+                                      <FaComment />
+                                    </button>
 
-                                  {unreadCounts[documentId] > 0 && (
-                        <span style={{ color: 'red', fontWeight: 'bold' }}>
-                          ({unreadCounts[documentId]})
-                        </span>
-                      )}
+                                    {unreadCounts[documentId] > 0 && (
+                                      <span
+                                        style={{
+                                          color: "red",
+                                          fontWeight: "bold",
+                                        }}
+                                      >
+                                        ({unreadCounts[documentId]})
+                                      </span>
+                                    )}
                                   </div>
-                                 
                                 </div>
                               ) : (
                                 <p>No document uploaded.</p>
@@ -1391,18 +1508,26 @@ useEffect(()=>{
                                   <span className="user-name-horizontal">
                                     {user.firstName} {user.lastName}
                                   </span>
-                            <div onClick={()=>markCommentsAsRead(user.id)}>
-                                  <button
-                                    className="comment-btna"
-                                    onClick={() => handleOpenComments(user)}
+                                  <div
+                                    onClick={() => markCommentsAsRead(user.id)}
                                   >
-                                    <FaCommentAlt />
-                                    {getCommentCountByUserId(user.id) > 0 && (
-                                    <span style={{fontSize: "20px" , color: "red" , padding: "2px"}}>
-                                      ({getCommentCountByUserId(user.id)})
-                                    </span>
-                                  )}
-                                  </button>
+                                    <button
+                                      className="comment-btna"
+                                      onClick={() => handleOpenComments(user)}
+                                    >
+                                      <FaCommentAlt />
+                                      {getCommentCountByUserId(user.id) > 0 && (
+                                        <span
+                                          style={{
+                                            fontSize: "20px",
+                                            color: "red",
+                                            padding: "2px",
+                                          }}
+                                        >
+                                          ({getCommentCountByUserId(user.id)})
+                                        </span>
+                                      )}
+                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -1421,36 +1546,45 @@ useEffect(()=>{
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
 
-                    {matrix.length > 0 ?
-                      <button className="leadtimematrixheadingbutton" disabled={notifyCustomerLoading} onClick={() => handleToNotifyCustomer()}>{notifyCustomerLoading ? <>Notify customer <SpinnerLoader size={10} /></> : "Notify customer"}</button>
-                      : null}
-
-
+                    {matrix.length > 0 ? (
+                      <button
+                        className="leadtimematrixheadingbutton"
+                        disabled={notifyCustomerLoading}
+                        onClick={() => handleToNotifyCustomer()}
+                      >
+                        {notifyCustomerLoading ? (
+                          <>
+                            Notify customer <SpinnerLoader size={10} />
+                          </>
+                        ) : (
+                          "Notify customer"
+                        )}
+                      </button>
+                    ) : null}
                   </div>
                   <table className="matrix-table">
-                    {items.length > 0 ?
+                    {items.length > 0 ? (
                       <thead>
                         <tr>
                           <th>Manufacturer Name</th>
                           <th>Description</th>
                           <th>
-  <span
-    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-    style={{
-      cursor: "pointer",
-    }}
-  >
-    TBD
-  </span>
-</th>
+                            <span
+                              title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+                              style={{
+                                cursor: "pointer",
+                              }}
+                            >
+                              TBD
+                            </span>
+                          </th>
                           <th>Expected Departure</th>
                           <th>Expected Arrival</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
-                      : null}
-
+                    ) : null}
 
                     <tbody>
                       {items.map((item, index) => {
@@ -1562,7 +1696,6 @@ useEffect(()=>{
                                   }}
                                 />
                                 TBD
-                  
                               </label>
                             </td>
 
@@ -1653,20 +1786,36 @@ useEffect(()=>{
                                     <button onClick={() => deleteItem(item.id)}>
                                       <MdDelete />
                                     </button>
-                                    <div onClick={() => itemMarkItemCommentsAsRead(item?.id)}>
-                                    <button
-                                      onClick={() => openItemComment(item.id)}
-                                      title="Comment"
+                                    <div
+                                      onClick={() =>
+                                        itemMarkItemCommentsAsRead(item?.id)
+                                      }
                                     >
-                                      <FaCommentAlt />
-                                      {commentCountsByManufacturerId[item.id] > 0 && (
-                        <span  style={{ color: 'red', fontWeight: 'bold' }}>
-                          ({commentCountsByManufacturerId[item.id]})
-                        </span>
-                      )}
-                                    </button>
+                                      <button
+                                        onClick={() => openItemComment(item.id)}
+                                        title="Comment"
+                                      >
+                                        <FaCommentAlt />
+                                        {commentCountsByManufacturerId[
+                                          item.id
+                                        ] > 0 && (
+                                          <span
+                                            style={{
+                                              color: "red",
+                                              fontWeight: "bold",
+                                            }}
+                                          >
+                                            (
+                                            {
+                                              commentCountsByManufacturerId[
+                                                item.id
+                                              ]
+                                            }
+                                            )
+                                          </span>
+                                        )}
+                                      </button>
                                     </div>
-                                  
                                   </>
                                 )
                               ) : (
@@ -1758,7 +1907,6 @@ useEffect(()=>{
                         <label>Upload Files</label>
                         <input
                           type="file"
-
                           accept="image/*"
                           onChange={handleImageSelect}
                         />
@@ -1911,8 +2059,9 @@ useEffect(()=>{
                             <div className="punch-card-top">
                               <h4>{issue.title}</h4>
                               <span
-                                className={`status-badge ${issue.status?.toLowerCase() || "pending"
-                                  }`}
+                                className={`status-badge ${
+                                  issue.status?.toLowerCase() || "pending"
+                                }`}
                               >
                                 {issue.status || "Pending"}
                               </span>
@@ -2003,26 +2152,31 @@ useEffect(()=>{
                             <p>
                               <strong>Created By:</strong>{" "}
                               {issue.createdByType === "user"
-                                ? `${issue.creatorUser?.firstName || ""} ${issue.creatorUser?.lastName || ""
-                                }`
+                                ? `${issue.creatorUser?.firstName || ""} ${
+                                    issue.creatorUser?.lastName || ""
+                                  }`
                                 : issue.creatorCustomer?.full_name || "N/A"}
                             </p>
-                            <div onClick={()=>markPunchListItemCommentsAsRead(issue.id)}>
-                            <button
-                              className="comment-btna"
-                              onClick={() => openPunchComment(issue.id)}
-                              title="Comment"
+                            <div
+                              onClick={() =>
+                                markPunchListItemCommentsAsRead(issue.id)
+                              }
                             >
-                              <FaCommentAlt />
-                              {commentCountsByIssueId[issue.id] > 0 && (
-                  <span style={{ color: 'red', fontWeight: 'bold' }}>
-                    ({commentCountsByIssueId[issue.id]})
-                  </span>
-                )}
-                            </button>
-
+                              <button
+                                className="comment-btna"
+                                onClick={() => openPunchComment(issue.id)}
+                                title="Comment"
+                              >
+                                <FaCommentAlt />
+                                {commentCountsByIssueId[issue.id] > 0 && (
+                                  <span
+                                    style={{ color: "red", fontWeight: "bold" }}
+                                  >
+                                    ({commentCountsByIssueId[issue.id]})
+                                  </span>
+                                )}
+                              </button>
                             </div>
-                            
                           </div>
                         );
                       })}
@@ -2288,4 +2442,3 @@ useEffect(()=>{
 };
 
 export default ProjectDetails;
-
