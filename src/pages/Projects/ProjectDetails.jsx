@@ -1323,25 +1323,25 @@ useEffect(()=>{
                                     <FaEye />
                                   </button>
                                   <div onClick={()=>markReadCustomerDocComment(documentId)}>
-                                  <button
-                                    className="file-action-btn"
-                                    onClick={() =>
-                                      navigate(
-                                        `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
-                                        {
-                                          state: {
-                                            data: dataDoc,
-                                            fileName: fileEntry[0],
-                                          },
-                                        }
-                                      )
-                                    }
-                                    title="View"
-                                  >
-                                    <FaComment />
-                            
-                   
-                                  </button>
+                                <button
+  className="file-action-btn"
+  onClick={() =>
+    navigate(
+      `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
+      {
+        state: {
+          data: dataDoc,
+          fileName: fileEntry[0],
+          filePath: filePath 
+        },
+      }
+    )
+  }
+  title="View"
+>
+  <FaComment />
+</button>
+
                                   {unreadCounts[documentId] > 0 && (
                         <span style={{ color: 'red', fontWeight: 'bold' }}>
                           ({unreadCounts[documentId]})
