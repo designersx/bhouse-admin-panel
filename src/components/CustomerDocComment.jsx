@@ -56,29 +56,37 @@ function CustomerDocComment() {
     latestCommentRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [comments]);
 const [loader , setLoader] = useState(false)
-  const handleSubmit = async () => {
-    setLoader(true)
-    if (!comment || !documentId || !userId) return;
+ const handleSubmit = async () => {
+  if (!comment || !documentId || !userId) return;
 
-    try {
-      const res = await axios.post(`${url}/customerDoc/comments`, {
-        documentId,
-        message: comment,
-        userId,
-      });
-      
-      setComment('');
-      fetchComments();
-    
-    } catch (err) {
-      console.error('Failed to submit comment:', err);
-      console.log(err)
-
-    }
-    finally{
-      setLoader(false)
-    }
+  const tempComment = {
+    id: `temp-${Date.now()}`,  
+    message: comment,
+    createdAt: new Date().toISOString(),
+    User: user.user, 
+    Customer: null,  
   };
+
+
+  setComments(prevComments => [...prevComments, tempComment]);
+  setComment('');
+  setLoader(true);
+
+  try {
+    await axios.post(`${url}/customerDoc/comments`, {
+      documentId,
+      message: comment,
+      userId,
+    });
+   
+    fetchComments();
+  } catch (err) {
+    console.error('Failed to submit comment:', err);
+  } finally {
+    setLoader(false);
+  }
+};
+
 
   useEffect(() => {
     fetchComments();

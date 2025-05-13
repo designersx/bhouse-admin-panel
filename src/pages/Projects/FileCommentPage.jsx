@@ -35,26 +35,37 @@ useEffect(() => {
     }
   };
 
-  const handleSubmit = async () => {
-    setLoader(true)
-    if (!comment || !userId) return alert("Comment or User ID missing");
+const handleSubmit = async () => {
+  if (!comment || !userId) return alert("Comment or User ID missing");
 
-    try {
-      await axios.post(`${url}/projects/${projectId}/file-comments`, {
-        filePath,
-        category,
-        comment,
-        userId
-      });
-      setComment('');
-      fetchComments();
-    } catch (err) {
-      console.error("Failed to submit comment:", err);
-    }
-    finally{
-      setLoader(false)
-    }
+  const tempComment = {
+    id: `temp-${Date.now()}`,  
+    comment: comment,
+    createdAt: new Date().toISOString(),
+    user: JSON.parse(storedUser).user,
+    customer: null, 
   };
+
+  // Optimistically update UI
+  setComments(prevComments => [...prevComments, tempComment]);
+  setComment('');
+  setLoader(true);
+
+  try {
+    await axios.post(`${url}/projects/${projectId}/file-comments`, {
+      filePath,
+      category,
+      comment,
+      userId
+    });
+   
+  } catch (err) {
+    console.error("Failed to submit comment:", err);
+  } finally {
+    setLoader(false);
+  }
+};
+
 
   useEffect(() => {
     fetchComments();
@@ -68,8 +79,7 @@ useEffect(() => {
   const closeOffcanvas = () => {
     setIsOffcanvasOpen(false);
   };
-  const groupedComments = {}; // To group comments by date
-
+  const groupedComments = {}; 
 comments.forEach((comment) => {
   const commentDate = new Date(comment.createdAt).toLocaleDateString();
   if (!groupedComments[commentDate]) {
@@ -118,7 +128,7 @@ comments.forEach((comment) => {
 
             <p className="whatsapp-comment-text">{c.comment}</p>
 
-            <p className="whatsapp-comment-meta">{new Date(c.createdAt).toLocaleTimeString()}</p> {/* Time is displayed below comment */}
+            <p className="whatsapp-comment-meta">{new Date(c.createdAt).toLocaleTimeString()}</p> 
           </div>
         ))}
       </div>

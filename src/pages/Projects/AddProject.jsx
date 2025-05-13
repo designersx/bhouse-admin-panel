@@ -447,7 +447,7 @@ if (!isLeadMatrixValid()) {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: "Something went wrong, Please contact admin!",
+           text: `Error: ${data.error}`,
         });
       }
     } catch (error) {
