@@ -4,7 +4,12 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
 }
-
+.estimate{
+  width: 100px;
+}
+.actionproject{
+  width: 90px;
+}
 /* Project header styling */
 .projects-page  {
   display: flex;

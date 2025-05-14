@@ -10,7 +10,6 @@ import ReactEcharts from 'echarts-for-react';
 import moment from "moment";
 import { CategoryScale, LinearScale, PointElement, LineElement } from "chart.js";
 import Loader from "../components/Loader";
-import NoProject from "./Projects/NoProject";
 ChartJS?.register(CategoryScale, LinearScale, PointElement, LineElement);
 ChartJS?.register(ArcElement, Tooltip, Legend);
 
@@ -26,7 +25,7 @@ const Dashboard = () => {
       try {
         const res = await fetch(`${url}/dashboard/total-paid`);
         const data = await res.json();
-        setMonthlyData(data.breakdown || {}); // Ensure breakdown is not undefined
+        setMonthlyData(data.breakdown || {}); 
         const months = Object.keys(data?.breakdown || {});
         if (months.length > 0) setSelectedMonth(months[0]);
       } catch (err) {
@@ -42,7 +41,7 @@ const Dashboard = () => {
       try {
         const res = await fetch(`${url}/dashboard/project-status`);
         const data = await res.json();
-        setStatusData(data || []); // Ensure statusData is not undefined
+        setStatusData(data || []); 
       } catch (err) {
         console.error("Error fetching project status stats:", err);
       }
@@ -165,13 +164,13 @@ const Dashboard = () => {
     );
   }
   
-  if (stats.totalProjects === 0) {
-    return (
-      <Layout>
-        <NoProject />
-      </Layout>
-    );
-  }
+  // if (stats.totalProjects === 0) {
+  //   return (
+  //     <Layout>
+  //       <NoProject />
+  //     </Layout>
+  //   );
+  // }
   
   return (
     <Layout>
