@@ -6,8 +6,7 @@ import Layout from '../../components/Layout';
 import { FaArrowLeft } from 'react-icons/fa';
 import '../../styles/Projects/FileCommentsPage.css'; 
 import Offcanvas from '../../components/OffCanvas/OffCanvas';
-import { FaTelegramPlane } from 'react-icons/fa';
-import SpinnerLoader from '../../components/SpinnerLoader';
+import { FaTelegramPlane } from 'react-icons/fa'; 
 const FileCommentsPage = () => {
   const { projectId } = useParams();
   const location = useLocation();
@@ -145,8 +144,8 @@ comments.forEach((comment) => {
       onChange={(e) => setComment(e.target.value)}
       className="whatsapp-comment-input"
     />
-    <button onClick={ loader ? null : handleSubmit} className="whatsapp-submit-btn">
-     {loader ? <SpinnerLoader size={10}/> :  <FaTelegramPlane />} 
+    <button onClick={  handleSubmit} className="whatsapp-submit-btn">
+     { <FaTelegramPlane />} 
     </button>
   </div>
       </Offcanvas>

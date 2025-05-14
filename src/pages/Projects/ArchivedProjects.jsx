@@ -96,15 +96,12 @@ const ArchivedProjects = () => {
     <Layout>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="roles-container">
+        <BackButton />
         <div className="project-first-header">
-          <BackButton />
           <h2>Archived Projects</h2>
-        </div>
-
-        <div className="user-roles-header">
-          <div className="user-roles-headerb">
+           <div className="user-roles-headerb">
             <input
-              type="text"
+              type="text" 
               className="user-search-input"
               placeholder="Search projects..."
               value={searchQuery}

@@ -367,9 +367,9 @@ const Projects = () => {
 
                         <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
                         <td>{project.type}</td>
-                        <td>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
+                        <td className='estimate'>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
 
-                        <td className="actions">
+                        <td className='actionproject'>
                           {canEdit && (
                             <FaEdit
                               style={{ color: "#004680", fontSize: "22px", cursor: "pointer" }}
