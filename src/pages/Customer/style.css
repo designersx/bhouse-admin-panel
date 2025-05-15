@@ -9,15 +9,18 @@
 }
   .password-modal { 
   position: fixed;
-  top: 25%;
-  left: 45%;
-  transform: translateX(-50%);
+  top: 65%;
+  left: 68%;
+  transform: translate(-50%, -50%);
   background: white;
   border: 1px solid #ccc;
   padding: 20px;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
+  max-width: 90vw;       
+  width: 350px;         
+  box-sizing: border-box;
 }
 
 .password-modal h3 {

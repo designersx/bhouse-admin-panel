@@ -463,7 +463,7 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
           </button>
         </form>}
 {showPasswordModal && (
-  <div className="password-modal">
+  <div className="password-modal1">
     <h3>Password Requirements</h3>
     <ul>
       <li>{passwordRules.length ? "✅" : "❌"} 6–20 characters long</li>
