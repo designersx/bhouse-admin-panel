@@ -219,7 +219,7 @@ const Users = () => {
                       {user.status === "active" ? " Active" : " Inactive"}
                     </td>
                     {(rolePermissions?.UserManagement?.edit || rolePermissions?.UserManagement?.delete) ? (
-                      <td className="actions">
+                      <td className="action-user">
                         {rolePermissions?.UserManagement?.edit && (
                           <FaEdit
                             style={{

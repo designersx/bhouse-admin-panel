@@ -1,6 +1,9 @@
 .users {
     padding: 20px;
   }
+  .action-user{
+  width: 50px;
+  }
   .password-modal { 
   position: fixed;
   top: 45%;

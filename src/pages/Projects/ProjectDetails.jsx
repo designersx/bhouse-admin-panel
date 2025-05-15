@@ -1862,7 +1862,7 @@ const handleAddItemComment = async () => {
                     </button>
                   </div>
                   {showPunchModal && (
-                    <div className="modal-overlay">
+                    <div className="modal-overlay1">
                       <div className="modal-content">
                         <h3>Add Punch List Issue</h3>
                         <label>Manufacturer</label>
@@ -2276,10 +2276,10 @@ const handleAddItemComment = async () => {
             placeholder="Write your comment..."
           />
           <button
-            onClick={commentLoading ? null : handleAddComment}
+            onClick={ handleAddComment}
             className="whatsapp-submit-btn"
           >
-            {commentLoading ? <SpinnerLoader size={10} /> : <FaTelegramPlane />}
+            {<FaTelegramPlane />}
           </button>
         </div>
       </Offcanvas>
@@ -2349,10 +2349,10 @@ const handleAddItemComment = async () => {
             placeholder="Write your comment..."
           />
           <button
-            onClick={commentLoading ? null : handleAddItemComment}
+            onClick={handleAddItemComment}
             className="whatsapp-submit-btn"
           >
-            {commentLoading ? <SpinnerLoader size={10} /> : <FaTelegramPlane />}
+            {<FaTelegramPlane />}
           </button>
         </div>
       </Offcanvas>
@@ -2430,10 +2430,10 @@ const handleAddItemComment = async () => {
             placeholder="Write your comment..."
           />
           <button
-            onClick={commentLoading ? null : handleAddPunchComment}
+            onClick={handleAddPunchComment}
             className="whatsapp-submit-btn"
           >
-            {commentLoading ? <SpinnerLoader size={10} /> : <FaTelegramPlane />}
+            {<FaTelegramPlane />}
           </button>
         </div>
       </Offcanvas>
