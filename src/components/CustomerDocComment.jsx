@@ -6,7 +6,6 @@ import { url, url2 } from '../lib/api';
 import { FaTelegramPlane, FaArrowLeft } from 'react-icons/fa';
 import '../styles/Projects/FileCommentsPage.css';
 import Offcanvas from '../components/OffCanvas/OffCanvas';
-import SpinnerLoader from './SpinnerLoader';
 
 function CustomerDocComment() {
   const latestCommentRef = useRef(null);
@@ -149,34 +148,45 @@ const effectiveFilePath = filePathz || filePath;
                 <div key={date}>
                   <p className="whatsapp-comment-date">{date}</p>
                   {groupedComments[date].map((c) => {
-                    const isUser = !!c.User;
-                    const name = isUser
-                      ? c.User.firstName
-                      : c.Customer.full_name;
-                    const role = isUser ? 'User' : 'Customer';
+  const isUser = !!c.User;
+  const name = isUser
+    ? `${c.User.firstName} ${c.User.lastName || ''}`.trim()
+    : c.Customer?.full_name || "Customer";
+  
+  // Show userRole if available, otherwise 'Customer'
+  const role = isUser 
+    ? c.User.userRole || "User" 
+    : "Customer";
 
-                    return (
-                      <div key={c.id} className={`whatsapp-comment-box`}>
-                        <div className="whatsapp-comment-user-info">
-                          <img
-                            src={`${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`}
-                            alt="Profile"
-                            className="whatsapp-comment-user-avatar"
-                          />
-                          <div>
-                            <p className="whatsapp-comment-author">
-                              {name}{' '}
-                              <span className="comment-user-role">({role})</span>
-                            </p>
-                          </div>
-                        </div>
-                        <p className="whatsapp-comment-text">{c.message}</p>
-                        <p className="whatsapp-comment-meta">
-                          {new Date(c.createdAt).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    );
-                  })}
+  // Profile image URL, fallback to default
+  const profileImage = isUser && c.User.profileImage 
+    ? `${url2}/${c.User.profileImage}` 
+    : `${process.env.PUBLIC_URL}/assets/Default_pfp.jpg`;
+
+  return (
+    <div key={c.id} className={`whatsapp-comment-box`}>
+      <div className="whatsapp-comment-user-info">
+        <img
+          src={profileImage}
+          alt={name}
+          className="whatsapp-comment-user-avatar"
+        />
+        <div>
+          <p className="whatsapp-comment-author">
+            {name}{' '}
+            <span className="comment-user-role">({role})</span>
+          </p>
+        </div>
+      </div>
+      <p className="whatsapp-comment-text">{c.message}</p>
+      <p className="whatsapp-comment-meta">
+        {new Date(c.createdAt).toLocaleTimeString()}
+      </p>
+    </div>
+  );
+})}
+
+       
                 </div>
               ))}
                 <div ref={latestCommentRef} />
@@ -204,7 +214,7 @@ const effectiveFilePath = filePathz || filePath;
               title={!comment.trim() ? "Type something first" : "Send comment"}
             >
               
-              {loader ? <SpinnerLoader size={10}/>: <FaTelegramPlane />}
+              { <FaTelegramPlane />}
             </button>
           </div>
          
