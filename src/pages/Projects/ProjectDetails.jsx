@@ -1606,12 +1606,6 @@ const handleAddItemComment = async () => {
                             );
                           }
 
-                          if (!/^[a-zA-Z\s]*$/.test(item.itemName)) {
-                            return toast.error(
-                              "Item Name must contain only letters."
-                            );
-                          }
-
                           if (item.id) {
                             updateItem(item);
                           } else {
