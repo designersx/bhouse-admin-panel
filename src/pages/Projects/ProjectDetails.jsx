@@ -165,51 +165,50 @@ const ProjectDetails = () => {
       console.error("Error fetching punch list comments:", err);
     }
   };
-const handleAddPunchComment = async () => {
-  if (!punchCommentText.trim()) return;
+  const handleAddPunchComment = async () => {
+    if (!punchCommentText.trim()) return;
 
-  const user = JSON.parse(localStorage.getItem("user"))?.user;
-  const customer = JSON.parse(localStorage.getItem("customer"));
-  const creator = user || customer;
-  const creatorType = user ? "user" : "customer";
+    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const customer = JSON.parse(localStorage.getItem("customer"));
+    const creator = user || customer;
+    const creatorType = user ? "user" : "customer";
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: punchCommentText,
-    createdAt: new Date().toISOString(),
-    createdByType: creatorType,
-    name: creator.firstName || creator.full_name,
-    userRole: user ? creator.userRole : null,
-    profileImage: creator.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: punchCommentText,
+      createdAt: new Date().toISOString(),
+      createdByType: creatorType,
+      name: creator.firstName || creator.full_name,
+      userRole: user ? creator.userRole : null,
+      profileImage: creator.profileImage || null,
+    };
+
+    const today = new Date().toLocaleDateString();
+    setGroupedPunchComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setPunchCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(
+        `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
+        {
+          comment: tempComment.comment,
+          userId: creatorType === "user" ? creator.id : null,
+          clientId: creatorType === "customer" ? creator.id : null,
+        }
+      );
+
+      await openPunchComment(selectedPunchItemId);
+    } catch (err) {
+      console.error("Failed to add punch comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  const today = new Date().toLocaleDateString();
-  setGroupedPunchComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setPunchCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(
-      `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
-      {
-        comment: tempComment.comment,
-        userId: creatorType === "user" ? creator.id : null,
-        clientId: creatorType === "customer" ? creator.id : null,
-      }
-    );
-
-    await openPunchComment(selectedPunchItemId); 
-  } catch (err) {
-    console.error("Failed to add punch comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
-
 
   useEffect(() => {
     fetchDocuments();
@@ -235,47 +234,47 @@ const handleAddPunchComment = async () => {
     }
   };
 
-const handleAddItemComment = async () => {
-  if (!itemCommentText.trim()) return;
+  const handleAddItemComment = async () => {
+    if (!itemCommentText.trim()) return;
 
-  const user = JSON.parse(localStorage.getItem("user"))?.user;
-  const customer = JSON.parse(localStorage.getItem("customer"));
-  const creator = user || customer;
-  const creatorType = user ? "user" : "customer";
+    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const customer = JSON.parse(localStorage.getItem("customer"));
+    const creator = user || customer;
+    const creatorType = user ? "user" : "customer";
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: itemCommentText,
-    createdAt: new Date().toISOString(),
-    createdByName: creator.firstName || creator.full_name,
-    userRole: user ? creator.userRole : null,
-    profileImage: creator.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: itemCommentText,
+      createdAt: new Date().toISOString(),
+      createdByName: creator.firstName || creator.full_name,
+      userRole: user ? creator.userRole : null,
+      profileImage: creator.profileImage || null,
+    };
+
+    const today = new Date().toLocaleDateString();
+    setGroupedItemComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setItemCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(`${url}/items/${selectedItemId}/comments`, {
+        comment: tempComment.comment,
+        createdById: creator.id,
+        createdByType: creatorType,
+        projectId,
+      });
+
+      await openItemComment(selectedItemId); // Sync after
+    } catch (err) {
+      console.error("Failed to add item comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  const today = new Date().toLocaleDateString();
-  setGroupedItemComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setItemCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(`${url}/items/${selectedItemId}/comments`, {
-      comment: tempComment.comment,
-      createdById: creator.id,
-      createdByType: creatorType,
-      projectId,
-    });
-
-    await openItemComment(selectedItemId); // Sync after
-  } catch (err) {
-    console.error("Failed to add item comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
 
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
@@ -333,48 +332,46 @@ const handleAddItemComment = async () => {
     setIsOffcanvasOpen(true);
   };
 
- const handleAddComment = async () => {
-  if (!newCommentText.trim()) return;
+  const handleAddComment = async () => {
+    if (!newCommentText.trim()) return;
 
-  const storedUser = JSON.parse(localStorage.getItem("user"))?.user;
-  const fromUserId = storedUser?.id;
+    const storedUser = JSON.parse(localStorage.getItem("user"))?.user;
+    const fromUserId = storedUser?.id;
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: newCommentText,
-    createdAt: new Date().toISOString(),
-    name: storedUser.firstName,
-    userRole: storedUser.userRole,
-    profileImage: storedUser.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: newCommentText,
+      createdAt: new Date().toISOString(),
+      name: storedUser.firstName,
+      userRole: storedUser.userRole,
+      profileImage: storedUser.profileImage || null,
+    };
+
+    // Optimistic UI update
+    const today = new Date().toLocaleDateString();
+    setGroupedComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setNewCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(`${url}/projects/${projectId}/user-comments`, {
+        fromUserId,
+        toUserId: selectedUser.id,
+        comment: tempComment.comment,
+        commentType: "customer",
+      });
+
+      await fetchUserComments(selectedUser.id); // Sync after
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  // Optimistic UI update
-  const today = new Date().toLocaleDateString();
-  setGroupedComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setNewCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(`${url}/projects/${projectId}/user-comments`, {
-      fromUserId,
-      toUserId: selectedUser.id,
-      comment: tempComment.comment,
-      commentType: "customer",
-    });
-
-    await fetchUserComments(selectedUser.id); // Sync after
-  } catch (err) {
-    console.error("Error posting comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
-;
-
   useEffect(() => {
     axios
       .get(`${url}/items/${projectId}`)
@@ -1936,12 +1933,22 @@ const handleAddItemComment = async () => {
                             className="submit-btn"
                             onClick={async () => {
                               try {
+                                // Validation
+                                if (
+                                  !newIssue.projectItemId ||
+                                  !newIssue.title.trim() ||
+                                  !newIssue.issueDescription.trim() ||
+                                  newIssue.productImages.length === 0
+                                ) {
+                                  toast.error("All fields are required.");
+                                  return;
+                                }
+
                                 setPunchListLoading(true);
                                 const formData = new FormData();
                                 const stored = JSON.parse(
                                   localStorage.getItem("user")
                                 );
-
                                 const storedUser = stored?.user;
                                 const storedCustomer = JSON.parse(
                                   localStorage.getItem("customer")
@@ -2012,7 +2019,6 @@ const handleAddItemComment = async () => {
                                 );
                               } catch (err) {
                                 console.error("Failed to add issue", err);
-                                toast.error("Error adding issue");
                               } finally {
                                 setPunchListLoading(false);
                               }
@@ -2269,10 +2275,7 @@ const handleAddItemComment = async () => {
             className="whatsapp-comment-input"
             placeholder="Write your comment..."
           />
-          <button
-            onClick={ handleAddComment}
-            className="whatsapp-submit-btn"
-          >
+          <button onClick={handleAddComment} className="whatsapp-submit-btn">
             {<FaTelegramPlane />}
           </button>
         </div>
