@@ -481,7 +481,7 @@ const ProjectDetails = () => {
         expectedArrivalDate: "",
         status: "Pending",
         projectId,
-        arrivalDate : ""
+        arrivalDate : null
       },
     ]);
   };
@@ -1664,9 +1664,9 @@ const ProjectDetails = () => {
                               TBD
                             </span>
                           </th>
-                          <th>Estimated Departurn</th>
-                          <th>Expected Arrival</th>
-                          <th>Arrival Date</th>
+                          <th title="Estimated Departurn">ETD</th>
+                          <th title="Expected Arrival">ETA</th>
+                          <th>Arrival</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -1685,7 +1685,8 @@ const ProjectDetails = () => {
                             !item.quantity ||
                             (!item.tbd &&
                               (!item.expectedDeliveryDate ||
-                                !item.expectedArrivalDate)) ||
+                                !item.expectedArrivalDate || !item.arrivalDate )) ||
+                                
                             !item.status
                           ) {
                             return toast.error(
@@ -1771,6 +1772,11 @@ const ProjectDetails = () => {
                                       handleItemChange(
                                         index,
                                         "expectedArrivalDate",
+                                        ""
+                                      );
+                                        handleItemChange(
+                                        index,
+                                        "arrivalDate",
                                         ""
                                       );
                                     }
