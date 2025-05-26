@@ -170,6 +170,7 @@ const EditProject = () => {
         expectedArrivalDate: "",
         status: "Pending",
         projectId,
+        arrivalDate : null
       },
     ]);
   };
@@ -212,6 +213,7 @@ const EditProject = () => {
         // If TBD is checked, clear the date fields
         updated[index].expectedDeliveryDate = "";
         updated[index].expectedArrivalDate = "";
+        updated[index].arrivalDate = "";
       }
     } else {
       updated[index][field] = value;
@@ -613,20 +615,15 @@ const EditProject = () => {
                       Estimated Occupancy Date{" "}
                       <span className="required-star">*</span>
                     </label>
+<input
+  type="date"
+  name="estimatedCompletion"
+  value={formData.estimatedCompletion}
+  onChange={handleChange}
+  required
+/>
 
-                    <select
-                      name="estimatedCompletion"
-                      value={formData.estimatedCompletion}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Completion Time</option>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
-                        <option key={week} value={`${week}_weeks`}>
-                          {week} Week{week > 1 ? "s" : ""}
-                        </option>
-                      ))}
-                    </select>
+                  
                   </div>
                 </div>
 
@@ -1237,6 +1234,7 @@ const EditProject = () => {
 
                         <th>Expected Departure</th>
                         <th>Expected Arrival</th>
+                        <th>Arrival Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -1320,6 +1318,25 @@ const EditProject = () => {
                               disabled={item.tbd}
                             />
                           </td>
+
+
+                          <td>
+                            <input
+                              className="edd"
+                              type="date"
+                              value={
+                                item.arrivalDate?.slice(0, 10) || ""
+                              }
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "arrivalDate",
+                                  e.target.value
+                                )
+                              }
+                              disabled={item.tbd}
+                            />
+                            </td>
 
                           <td>
                             <select

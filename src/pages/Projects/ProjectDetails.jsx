@@ -84,10 +84,10 @@ const ProjectDetails = () => {
   ]);
   const docMap = {
     "Sample COI": "Sample COI",
-    "COI (Certificate)": "COI (Certificate)",
-    "Pro Forma Invoice": "Pro Forma Invoice",
-    "Final Invoice": "Final Invoice",
-    "Sales Agreement": "Sales Agreement",
+    "COI (Certificate)": "Floor Plan ",
+    "Pro Forma Invoice": "CAD file",
+    // "Final Invoice": "Final Invoice",
+    // "Sales Agreement": "Sales Agreement",
   };
   const normalize = (str) => str.trim().toLowerCase();
   const [data, setData] = useState();
@@ -275,7 +275,27 @@ const ProjectDetails = () => {
       setCommentLoading(false);
     }
   };
-
+  const formatDate = (date) => {
+    const d = new Date(date);
+  
+    const options = {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    };
+  
+    // Format with lowercase am/pm
+    let formatted = d.toLocaleString('en-GB', options);
+  
+    // Capitalize AM/PM
+    formatted = formatted.replace(/\b(am|pm)\b/, (match) => match.toUpperCase());
+  
+    return formatted;
+  };
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -286,6 +306,7 @@ const ProjectDetails = () => {
 
     acknowledgements: [],
     receivingReports: [],
+    finalInvoice : []
   });
   const roleId = JSON.parse(localStorage.getItem("user"));
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -460,6 +481,7 @@ const ProjectDetails = () => {
         expectedArrivalDate: "",
         status: "Pending",
         projectId,
+        arrivalDate : ""
       },
     ]);
   };
@@ -621,11 +643,22 @@ const ProjectDetails = () => {
         )
           ? fetchedProject.acknowledgements
           : JSON.parse(fetchedProject.acknowledgements || "[]");
-        fetchedProject.receivingReports = Array.isArray(
-          fetchedProject.receivingReports
+        fetchedProject.acknowledgements = Array.isArray(
+          fetchedProject.acknowledgements
         )
-          ? fetchedProject.receivingReports
-          : JSON.parse(fetchedProject.receivingReports || "[]");
+
+
+          ? fetchedProject.finalInvoice
+          : JSON.parse(fetchedProject.finalInvoice || "[]");
+            fetchedProject.finalInvoice = Array.isArray(
+          fetchedProject.finalInvoice
+        )
+          ? fetchedProject.finalInvoice
+          : JSON.parse(fetchedProject.finalInvoice || "[]");
+           
+         
+          
+          
 
         setInvoiceFiles(fetchedProject.invoice);
 
@@ -686,6 +719,7 @@ const ProjectDetails = () => {
       "otherDocuments",
       "acknowledgements",
       "receivingReports",
+      "finalInvoive"
     ];
 
     const newCommentCounts = {};
@@ -824,6 +858,7 @@ const ProjectDetails = () => {
         "cad",
         "acknowledgements",
         "receivingReports",
+        "finalInvoice"
       ].forEach((key) => {
         updatedProject[key] = Array.isArray(updatedProject[key])
           ? updatedProject[key]
@@ -1032,6 +1067,43 @@ const ProjectDetails = () => {
     }
   };
 
+    const handleToNotifyCustomerofPunchList = async () => {
+    const data = { projectId };
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to notify the customer?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Notify!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          setNotifyCustomerLoading(true);
+          const response = await axios.post(
+            `${url}/notifyCustomerOfPunchList`,
+            data
+          );
+          console.log(response);
+          setNotifyCustomerLoading(false);
+          await Swal.fire({
+            title: "Success!",
+            text: "Customer has been notified successfully.",
+            icon: "success",
+            timer: 2000, // 3 seconds
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error(error);
+          setNotifyCustomerLoading(false);
+          Swal.fire("Error!", "Something went wrong while notifying.", "error");
+        }
+      }
+    });
+  };
+
   return (
     <Layout>
       <ToastContainer />
@@ -1108,7 +1180,25 @@ const ProjectDetails = () => {
                     <div className="info-group">
                       <strong>Hours:</strong> {project.deliveryHours || "N/A"}
                     </div>
+                     <div className="info-group">
+                      <strong>Delivery Date:</strong> {project.deliveryDate || "N/A"}
+                    </div>
+                   
                   </div>
+
+                   <div className="project-info-card">
+                    <h2>Point of Contact</h2>
+                    <div className="info-group">
+                      <strong>Name:</strong>{" "}
+                      {project.pocName   || "N/A"}
+                    </div>
+                    <div className="info-group">
+                      <strong>Email:</strong> {project.pocEmail || "N/A"}
+                    </div>
+                     <div className="info-group">
+                      <strong> Phone</strong> {project.pocNumber || "N/A"}
+                    </div>
+                    </div>
                 </div>
               )}
               {activeTab === "documents" && (
@@ -1145,7 +1235,7 @@ const ProjectDetails = () => {
                             category: "proposals",
                           },
                           {
-                            title: "Floor Plans",
+                            title: "Pro Forma Invoice",
                             files: project.floorPlans,
                             category: "floorPlans",
                           },
@@ -1155,7 +1245,7 @@ const ProjectDetails = () => {
                             category: "otherDocuments",
                           },
                           {
-                            title: "Cad Files",
+                            title: " COI(Certificate)",
                             files: project.cad,
                             category: "cad",
                           },
@@ -1179,6 +1269,11 @@ const ProjectDetails = () => {
                             files: project.receivingReports,
                             category: "receivingReports",
                           },
+                            {
+                            title: "Final Invoice",
+                            files: project.finalInvoice,
+                            category: "finalInvoice",
+                          },
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title.toUpperCase()}</h3>
@@ -1193,11 +1288,7 @@ const ProjectDetails = () => {
                                   ) &&
                                     project[docCategory.category].length > 0)
                                 }
-                                accept={
-                                  docCategory.category === "cad"
-                                    ? ".dwg,.dxf,.cad" // Only CAD formats allowed
-                                    : "*/*" // All formats allowed for other categories
-                                }
+                               
                                 onChange={(e) =>
                                   handleFileUpload(e, docCategory.category)
                                 }
@@ -1542,7 +1633,12 @@ const ProjectDetails = () => {
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
-
+                         <p >
+            <b>Last Updated:{" "}</b>
+            {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
+              ? formatDate(project.lastNotificationSentAt)
+              : "Not Updated"}
+          </p>
                     {matrix.length > 0 ? (
                       <button
                         className="leadtimematrixheadingbutton"
@@ -1577,6 +1673,7 @@ const ProjectDetails = () => {
                           </th>
                           <th>Expected Departure</th>
                           <th>Expected Arrival</th>
+                          <th>Arrival Date</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -1735,6 +1832,29 @@ const ProjectDetails = () => {
                                 }
                               />
                             </td>
+
+                             <td>
+                              <input
+                                type="date"
+                                style={{
+                                  height: "30px",
+                                  borderRadius: "5px",
+                                  border: "1px solid #ccc",
+                                }}
+                                value={
+                                  item.arrivalDate?.slice(0, 10) || ""
+                                }
+                                min={new Date().toISOString().split("T")[0]}
+                                disabled={item.tbd || !isEditable}
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "arrivalDate",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
                             <td>
                               <select
                                 value={item.status}
@@ -1844,14 +1964,30 @@ const ProjectDetails = () => {
               )}
               {activeTab === "punchlist" && (
                 <div className="project-info-card">
-                  <div style={{ textAlign: "right", marginBottom: "1rem" }}>
+                 
+                  <div style={{ textAlign: "right", marginBottom: "1rem" }} className="xyzxc">
+                      <button
+                        className="leadtimematrixheadingbutton"
+                        disabled={notifyCustomerLoading}
+                        onClick={() => handleToNotifyCustomerofPunchList()}
+                      >
+                        {notifyCustomerLoading ? (
+                          <>
+                            Notify customer <SpinnerLoader size={10} />
+                          </>
+                        ) : (
+                          "Notify customer"
+                        )}
+                      </button>
                     <button
                       className="ledbutton"
                       onClick={() => setShowPunchModal(true)}
                     >
                       + Add
                     </button>
+                    
                   </div>
+                  
                   {showPunchModal && (
                     <div className="modal-overlay1">
                       <div className="modal-content">
@@ -1899,6 +2035,7 @@ const ProjectDetails = () => {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageSelect}
                         />
                         {newIssue.productImages.length > 0 && (
@@ -1937,8 +2074,7 @@ const ProjectDetails = () => {
                                 if (
                                   !newIssue.projectItemId ||
                                   !newIssue.title.trim() ||
-                                  !newIssue.issueDescription.trim() ||
-                                  newIssue.productImages.length === 0
+                                  !newIssue.issueDescription.trim()
                                 ) {
                                   toast.error("All fields are required.");
                                   return;

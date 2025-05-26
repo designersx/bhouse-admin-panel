@@ -49,8 +49,8 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
     userRole: "",
     status: "active",
     createdBy: createdBYId?.user.id,
-    roleId: null
-  };
+    roleId: null , 
+  mettingLink : ""  };
   const [newUser, setNewUser] = useState(defaultUserState);
   const [errors, setErrors] = useState({});
 
@@ -414,6 +414,21 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
             />
             {errors.mobileNumber && <p className="user-error">{errors.mobileNumber}</p>}
           </div>
+           <div className="user-form-group mobnumber">
+              <label>Meeting Link</label>
+              <input
+                type="text"
+                name="mettingLink"
+                placeholder="Metting Link"
+                value={newUser.mettingLink}
+                onChange={handleChange}
+                
+            
+              />
+              
+              
+              {/* {errors.firstName && <p className="user-error">{errors.firstName}</p>} */}
+            </div>
 
           <div className="user-form-row">
             <div className="user-form-group">
@@ -445,6 +460,7 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+           
           </div>
           <div className="user-form-row">
             <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>

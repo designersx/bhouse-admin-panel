@@ -367,7 +367,7 @@ const Projects = () => {
 
                         <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
                         <td>{project.type}</td>
-                        <td className='estimate'>{project.estimatedCompletion?.match(/\d+/)?.[0]} Weeks</td>
+                        <td className='estimate'>{project.estimatedCompletion}</td>
 
                         <td className='actionproject'>
                           {canEdit && (

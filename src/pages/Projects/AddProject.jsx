@@ -52,6 +52,7 @@ const AddProject = () => {
           expectedDeliveryDate: "",
           expectedArrivalDate: "",
           status: "Pending",
+          arrivalDate : ""
         },
       ];
   });
@@ -177,6 +178,7 @@ const AddProject = () => {
         // If TBD is true, clear both dates
         updated[index].expectedDeliveryDate = "";
         updated[index].expectedArrivalDate = "";
+        updated[index].arrivalDate = "";
       }
     } else {
       updated[index][field] = value;
@@ -193,6 +195,7 @@ const AddProject = () => {
         expectedDeliveryDate: null,
         expectedArrivalDate: null,
         status: "Pending",
+        arrivalDate : null
       },
     ]);
   };
@@ -322,7 +325,8 @@ const isLeadMatrixValid = () => {
         !item.quantity?.trim() ||
         !item.expectedDeliveryDate ||
         !item.expectedArrivalDate ||
-        !item.status
+        !item.status ||
+        !item.arrivalDate
       ) {
         return false;
       }
@@ -383,6 +387,11 @@ const isLeadMatrixValid = () => {
         : null,
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
+        : null,
+        
+
+        arrivalDate: item.arrivalDate
+        ? new Date(item.arrivalDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       status: item.status || "Pending",
       tbd: !!item.tbd, 
@@ -610,19 +619,13 @@ if (!isLeadMatrixValid()) {
                       <span className="required-star">*</span>
                     </label>
 
-                    <select
-                      name="estimatedCompletion"
-                      value={formData.estimatedCompletion}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Completion Time</option>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((week) => (
-                        <option key={week} value={`${week}_weeks`}>
-                          {week} Week{week > 1 ? "s" : ""}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+  type="date"
+  name="estimatedCompletion"
+  value={formData.estimatedCompletion}
+  onChange={handleChange}
+  required
+/>
                   </div>
                 </div>
                 <div className="form-group-row">
@@ -1204,6 +1207,28 @@ if (!isLeadMatrixValid()) {
                             handleItemChange(
                               index,
                               "expectedArrivalDate",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+
+                           <div className="form-group1">
+                        <label> Arrival Date</label>
+                        <input
+                          className="user-search-input1"
+                          type="date"
+                          value={item.arrivalDate}
+                          min={
+                            item.expectedDeliveryDate ||
+                            new Date().toISOString().split("T")[0]
+                          }
+                          disabled={item.tbd}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              "arrivalDate",
                               e.target.value
                             )
                           }
