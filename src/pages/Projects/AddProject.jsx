@@ -1230,7 +1230,7 @@ if (!isLeadMatrixValid()) {
                       </div>
 
                       <div className="form-group1">
-                        <label>Expected Delivery Date</label>
+                        <label title="Expected Delivery Date">ETD</label>
                         <input
                           className="user-search-input1"
                           type="date"
@@ -1248,7 +1248,7 @@ if (!isLeadMatrixValid()) {
                       </div>
 
                       <div className="form-group1">
-                        <label>Expected Arrival Date</label>
+                        <label title="Expected Arrival Date">EAD</label>
                         <input
                           className="user-search-input1"
                           type="date"
