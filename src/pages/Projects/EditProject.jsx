@@ -35,6 +35,7 @@ const EditProject = () => {
     cad: [],
     salesAggrement: [],
     acknowledgements: [],
+    finalInvoice : [] ,
 
     receivingReports: [],
   });
@@ -142,6 +143,8 @@ const EditProject = () => {
         salesAggrement: JSON.parse(project.salesAggrement || "[]"),
         receivingReports: JSON.parse(project.receivingReports || "[]"),
         acknowledgements: JSON.parse(project.acknowledgements || "[]"),
+        finalInvoice: JSON.parse(project.finalInvoice || "[]"),
+
       });
 
       // 🟡 Lead Time Matrix
@@ -410,6 +413,7 @@ const EditProject = () => {
           "otherDocuments",
           "acknowledgements",
           "receivingReports",
+          "finalInvoice"
         ].includes(key)
       ) {
         formDataToSend.append(
@@ -798,7 +802,7 @@ const EditProject = () => {
 
                   {/* Floor Plans & CAD Files */}
                   <div className="form-group">
-                    <label>Floor Plans</label>
+                    <label>Pro Forma Invoice</label>
                     <input
                       type="file"
    
@@ -841,6 +845,59 @@ const EditProject = () => {
                       </ul>
                     )}
                   </div>
+
+
+
+                  {/*  */}
+ <div className="form-group">
+                    <label>Final Invoice</label>
+                    <input
+                      type="file"
+   
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange("finalInvoice", e)}
+                    />
+                    {formData.finalInvoice && formData.finalInvoice.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.finalInvoice.map((url, idx) => {
+                          const fileName = url.split("/").pop();
+                          const fileExt = fileName.split(".").pop();
+                          const fileUrl = url.startsWith("uploads")
+                            ? `${url2}/${url}`
+                            : url;
+
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("finalInvoice", url)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+
+{/*  */}
+
+
+
 
                   {/* Other Documents */}
                   <div className="form-group">

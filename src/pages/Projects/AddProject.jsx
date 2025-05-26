@@ -408,6 +408,9 @@ const isLeadMatrixValid = () => {
     for (let file of formData.proposals || []) {
       formDataToSend.append("proposals", file);
     }
+      for (let file of formData.finalInvoice || []) {
+      formDataToSend.append("finalInvoice", file);
+    }
     for (let file of formData.floorPlans || []) {
       formDataToSend.append("floorPlans", file);
     }
@@ -791,8 +794,60 @@ if (!isLeadMatrixValid()) {
                     )}
                   </div>
 
+
+
+
+
+
+
+
+
+
+
+
+                  {/*  */}
+
+  <div className="form-group">
+                    <label>Final Invoice</label>
+                    <input
+                      type="file"
+                      name="finalInvoice"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileInputChange(e, "finalInvoice")}
+                      disabled={!!formData.finalInvoice?.length}
+                    />
+
+                    {formData.finalInvoice && formData.finalInvoice.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.finalInvoice.map((file, idx) => (
+                          <li key={idx}>
+                            <a
+                              href={URL.createObjectURL(file)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("finalInvoice", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+
+
+
+
+                  {/*  */}
+
                   <div className="form-group">
-                    <label>Floor Plans</label>
+                    <label>Pro Forma Invoice</label>
                     <input
                       type="file"
                       name="floorPlans"
@@ -978,7 +1033,7 @@ if (!isLeadMatrixValid()) {
                       )}
                   </div>
                   <div className="form-group">
-                    <label>CAD Files</label>
+                    <label>COI(Certificate)</label>
                     <input
                       type="file"
                       name="cad"
