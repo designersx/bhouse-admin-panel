@@ -84,10 +84,10 @@ const ProjectDetails = () => {
   ]);
   const docMap = {
     "Sample COI": "Sample COI",
-    "COI (Certificate)": "COI (Certificate)",
-    "Pro Forma Invoice": "Pro Forma Invoice",
-    "Final Invoice": "Final Invoice",
-    "Sales Agreement": "Sales Agreement",
+    "COI (Certificate)": "Floor Plan ",
+    "Pro Forma Invoice": "CAD file",
+    // "Final Invoice": "Final Invoice",
+    // "Sales Agreement": "Sales Agreement",
   };
   const normalize = (str) => str.trim().toLowerCase();
   const [data, setData] = useState();
@@ -165,51 +165,50 @@ const ProjectDetails = () => {
       console.error("Error fetching punch list comments:", err);
     }
   };
-const handleAddPunchComment = async () => {
-  if (!punchCommentText.trim()) return;
+  const handleAddPunchComment = async () => {
+    if (!punchCommentText.trim()) return;
 
-  const user = JSON.parse(localStorage.getItem("user"))?.user;
-  const customer = JSON.parse(localStorage.getItem("customer"));
-  const creator = user || customer;
-  const creatorType = user ? "user" : "customer";
+    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const customer = JSON.parse(localStorage.getItem("customer"));
+    const creator = user || customer;
+    const creatorType = user ? "user" : "customer";
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: punchCommentText,
-    createdAt: new Date().toISOString(),
-    createdByType: creatorType,
-    name: creator.firstName || creator.full_name,
-    userRole: user ? creator.userRole : null,
-    profileImage: creator.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: punchCommentText,
+      createdAt: new Date().toISOString(),
+      createdByType: creatorType,
+      name: creator.firstName || creator.full_name,
+      userRole: user ? creator.userRole : null,
+      profileImage: creator.profileImage || null,
+    };
+
+    const today = new Date().toLocaleDateString();
+    setGroupedPunchComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setPunchCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(
+        `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
+        {
+          comment: tempComment.comment,
+          userId: creatorType === "user" ? creator.id : null,
+          clientId: creatorType === "customer" ? creator.id : null,
+        }
+      );
+
+      await openPunchComment(selectedPunchItemId);
+    } catch (err) {
+      console.error("Failed to add punch comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  const today = new Date().toLocaleDateString();
-  setGroupedPunchComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setPunchCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(
-      `${url}/projects/${projectId}/punchlist/${selectedPunchItemId}/comments`,
-      {
-        comment: tempComment.comment,
-        userId: creatorType === "user" ? creator.id : null,
-        clientId: creatorType === "customer" ? creator.id : null,
-      }
-    );
-
-    await openPunchComment(selectedPunchItemId); 
-  } catch (err) {
-    console.error("Failed to add punch comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
-
 
   useEffect(() => {
     fetchDocuments();
@@ -235,48 +234,68 @@ const handleAddPunchComment = async () => {
     }
   };
 
-const handleAddItemComment = async () => {
-  if (!itemCommentText.trim()) return;
+  const handleAddItemComment = async () => {
+    if (!itemCommentText.trim()) return;
 
-  const user = JSON.parse(localStorage.getItem("user"))?.user;
-  const customer = JSON.parse(localStorage.getItem("customer"));
-  const creator = user || customer;
-  const creatorType = user ? "user" : "customer";
+    const user = JSON.parse(localStorage.getItem("user"))?.user;
+    const customer = JSON.parse(localStorage.getItem("customer"));
+    const creator = user || customer;
+    const creatorType = user ? "user" : "customer";
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: itemCommentText,
-    createdAt: new Date().toISOString(),
-    createdByName: creator.firstName || creator.full_name,
-    userRole: user ? creator.userRole : null,
-    profileImage: creator.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: itemCommentText,
+      createdAt: new Date().toISOString(),
+      createdByName: creator.firstName || creator.full_name,
+      userRole: user ? creator.userRole : null,
+      profileImage: creator.profileImage || null,
+    };
+
+    const today = new Date().toLocaleDateString();
+    setGroupedItemComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setItemCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(`${url}/items/${selectedItemId}/comments`, {
+        comment: tempComment.comment,
+        createdById: creator.id,
+        createdByType: creatorType,
+        projectId,
+      });
+
+      await openItemComment(selectedItemId); // Sync after
+    } catch (err) {
+      console.error("Failed to add item comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  const today = new Date().toLocaleDateString();
-  setGroupedItemComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setItemCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(`${url}/items/${selectedItemId}/comments`, {
-      comment: tempComment.comment,
-      createdById: creator.id,
-      createdByType: creatorType,
-      projectId,
-    });
-
-    await openItemComment(selectedItemId); // Sync after
-  } catch (err) {
-    console.error("Failed to add item comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
-
+  const formatDate = (date) => {
+    const d = new Date(date);
+  
+    const options = {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    };
+  
+    // Format with lowercase am/pm
+    let formatted = d.toLocaleString('en-GB', options);
+  
+    // Capitalize AM/PM
+    formatted = formatted.replace(/\b(am|pm)\b/, (match) => match.toUpperCase());
+  
+    return formatted;
+  };
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
     floorPlans: [],
@@ -287,6 +306,7 @@ const handleAddItemComment = async () => {
 
     acknowledgements: [],
     receivingReports: [],
+    finalInvoice : []
   });
   const roleId = JSON.parse(localStorage.getItem("user"));
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -333,48 +353,46 @@ const handleAddItemComment = async () => {
     setIsOffcanvasOpen(true);
   };
 
- const handleAddComment = async () => {
-  if (!newCommentText.trim()) return;
+  const handleAddComment = async () => {
+    if (!newCommentText.trim()) return;
 
-  const storedUser = JSON.parse(localStorage.getItem("user"))?.user;
-  const fromUserId = storedUser?.id;
+    const storedUser = JSON.parse(localStorage.getItem("user"))?.user;
+    const fromUserId = storedUser?.id;
 
-  const tempComment = {
-    id: `temp-${Date.now()}`,
-    comment: newCommentText,
-    createdAt: new Date().toISOString(),
-    name: storedUser.firstName,
-    userRole: storedUser.userRole,
-    profileImage: storedUser.profileImage || null,
+    const tempComment = {
+      id: `temp-${Date.now()}`,
+      comment: newCommentText,
+      createdAt: new Date().toISOString(),
+      name: storedUser.firstName,
+      userRole: storedUser.userRole,
+      profileImage: storedUser.profileImage || null,
+    };
+
+    // Optimistic UI update
+    const today = new Date().toLocaleDateString();
+    setGroupedComments((prev) => ({
+      ...prev,
+      [today]: [...(prev[today] || []), tempComment],
+    }));
+
+    setNewCommentText("");
+    setCommentLoading(true);
+
+    try {
+      await axios.post(`${url}/projects/${projectId}/user-comments`, {
+        fromUserId,
+        toUserId: selectedUser.id,
+        comment: tempComment.comment,
+        commentType: "customer",
+      });
+
+      await fetchUserComments(selectedUser.id); // Sync after
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    } finally {
+      setCommentLoading(false);
+    }
   };
-
-  // Optimistic UI update
-  const today = new Date().toLocaleDateString();
-  setGroupedComments((prev) => ({
-    ...prev,
-    [today]: [...(prev[today] || []), tempComment],
-  }));
-
-  setNewCommentText("");
-  setCommentLoading(true);
-
-  try {
-    await axios.post(`${url}/projects/${projectId}/user-comments`, {
-      fromUserId,
-      toUserId: selectedUser.id,
-      comment: tempComment.comment,
-      commentType: "customer",
-    });
-
-    await fetchUserComments(selectedUser.id); // Sync after
-  } catch (err) {
-    console.error("Error posting comment:", err);
-  } finally {
-    setCommentLoading(false);
-  }
-};
-;
-
   useEffect(() => {
     axios
       .get(`${url}/items/${projectId}`)
@@ -463,6 +481,7 @@ const handleAddItemComment = async () => {
         expectedArrivalDate: "",
         status: "Pending",
         projectId,
+        arrivalDate : ""
       },
     ]);
   };
@@ -624,11 +643,22 @@ const handleAddItemComment = async () => {
         )
           ? fetchedProject.acknowledgements
           : JSON.parse(fetchedProject.acknowledgements || "[]");
-        fetchedProject.receivingReports = Array.isArray(
-          fetchedProject.receivingReports
+        fetchedProject.acknowledgements = Array.isArray(
+          fetchedProject.acknowledgements
         )
-          ? fetchedProject.receivingReports
-          : JSON.parse(fetchedProject.receivingReports || "[]");
+
+
+          ? fetchedProject.finalInvoice
+          : JSON.parse(fetchedProject.finalInvoice || "[]");
+            fetchedProject.finalInvoice = Array.isArray(
+          fetchedProject.finalInvoice
+        )
+          ? fetchedProject.finalInvoice
+          : JSON.parse(fetchedProject.finalInvoice || "[]");
+           
+         
+          
+          
 
         setInvoiceFiles(fetchedProject.invoice);
 
@@ -689,6 +719,7 @@ const handleAddItemComment = async () => {
       "otherDocuments",
       "acknowledgements",
       "receivingReports",
+      "finalInvoive"
     ];
 
     const newCommentCounts = {};
@@ -827,6 +858,7 @@ const handleAddItemComment = async () => {
         "cad",
         "acknowledgements",
         "receivingReports",
+        "finalInvoice"
       ].forEach((key) => {
         updatedProject[key] = Array.isArray(updatedProject[key])
           ? updatedProject[key]
@@ -1035,6 +1067,43 @@ const handleAddItemComment = async () => {
     }
   };
 
+    const handleToNotifyCustomerofPunchList = async () => {
+    const data = { projectId };
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to notify the customer?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Notify!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          setNotifyCustomerLoading(true);
+          const response = await axios.post(
+            `${url}/notifyCustomerOfPunchList`,
+            data
+          );
+          console.log(response);
+          setNotifyCustomerLoading(false);
+          await Swal.fire({
+            title: "Success!",
+            text: "Customer has been notified successfully.",
+            icon: "success",
+            timer: 2000, // 3 seconds
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error(error);
+          setNotifyCustomerLoading(false);
+          Swal.fire("Error!", "Something went wrong while notifying.", "error");
+        }
+      }
+    });
+  };
+
   return (
     <Layout>
       <ToastContainer />
@@ -1111,7 +1180,25 @@ const handleAddItemComment = async () => {
                     <div className="info-group">
                       <strong>Hours:</strong> {project.deliveryHours || "N/A"}
                     </div>
+                     <div className="info-group">
+                      <strong>Delivery Date:</strong> {project.deliveryDate || "N/A"}
+                    </div>
+                   
                   </div>
+
+                   <div className="project-info-card">
+                    <h2>Point of Contact</h2>
+                    <div className="info-group">
+                      <strong>Name:</strong>{" "}
+                      {project.pocName   || "N/A"}
+                    </div>
+                    <div className="info-group">
+                      <strong>Email:</strong> {project.pocEmail || "N/A"}
+                    </div>
+                     <div className="info-group">
+                      <strong> Phone</strong> {project.pocNumber || "N/A"}
+                    </div>
+                    </div>
                 </div>
               )}
               {activeTab === "documents" && (
@@ -1148,7 +1235,7 @@ const handleAddItemComment = async () => {
                             category: "proposals",
                           },
                           {
-                            title: "Floor Plans",
+                            title: "Pro Forma Invoice",
                             files: project.floorPlans,
                             category: "floorPlans",
                           },
@@ -1158,7 +1245,7 @@ const handleAddItemComment = async () => {
                             category: "otherDocuments",
                           },
                           {
-                            title: "Cad Files",
+                            title: " COI(Certificate)",
                             files: project.cad,
                             category: "cad",
                           },
@@ -1182,6 +1269,11 @@ const handleAddItemComment = async () => {
                             files: project.receivingReports,
                             category: "receivingReports",
                           },
+                            {
+                            title: "Final Invoice",
+                            files: project.finalInvoice,
+                            category: "finalInvoice",
+                          },
                         ].map((docCategory, idx) => (
                           <div key={idx} className="  -section">
                             <h3>{docCategory.title.toUpperCase()}</h3>
@@ -1196,11 +1288,7 @@ const handleAddItemComment = async () => {
                                   ) &&
                                     project[docCategory.category].length > 0)
                                 }
-                                accept={
-                                  docCategory.category === "cad"
-                                    ? ".dwg,.dxf,.cad" // Only CAD formats allowed
-                                    : "*/*" // All formats allowed for other categories
-                                }
+                               
                                 onChange={(e) =>
                                   handleFileUpload(e, docCategory.category)
                                 }
@@ -1545,7 +1633,12 @@ const handleAddItemComment = async () => {
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
-
+                         <p >
+            <b>Last Updated:{" "}</b>
+            {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
+              ? formatDate(project.lastNotificationSentAt)
+              : "Not Updated"}
+          </p>
                     {matrix.length > 0 ? (
                       <button
                         className="leadtimematrixheadingbutton"
@@ -1580,6 +1673,7 @@ const handleAddItemComment = async () => {
                           </th>
                           <th>Expected Departure</th>
                           <th>Expected Arrival</th>
+                          <th>Arrival Date</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -1738,6 +1832,29 @@ const handleAddItemComment = async () => {
                                 }
                               />
                             </td>
+
+                             <td>
+                              <input
+                                type="date"
+                                style={{
+                                  height: "30px",
+                                  borderRadius: "5px",
+                                  border: "1px solid #ccc",
+                                }}
+                                value={
+                                  item.arrivalDate?.slice(0, 10) || ""
+                                }
+                                min={new Date().toISOString().split("T")[0]}
+                                disabled={item.tbd || !isEditable}
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "arrivalDate",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </td>
                             <td>
                               <select
                                 value={item.status}
@@ -1847,14 +1964,30 @@ const handleAddItemComment = async () => {
               )}
               {activeTab === "punchlist" && (
                 <div className="project-info-card">
-                  <div style={{ textAlign: "right", marginBottom: "1rem" }}>
+                 
+                  <div style={{ textAlign: "right", marginBottom: "1rem" }} className="xyzxc">
+                      <button
+                        className="leadtimematrixheadingbutton"
+                        disabled={notifyCustomerLoading}
+                        onClick={() => handleToNotifyCustomerofPunchList()}
+                      >
+                        {notifyCustomerLoading ? (
+                          <>
+                            Notify customer <SpinnerLoader size={10} />
+                          </>
+                        ) : (
+                          "Notify customer"
+                        )}
+                      </button>
                     <button
                       className="ledbutton"
                       onClick={() => setShowPunchModal(true)}
                     >
                       + Add
                     </button>
+                    
                   </div>
+                  
                   {showPunchModal && (
                     <div className="modal-overlay1">
                       <div className="modal-content">
@@ -1902,6 +2035,7 @@ const handleAddItemComment = async () => {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageSelect}
                         />
                         {newIssue.productImages.length > 0 && (
@@ -1936,12 +2070,21 @@ const handleAddItemComment = async () => {
                             className="submit-btn"
                             onClick={async () => {
                               try {
+                                // Validation
+                                if (
+                                  !newIssue.projectItemId ||
+                                  !newIssue.title.trim() ||
+                                  !newIssue.issueDescription.trim()
+                                ) {
+                                  toast.error("All fields are required.");
+                                  return;
+                                }
+
                                 setPunchListLoading(true);
                                 const formData = new FormData();
                                 const stored = JSON.parse(
                                   localStorage.getItem("user")
                                 );
-
                                 const storedUser = stored?.user;
                                 const storedCustomer = JSON.parse(
                                   localStorage.getItem("customer")
@@ -2012,7 +2155,6 @@ const handleAddItemComment = async () => {
                                 );
                               } catch (err) {
                                 console.error("Failed to add issue", err);
-                                toast.error("Error adding issue");
                               } finally {
                                 setPunchListLoading(false);
                               }
@@ -2269,10 +2411,7 @@ const handleAddItemComment = async () => {
             className="whatsapp-comment-input"
             placeholder="Write your comment..."
           />
-          <button
-            onClick={ handleAddComment}
-            className="whatsapp-submit-btn"
-          >
+          <button onClick={handleAddComment} className="whatsapp-submit-btn">
             {<FaTelegramPlane />}
           </button>
         </div>

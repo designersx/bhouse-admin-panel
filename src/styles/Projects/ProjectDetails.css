@@ -62,6 +62,11 @@
   pointer-events: none;
   animation: project-tab-shine 2.5s infinite linear;
 }
+.xyzxc{
+  display: flex;
+  justify-content: right;
+  gap: 20px;
+}
 
 @keyframes project-tab-shine {
   from {
