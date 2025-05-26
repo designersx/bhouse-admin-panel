@@ -643,19 +643,12 @@ const ProjectDetails = () => {
         )
           ? fetchedProject.acknowledgements
           : JSON.parse(fetchedProject.acknowledgements || "[]");
-        fetchedProject.acknowledgements = Array.isArray(
-          fetchedProject.acknowledgements
-        )
-
-
-          ? fetchedProject.finalInvoice
-          : JSON.parse(fetchedProject.finalInvoice || "[]");
-            fetchedProject.finalInvoice = Array.isArray(
+       
+ fetchedProject.finalInvoice = Array.isArray(
           fetchedProject.finalInvoice
         )
           ? fetchedProject.finalInvoice
           : JSON.parse(fetchedProject.finalInvoice || "[]");
-           
          
           
           
@@ -1339,7 +1332,7 @@ const ProjectDetails = () => {
                               return files.length > 0 ? (
                                 <div className="uploaded-files">
                                   {files.map((filePath, idx) => {
-                                    const fileName = filePath.split("/").pop();
+                                    const fileName = filePath?.split("/").pop();
                                     const fileUrl = filePath.startsWith(
                                       "uploads"
                                     )
@@ -1671,7 +1664,7 @@ const ProjectDetails = () => {
                               TBD
                             </span>
                           </th>
-                          <th>Expected Departure</th>
+                          <th>Estimated Departurn</th>
                           <th>Expected Arrival</th>
                           <th>Arrival Date</th>
                           <th>Status</th>
@@ -1966,6 +1959,12 @@ const ProjectDetails = () => {
                 <div className="project-info-card">
                  
                   <div style={{ textAlign: "right", marginBottom: "1rem" }} className="xyzxc">
+                                             <p >
+            <b>Last Updated:{" "}</b>
+            {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
+              ? formatDate(project.lastNotificationSentAt)
+              : "Not Updated"}
+          </p>
                       <button
                         className="leadtimematrixheadingbutton"
                         disabled={notifyCustomerLoading}
