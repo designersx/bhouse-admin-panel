@@ -1152,8 +1152,8 @@ const ProjectDetails = () => {
                     </div>
 
                     <div className="info-group">
-                      <strong>Estimated Occupancy Date:</strong>{" "}
-                      {parseInt(project.estimatedCompletion)} Weeks
+                      <strong>Estimated Occupancy Date:</strong>
+                      {project.estimatedCompletion}
                     </div>
                     <div className="info-group">
                       <strong>Total Value:</strong> ${" "}
@@ -1685,7 +1685,7 @@ const ProjectDetails = () => {
                             !item.quantity ||
                             (!item.tbd &&
                               (!item.expectedDeliveryDate ||
-                                !item.expectedArrivalDate || !item.arrivalDate )) ||
+                                !item.expectedArrivalDate  )) ||
                                 
                             !item.status
                           ) {
