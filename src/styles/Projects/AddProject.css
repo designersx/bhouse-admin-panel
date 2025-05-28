@@ -79,6 +79,21 @@
   border-radius: 8px;
   background-color: #f9f9f9;
   margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+/* Thinner horizontal scrollbar */
+.form-card::-webkit-scrollbar {
+  height: 6px; /* For horizontal scrollbar */
+}
+
+.form-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.form-card::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 10px;
 }
 
 .form-card h3 {
