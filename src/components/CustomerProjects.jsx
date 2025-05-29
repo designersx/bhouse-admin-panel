@@ -56,8 +56,8 @@ function CustomerProjects({ customerId, customerName }) {
                 <strong>Description:</strong> {project.description}
               </p>
               <p className="project-info">
-                <strong>Estimated Completion:</strong>{" "}
-                {parseInt(project.estimatedCompletion)} Weeks
+                <strong>Estimated Completion:</strong>
+                {project.estimatedCompletion} 
               </p>
               <p className="project-info">
                 <strong>Total Value:</strong> ${project.totalValue}
