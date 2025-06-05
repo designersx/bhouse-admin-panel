@@ -1,7 +1,7 @@
 /* dashboard.css */
 
 .dashboard-container {
-  padding: 2rem;
+  padding: 2rem 1rem;
   background: #f4f7fa;
   color: #333;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -190,6 +190,7 @@
 }
 .chart-container1{
   display: flex;
+  flex-wrap: wrap;
   
 }
 .card-header{

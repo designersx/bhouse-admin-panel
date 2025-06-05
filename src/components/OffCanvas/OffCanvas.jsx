@@ -11,7 +11,9 @@ const Offcanvas = ({ isOpen, closeOffcanvas, children  , getLatestComment}) => {
               &times;
             </button>
            <LuRefreshCw onClick={getLatestComment} style={{cursor:"pointer"}}/>  
+            <hr className="CanvaHrLIne"></hr>
             <div className="offcanvas-body">{children}</div>
+          
           </div>
         </div>
       </div>

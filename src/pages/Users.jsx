@@ -169,7 +169,9 @@ const Users = () => {
             className="user-search-input"
           />
         </div>
+
         {isLoading ? <Loader /> :
+<div className="UserRolesMain">
           <table className="roles-table">
             <thead>
               <tr>
@@ -254,6 +256,7 @@ const Users = () => {
             </tbody>
 
           </table>
+          </div>
         }
         {totalPages > 1 && (
           <div className="pagination">

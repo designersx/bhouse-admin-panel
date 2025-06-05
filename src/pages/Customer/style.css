@@ -1,6 +1,6 @@
 /* Main container */
 .customer-form-container {
-    max-width: 70%;
+    /* max-width: 70%; */
     margin: 40px auto;
     background: #ffffff;
     padding: 25px;
@@ -77,14 +77,28 @@
 }
 
 /* Input Fields */
-.form-group  input {
-    width: 90%;
+.form-group input {
+    width: 95%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 16px;
     transition: border-color 0.3s ease-in-out;
 }
+
+.form-group input[type="checkbox"] {
+    width: unset;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+
+
+
+
 .full-width input {
     width: 95%;
     padding: 10px;
@@ -414,6 +428,7 @@ justify-content: center;
   width: 95%;
   margin: auto;
   font-family: "Montserrat", sans-serif;
+      margin: 0 0 20px auto;
 }
 
 .tabs-header {
@@ -453,4 +468,19 @@ justify-content: center;
   padding: 20px;
   font-size: 16px;
   color: #333;
+}
+
+
+@media(max-width:900px){
+  .customer-form  {
+display: unset;
+  }
+
+  .customer-form .form-group {
+    margin: 0 0 20px 0;
+}
+
+.customer-form .checkbox-group {
+     margin: 20px 0;
+}
 }

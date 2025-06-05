@@ -220,6 +220,7 @@ const Customer = () => {
 
         {/* 📌 Customers Table */}
         {loader ? <Loader /> :
+        <div className="rolesTableM">
           <table className="roles-table">
             <thead>
               <tr className="bg-gray-100">
@@ -306,6 +307,7 @@ const Customer = () => {
             </tbody>
 
           </table>
+          </div>
         }
 
         {/* 🔄 Pagination */}

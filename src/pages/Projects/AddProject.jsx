@@ -1187,28 +1187,18 @@ if (!isLeadMatrixValid()) {
                       </div>
 
                       {/* ✅ TBD Checkbox */}
-                      <div className="form-group1">
+                      <div className="form-group2">
                       <label>
   <span
     title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-    style={{
-      cursor: "pointer",  
-    }}
-  >
+    style={{cursor: "pointer", }}>
     TBD
   </span>
 </label>
 
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={item.tbd || false}
+                          style={{display: "flex", alignItems: "center",  gap: "10px",}}>
+                          <input  type="checkbox" checked={item.tbd || false}
                             onChange={(e) => {
                               const checked = e.target.checked;
                               handleItemChange(index, "tbd", checked);

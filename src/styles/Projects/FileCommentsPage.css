@@ -157,13 +157,23 @@
   display: flex;
   flex-direction: column;
   padding: 20px;
-  max-width: 700px;
+  /* max-width: 700px; */
   margin: 0 auto;
-  background-color: #f9f9f9;
+  /* background-color: #f9f9f9; */
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
   overflow-y: scroll;
   min-height: 500px;
+  /* height: 100dvh; */
+}
+
+
+.CanvaHrLIne{
+  position: relative;
+  top: 15px;
+  background-color: #cecece;
+  height: 1px;
+  border: none;
 }
 .right-panel::-webkit-scrollbar {
   width: 5px; /* Scroll bar width ko patla karne ke liye */
@@ -264,12 +274,17 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 10px;
+  position: absolute;
+  bottom: 10px;
+  width: 94%;
+  gap: 10px;
+  height: 62px;
 }
 
 .whatsapp-comment-input {
   width: 80%;
-  padding: 15px;
-  border-radius: 25px;
+  padding: 10px 10px;
+  border-radius: 5px;
   border: 1px solid #ddd;
   font-size: 15px;
   background-color: #f4f4f4;

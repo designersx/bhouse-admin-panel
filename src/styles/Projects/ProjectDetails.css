@@ -21,9 +21,9 @@
 /* ---------- Tabs ---------- */
 .project-details-page .tabs {
   display: flex;
-  justify-content: center;
   gap: 16px;
   margin: 30px 0;
+      padding: 0 20px;
   flex-wrap: wrap;
 }
 
@@ -98,7 +98,7 @@
 .project-details-page .project-info-card {
     background-color: #ffffff;
     /* padding: 24px; */
-    overflow-x: auto; /* or scroll */
+    /* overflow-x: auto;  */
     border-radius: 14px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 
@@ -136,6 +136,14 @@
   font-size: 1rem;
   color: #2f3640;
   line-height: 1.6;
+}
+
+.matrixTableMain{
+  overflow: auto;
+}
+
+.matrixTableMain button{
+margin: 3px;
 }
 
 .project-details-page .info-group strong {
@@ -697,6 +705,8 @@
 .leadtimematrixheading {
   display: flex;
   justify-content: space-between;
+  gap: 15px;
+  align-items: center;
 }
 
 .leadtimematrixheadingbutton {
