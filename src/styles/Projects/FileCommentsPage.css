@@ -248,7 +248,7 @@
   word-wrap: break-word;
   font-size: 15px;
   line-height: 1.5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Styling for sent comments */
