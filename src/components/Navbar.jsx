@@ -142,6 +142,7 @@ const Navbar = ({ isLogin }) => {
           closeOffcanvas={handleCloseOffcanvas}
           getLatestComment={fetchNotification}
         >
+          <div className="notificationTop">
           {notification.length > 0 ? notification
             .filter(msg => msg.user_id === loggedInUserId && msg.role === "user")
             .map(msg => (
@@ -155,6 +156,7 @@ const Navbar = ({ isLogin }) => {
                 </div>
               </div>
             )) : "No data"}
+            </div>
         </Offcanvas>
       )}
 

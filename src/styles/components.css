@@ -1,13 +1,14 @@
 /* SIDEBAR */
 .sidebar {
-    width: 16%;
+
+    width:calc(20% - 40px);
     height: 98vh;
     background-color: #004680;
     color: white;
     position: fixed;
     left: 0;
     top: 0;
-    padding: 20px;
+    padding: 20px 20px;
     display: flex;
     flex-direction: column;
     transition: transform 0.3s ease;
@@ -56,9 +57,13 @@
   }
   
   /* ICON SIZE */
-  .sidebar ul li a svg {
-    font-size: 20px;
-  }
+
+    .sidebar ul li a svg {
+    /* font-size: 20px; */
+    min-width: 24px;
+    min-height: 24px;
+}
+  
   
   /* NAVBAR */
   /* styles/components.css */
@@ -106,6 +111,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    padding: 0 40px 0 0;
 }
 
 /* Style for logout button */
@@ -187,4 +193,15 @@ body {
   }
   .notification-card {
     transition: background-color 0.3s ease, opacity 0.3s ease;
+  }
+
+
+  @media(max-width:1024px){
+
+.sidebar ul li a {
+     gap: 6px;
+    padding: 9px 6px;
+    font-size: 14px;
+ }
+
   }

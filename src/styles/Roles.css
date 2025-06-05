@@ -5,8 +5,8 @@
 }
 
 .roles-container {
-  max-width: 1100px;
-  margin: 25px auto;
+  /* max-width: 1100px; */
+  margin: 85px auto 0;
   padding: 20px;
   background: #fff;
   border-radius: 8px;
@@ -52,12 +52,16 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  overflow: auto;
 }
+
+
 
 .roles-table th, .roles-table td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: left;
+      white-space: nowrap;
 }
 
 .roles-table th {
@@ -135,4 +139,8 @@
 .icon-btn:disabled {
   color: #cccccc;
   cursor: not-allowed;
+}
+
+.rolesTableM{
+  overflow: auto;
 }

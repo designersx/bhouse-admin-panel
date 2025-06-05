@@ -1648,6 +1648,7 @@ const ProjectDetails = () => {
                       </button>
                     ) : null}
                   </div>
+                  <div className="matrixTableMain">
                   <table className="matrix-table">
                     {items.length > 0 ? (
                       <thead>
@@ -1951,6 +1952,7 @@ const ProjectDetails = () => {
                       })}
                     </tbody>
                   </table>
+                  </div>
                   <div
                     className="button1"
                     style={{ display: "flex", justifyContent: "space-between" }}
