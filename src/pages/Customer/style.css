@@ -484,3 +484,9 @@ display: unset;
      margin: 20px 0;
 }
 }
+
+
+.dummyPushVK{
+  display: block;
+  display: none;
+}
