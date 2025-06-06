@@ -52,7 +52,9 @@ const ProjectDetails = () => {
   const [docsData, setDocsData] = useState({});
   const [commentLoading, setCommentLoading] = useState(false);
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
+   const [currentDocType, setCurrentDocType] = useState('');
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState(
     () => localStorage.getItem("activeTab") || "overview"
   );
@@ -89,7 +91,8 @@ const ProjectDetails = () => {
     // "Final Invoice": "Final Invoice",
     // "Sales Agreement": "Sales Agreement",
   };
-  const normalize = (str) => str.trim().toLowerCase();
+ const normalize = (str) => str.trim().toLowerCase().replace(/\s+/g, '');
+
   const [data, setData] = useState();
   const fetchDocuments = async () => {
     try {
@@ -108,6 +111,18 @@ const ProjectDetails = () => {
       console.error("Failed to fetch documents", error);
     }
   };
+
+
+    const fetchDocs = async () => {
+ 
+    try {
+      const res = await axios.get(`${url}/customerDoc/document/${projectId}`);
+      setDocsData(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch documents:', err);
+    }
+  };
+  
   const [unreadCounts, setUnreadCounts] = useState({});
   const fetchUnreadCountsForAllDocs = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -145,6 +160,56 @@ const ProjectDetails = () => {
   useEffect(() => {
     fetchUnreadCountsForAllDocs();
   }, [data]);
+
+
+const [fileupload , setFileUpload] = useState(false);
+  const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file || !currentDocType) return;
+
+  setLoading(true);
+
+
+  const existingDoc = Object.keys(docsData).some(
+    (docType) => normalize(docType) === normalize(currentDocType)
+  );
+
+  const endpoint = existingDoc ? 'update' : 'add';
+  const method = existingDoc ? 'put' : 'post';
+
+  const formData = new FormData();
+  formData.append('documentType', currentDocType);
+  formData.append('document', file);
+  formData.append('projectId', projectId);
+
+  try {
+    const config = {
+      method,
+      url: `${url}/customerDoc/${endpoint}`,
+      data: formData,
+    };
+
+    const res = await axios(config);
+    if (res) {
+      setFileUpload(true);
+      // fetchDocs(); 
+    }
+  
+  } catch (err) {
+    console.error('Upload/Update failed:', err);
+  } finally {
+    setLoading(false);
+     setFileUpload(false);
+    setCurrentDocType('');
+  }
+};
+
+
+useEffect(()=>{
+fetchDocs()
+fetchDocuments()
+} , [fileupload , currentDocType]);
+
 
   const openPunchComment = async (punchId) => {
     try {
@@ -275,6 +340,14 @@ const ProjectDetails = () => {
       setCommentLoading(false);
     }
   };
+
+const handleUploadClick = (docType) => {
+  setCurrentDocType(docType);
+  if (fileInputRef.current) {
+    fileInputRef.current.click();
+  }
+};
+
   const formatDate = (date) => {
     const d = new Date(date);
   
@@ -926,6 +999,25 @@ const ProjectDetails = () => {
     }
   };
 
+ const handleCustomerFileDelete = async (docType) => {
+  try {
+    const res = await axios.delete(`${url}/customerDoc/delete`, {
+      data: {
+        documentType: docType,
+        projectId: projectId
+      }
+    });
+
+    if (res?.status === 200 || res?.status === 204) {
+      fetchDocs(); // refresh view
+      Swal.fire("Deleted!", "File has been removed.", "success");
+    }
+  } catch (err) {
+    console.error("Delete failed:", err);
+    Swal.fire("Error", "File deletion failed. Try again.", "error");
+  }
+};
+
   const toggleEditRow = (index) => {
     setEditableRows((prev) => ({
       ...prev,
@@ -1130,7 +1222,12 @@ const ProjectDetails = () => {
                   ) : null;
                 }
               )}
-            </div>
+            </div><input
+  type="file"
+  ref={fileInputRef}
+  onChange={handleFileChange}
+  style={{ display: "none" }}
+/>
             {/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
@@ -1476,86 +1573,150 @@ const ProjectDetails = () => {
                         ))}
                       </div>
                     )}
-                    {activeTabing === "Customer" && (
-                      <div className="tab-panel">
-                        <h2>Uploaded Documents</h2>
+                  
 
-                        {Object.keys(docMap).map((key, idx) => {
-                          const normalizedKey = normalize(key);
-                          const fileEntry = Object.entries(docsData).find(
-                            ([docType]) => normalize(docType) === normalizedKey
-                          );
-                          const filePath = fileEntry?.[1];
-                          const fileName = filePath?.split("/").pop();
-                          const fileUrl = filePath?.startsWith("uploads")
-                            ? `${url2}/${filePath}`
-                            : filePath;
-                          const matchedDoc = dataDoc?.find(
-                            (doc) =>
-                              normalize(doc.documentType) === normalizedKey
-                          );
-                          const documentId = matchedDoc?.id;
-                          return (
-                            <div key={idx} className="doc-view-section">
-                              <h4>{docMap[key].toUpperCase()}</h4>
-                              {filePath ? (
-                                <div className="file-item-enhanced">
-                                  <span className="file-name-enhanced">
-                                    {fileName}
-                                  </span>
-                                  <button
-                                    className="file-action-btn eye"
-                                    onClick={() =>
-                                      window.open(`${fileUrl}`, "_blank")
-                                    }
-                                    title="View"
-                                  >
-                                    <FaEye />
-                                  </button>
-                                  <div
-                                    onClick={() =>
-                                      markReadCustomerDocComment(documentId)
-                                    }
-                                  >
-                                    <button
-                                      className="file-action-btn"
-                                      onClick={() =>
-                                        navigate(
-                                          `/customerDoc/comment/${fileEntry[0]}/${documentId}`,
-                                          {
-                                            state: {
-                                              data: dataDoc,
-                                              fileName: fileEntry[0],
-                                              filePath: filePath,
-                                            },
-                                          }
-                                        )
-                                      }
-                                      title="View"
-                                    >
-                                      <FaComment />
-                                    </button>
+           {activeTabing === "Customer" && (
+  <div className="tab-panel">
+    <h2>Uploaded Documents</h2>
 
-                                    {unreadCounts[documentId] > 0 && (
-                                      <span
-                                        style={{
-                                          color: "red",
-                                          fontWeight: "bold",
-                                        }}
-                                      >
-                                        ({unreadCounts[documentId]})
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <p>No document uploaded.</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+    {Object.keys(docMap).map((key, idx) => {
+      const normalizedKey = normalize(key);
+      const fileEntry = Object.entries(docsData).find(
+        ([docType]) => normalize(docType) === normalizedKey
+      );
+      const filePath = fileEntry?.[1];
+      const fileName = filePath?.split("/").pop();
+      const fileUrl = filePath?.startsWith("uploads")
+        ? `${url2}/${filePath}`
+        : filePath;
+
+      const matchedDoc = dataDoc?.find(
+        (doc) => normalize(doc.documentType) === normalizedKey
+      );
+      const documentId = matchedDoc?.id;
+      const docType = fileEntry?.[0] || key;
+
+      return (
+        <div key={idx} className="doc-view-section">
+          <h4>{docMap[key].toUpperCase()}</h4>
+
+
+
+{filePath ? (
+  <div className="file-item-enhanced">
+    <div>
+      <span className="file-name-enhanced">{fileName}</span>
+    </div>
+
+    <div className="uploaded-icon">
+     
+      <button
+        className="file-action-btn eye"
+        onClick={() => window.open(fileUrl, "_blank")}
+        title="View"
+      >
+        <FaEye />
+      </button>
+
+  
+      <button
+        className="file-action-btn"
+        title="Download"
+        onClick={async () => {
+          try {
+            const response = await fetch(fileUrl);
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+          } catch (error) {
+            console.error("Download failed", error);
+            alert("Download failed, please try again.");
+          }
+        }}
+      >
+        <FaDownload />
+      </button>
+
+     
+      <button
+        className="file-action-btn"
+        title="Delete"
+        onClick={() => {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to delete this document?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              await handleCustomerFileDelete( docType); 
+            }
+          });
+        }}
+      >
+        <MdDelete />
+      </button>
+
+     
+      {matchedDoc && (
+        <div onClick={() => markReadCustomerDocComment(documentId)}>
+          <button
+            className="file-action-btn"
+            onClick={() =>
+              navigate(`/customerDoc/comment/${docType}/${documentId}`, {
+                state: {
+                  data: dataDoc,
+                  fileName: docType,
+                  filePath,
+                },
+              })
+            }
+            title="Comment"
+          >
+            <FaComment />
+          </button>
+
+          {unreadCounts[documentId] > 0 && (
+            <span style={{ color: "red", fontWeight: "bold" }}>
+              ({unreadCounts[documentId]})
+            </span>
+          )}
+        </div>
+      )}
+
+      
+      {/* <button onClick={() => handleUploadClick(docType)}>
+        {matchedDoc || filePath ? "Update" : "Upload"}
+      </button> */}
+    </div>
+  </div>
+) : (
+
+  <><p>No document uploaded.</p>
+  
+   <div style={{ marginTop: "8px" }}>
+    <button onClick={() => handleUploadClick(docType)}>
+      {filePath ? "Update" : "Upload"}
+    </button>
+  </div></>
+)}
+
+
+        
+        </div>
+      );
+    })}
+  </div>
+)}
+
                   </div>
                 </div>
               )}
@@ -1701,7 +1862,7 @@ const ProjectDetails = () => {
                             addNewItemToBackend(item, index);
                           }
 
-                          // ✅ After saving, disable the row
+                         
                           setEditableRows((prev) => ({
                             ...prev,
                             [index]: false,

@@ -2,9 +2,9 @@
 .project-details-page .project-details-header {
   text-align: center;
 }
-.eye{
-  margin-left: 600px;
-}
+
+
+
 .project-details-page .project-details-header h1 {
   font-size: 3rem;
   font-weight: bold;
@@ -25,6 +25,7 @@
   margin: 30px 0;
       padding: 0 20px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .project-details-page .tab {
@@ -256,7 +257,8 @@ margin: 3px;
 .project-details-page .file-name-enhanced {
   font-size: 14px;
   color: #444;
-  word-break: break-word;
+ 
+  white-space: nowrap;
 }
 
 .project-details-page .file-actions {
@@ -725,4 +727,10 @@ margin: 3px;
 .leadtimematrixheadingbutton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+
+.uploaded-icon{
+  display: flex;
+  gap:10px
 }
