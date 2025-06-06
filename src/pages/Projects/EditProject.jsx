@@ -16,6 +16,8 @@ const EditProject = () => {
   const [usersByRole, setUsersByRole] = useState({});
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [clicked, setClicked] = useState(false);
+  console.log({clicked})
   const [formData, setFormData] = useState({
     name: "",
     type: "Corporate Office",
@@ -53,6 +55,9 @@ const EditProject = () => {
     totalValue: "",
   });
   const [notifyClient, setNotifyClient] = useState(false);
+
+
+
 
   // Prefill when formData loads from DB
   useEffect(() => {
@@ -273,43 +278,63 @@ const EditProject = () => {
         return { ...prev, assignedTeamRoles: updated };
       });
     } else {
-      try {
-        const res = await axios.get(
-          `${url}/auth/users-by-role/${encodeURIComponent(role)}`
-        );
-        const users = res.data?.users || [];
+  try {
+    const res = await axios.get(
+      `${url}/auth/users-by-role/${encodeURIComponent(role)}`
+    );
+    let users = res.data?.users || [];
 
-        if (users.length === 0) {
-          Swal.fire({
-            icon: "warning",
-            title: "No Users Found",
-            text: `There are no users available for the role "${role}".`,
-          });
-          return; // Stop here, don't assign role
-        }
+    // Inject Mercedes user statically for Account Manager
+    if (role === "Account Manager") {
+      setClicked(true)
+      const mercedesUser = {
+        id: 143,
+        firstName: "Mercedes",
+        lastName: "",
+      };
 
-        // Add role
-        setSelectedRoles((prev) => [...prev, role]);
-        setUsersByRole((prev) => ({ ...prev, [role]: users }));
-        setFormData((prev) => ({
-          ...prev,
-          assignedTeamRoles: {
-            ...prev.assignedTeamRoles,
-            [role]: [],
-          },
-        }));
-      } catch (err) {
-        console.error(`Failed to fetch users for role: ${role}`, err);
-        Swal.fire({
-          icon: "error",
-          title: "Fetch Error",
-          text: `Unable to get users for role "${role}"`,
-        });
-      }
+      // Prevent duplicates
+      const userExists = users.find((u) => u.id === mercedesUser.id);
+      if (!userExists) users.push(mercedesUser);
     }
+
+    if (users.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Users Found",
+        text: `There are no users available for the role "${role}".`,
+      });
+      return;
+    }
+
+    setSelectedRoles((prev) => [...prev, role]);
+    setUsersByRole((prev) => ({ ...prev, [role]: users }));
+
+    // Pre-check Mercedes if 143 already exists in assignedTeamRoles
+    const preAssigned = formData.assignedTeamRoles[role] || [];
+    const alreadyHasMercedes = preAssigned.includes(143);
+
+    setFormData((prev) => ({
+      ...prev,
+      assignedTeamRoles: {
+        ...prev.assignedTeamRoles,
+        [role]: alreadyHasMercedes ? preAssigned : [],
+      },
+    }));
+  } catch (err) {
+    console.error(`Failed to fetch users for role: ${role}`, err);
+    Swal.fire({
+      icon: "error",
+      title: "Fetch Error",
+      text: `Unable to get users for role "${role}"`,
+    });
+  }
+}
+
   };
 
   const handleUserCheckbox = (role, userId, checked) => {
+    setClicked(true)  
     const prevSelected = formData.assignedTeamRoles[role] || [];
     const updatedUsers = checked
       ? [...prevSelected, userId]
@@ -499,10 +524,58 @@ const EditProject = () => {
       toast.error(`Error ${error}`);
       return;
     }
+    localStorage.setItem("projectFormData", nextStep);
     setStep(step + 1);
+    if(step!==2){
+      setClicked(false)
+    }
+    setClicked(true)
   };
 
   const prevStep = () => setStep(step - 1);
+const projectFormData=localStorage.getItem("projectFormData");
+
+useEffect(() => {
+  // Always add "Account Manager" to selectedRoles
+  setSelectedRoles((prev) =>
+    prev.includes("Account Manager") ? prev : [...prev, "Account Manager"]
+  );
+  // setClicked(true)
+
+  // Always add Mercedes to usersByRole["Account Manager"]
+  setUsersByRole((prev) => {
+    const existingUsers = prev["Account Manager"] || [];
+    const alreadyPresent = existingUsers.some((u) => u.id === 143);
+
+    if (!alreadyPresent) {
+      return {
+        ...prev,
+        "Account Manager": [
+          ...existingUsers,
+          { id: 143, firstName: "Mercedes", lastName: "" },
+        ],
+      };
+    }
+    return prev;
+  });
+
+  // ✅ Automatically check Mercedes (id 143) only if she's in the assignedTeamRoles
+  const amUsers = formData.assignedTeamRoles?.["Account Manager"] || [];
+  if (amUsers.includes(143)) {
+    // Already checked – do nothing
+    return;
+  }
+
+  // Optional: You can auto-check Mercedes the first time
+  // setFormData((prev) => ({
+  //   ...prev,
+  //   assignedTeamRoles: {
+  //     ...prev.assignedTeamRoles,
+  //     "Account Manager": [...amUsers, 143],
+  //   },
+  // }));
+}, [projectFormData , clicked]);
+
 
   return (
     <Layout>
@@ -654,15 +727,28 @@ const EditProject = () => {
                       name="totalValue"
                       value={formData.totalValue}
                       // onChange={handleChange}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value.length <= 8 && /^\d*$/.test(value)) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            totalValue: value,
-                          }));
-                        }
-                      }}
+                      // onChange={(e) => {
+                      //   const value = e.target.value;
+                      //   if (value.length <= 8 && /^\d*$/.test(value)) {
+                      //     setFormData((prev) => ({
+                      //       ...prev,
+                      //       totalValue: value,
+                      //     }));
+                      //   }
+                      // }}
+                          onChange={(e) => {
+    const value = e.target.value;
+
+  
+    const regex = /^\d*\.?\d{0,2}$/;
+
+    if (value.length <= 8 && regex.test(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        totalValue: value,
+      }));
+    }
+  }}
                       required
                       placeholder="Enter total value"
                     />
@@ -732,19 +818,21 @@ const EditProject = () => {
                           {usersByRole[role].map((user) => (
                             <label key={user.id} className="user-checkbox-pill">
                               <input
-                                type="checkbox"
-                                checked={(
-                                  formData.assignedTeamRoles[role] || []
-                                ).includes(user.id)}
-                                onChange={(e) =>
-                                  handleUserCheckbox(
-                                    role,
-                                    user.id,
-                                    e.target.checked
-                                  )
-                                }
-                              />
-                              {user.firstName} {user.lastName}
+  type="checkbox"
+  checked={(
+    formData.assignedTeamRoles[role] || []
+  ).includes(user.id)}
+  onChange={(e) =>
+    handleUserCheckbox(
+      role,
+      user.id,
+      e.target.checked
+    
+    )
+  }
+/>
+
+                              {user.firstName} {user.lastName}                           
                             </label>
                           ))}
                         </div>

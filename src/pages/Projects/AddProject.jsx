@@ -221,65 +221,144 @@ const AddProject = () => {
     fetchCustomers();
   }, []);
 
+  // const handleRoleToggle = async (role) => {
+  //   if (selectedRoles.includes(role)) {
+  //     setSelectedRoles((prev) => prev.filter((r) => r !== role));
+  //     setRoleUsers((prev) => {
+  //       const updated = { ...prev };
+  //       delete updated[role];
+  //       return updated;
+  //     });
+  //     setFormData((prev) => {
+  //       const updated = { ...prev.assignedTeamRoles };
+  //       delete updated[role];
+  //       return { ...prev, assignedTeamRoles: updated };
+  //     });
+  //   } else {
+  //     try {
+  //       const encodedRole = encodeURIComponent(role);
+  //       const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
+  //       const data = await res.json();
+  //       const users = data.users || [];
+
+  //       if (users.length === 0) {
+  //         toast.error(`No users found in the role "${role}"`);
+  //         return;
+  //       }
+
+  //       setSelectedRoles((prev) => [...prev, role]);
+  //       setRoleUsers((prev) => ({ ...prev, [role]: users }));
+
+  //       const loggedInUser = JSON.parse(localStorage.getItem("user"));
+  //       const loggedInUserId = loggedInUser?.user?.id;
+  //       const loggedInUserRole = loggedInUser?.user?.userRole;
+
+  //       let defaultUserIds = [];
+
+  //       if (
+  //         loggedInUserRole === "Account Manager" &&
+  //         users.some((user) => user.id === loggedInUserId)
+  //       ) {
+  //         defaultUserIds = [loggedInUserId];
+  //       } else {
+  //         const defaultUsers = users.filter(
+  //           (user) => user.permissionLevel === 2
+  //         );
+  //         defaultUserIds = defaultUsers.map((user) => user.id);
+  //       }
+
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         assignedTeamRoles: {
+  //           ...prev.assignedTeamRoles,
+  //           [role]: defaultUserIds,
+  //         },
+  //       }));
+  //     } catch (err) {
+  //       console.error(`Error fetching users for role ${role}`, err);
+  //       toast.error("Please try again later.");
+  //     }
+  //   }
+  // };
+
   const handleRoleToggle = async (role) => {
-    if (selectedRoles.includes(role)) {
-      setSelectedRoles((prev) => prev.filter((r) => r !== role));
-      setRoleUsers((prev) => {
-        const updated = { ...prev };
-        delete updated[role];
-        return updated;
-      });
-      setFormData((prev) => {
-        const updated = { ...prev.assignedTeamRoles };
-        delete updated[role];
-        return { ...prev, assignedTeamRoles: updated };
-      });
-    } else {
-      try {
-        const encodedRole = encodeURIComponent(role);
-        const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
-        const data = await res.json();
-        const users = data.users || [];
+  if (selectedRoles.includes(role)) {
+    // Remove role and cleanup
+    setSelectedRoles((prev) => prev.filter((r) => r !== role));
+    setRoleUsers((prev) => {
+      const updated = { ...prev };
+      delete updated[role];
+      return updated;
+    });
+    setFormData((prev) => {
+      const updated = { ...prev.assignedTeamRoles };
+      delete updated[role];
+      return { ...prev, assignedTeamRoles: updated };
+    });
+  } else {
+    try {
+      const encodedRole = encodeURIComponent(role);
+      const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
+      const data = await res.json();
+      let users = data.users || [];
 
-        if (users.length === 0) {
-          toast.error(`No users found in the role "${role}"`);
-          return;
+      // Add static Admin user if role is Account Manager
+      if (role === "Account Manager") {
+        const adminUser = { id: 143, firstName: "Admin", email: "mfernandez-edge@bhouse.design", isStatic: true };
+        const adminExists = users.some((user) => user.id === 143);
+        if (!adminExists) {
+          users = [...users, adminUser];
         }
-
-        setSelectedRoles((prev) => [...prev, role]);
-        setRoleUsers((prev) => ({ ...prev, [role]: users }));
-
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
-        const loggedInUserId = loggedInUser?.user?.id;
-        const loggedInUserRole = loggedInUser?.user?.userRole;
-
-        let defaultUserIds = [];
-
-        if (
-          loggedInUserRole === "Account Manager" &&
-          users.some((user) => user.id === loggedInUserId)
-        ) {
-          defaultUserIds = [loggedInUserId];
-        } else {
-          const defaultUsers = users.filter(
-            (user) => user.permissionLevel === 2
-          );
-          defaultUserIds = defaultUsers.map((user) => user.id);
-        }
-
-        setFormData((prev) => ({
-          ...prev,
-          assignedTeamRoles: {
-            ...prev.assignedTeamRoles,
-            [role]: defaultUserIds,
-          },
-        }));
-      } catch (err) {
-        console.error(`Error fetching users for role ${role}`, err);
-        toast.error("Please try again later.");
       }
+
+      if (users.length === 0) {
+        toast.error(`No users found in the role "${role}"`);
+        return;
+      }
+
+      setSelectedRoles((prev) => [...prev, role]);
+      setRoleUsers((prev) => ({ ...prev, [role]: users }));
+
+      const loggedInUser = JSON.parse(localStorage.getItem("user"));
+      const loggedInUserId = loggedInUser?.user?.id;
+      const loggedInUserRole = loggedInUser?.user?.userRole;
+
+      let defaultUserIds = [];
+
+      if (
+        loggedInUserRole === "Account Manager" &&
+        users.some((user) => user.id === loggedInUserId)
+      ) {
+        defaultUserIds = [loggedInUserId];
+      } else {
+        const defaultUsers = users.filter(
+          (user) => user.permissionLevel === 2
+        );
+        defaultUserIds = defaultUsers.map((user) => user.id);
+      }
+
+      // 🔐 Always include Admin (id 143) if role is Account Manager
+      if (role === "Account Manager" && !defaultUserIds.includes(143)) {
+        defaultUserIds.push(143);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        assignedTeamRoles: {
+          ...prev.assignedTeamRoles,
+          [role]: defaultUserIds,
+        },
+      }));
+    } catch (err) {
+      console.error(`Error fetching users for role ${role}`, err);
+      toast.error("Please try again later.");
     }
-  };
+  }
+};
+
+
+
+
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -325,8 +404,7 @@ const isLeadMatrixValid = () => {
         !item.quantity?.trim() ||
         !item.expectedDeliveryDate ||
         !item.expectedArrivalDate ||
-        !item.status ||
-        !item.arrivalDate
+        !item.status 
       ) {
         return false;
       }
@@ -347,6 +425,12 @@ const isLeadMatrixValid = () => {
     e.preventDefault();
 
     const formDataToSend = new FormData();
+      if (selectedRoles.includes("Account Manager")) {
+    const currentAM = formData.assignedTeamRoles["Account Manager"] || [];
+    if (!currentAM.includes(143)) {
+      formData.assignedTeamRoles["Account Manager"] = [...currentAM, 143];
+    }
+  }
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
       ([role, users]) => ({
         role,
@@ -489,6 +573,7 @@ if (!isLeadMatrixValid()) {
       return { ...prev, [field]: updatedFiles };
     });
   };
+
 
   return (
     <Layout>
@@ -651,19 +736,35 @@ if (!isLeadMatrixValid()) {
                     </label>
 
                     <input
-                      type="number"
+                      type="text"
                       name="totalValue"
                       value={formData.totalValue}
                       // onChange={handleChange}
+                      // onChange={(e) => {
+                      //   const value = e.target.value;
+                      //   if (value.length <= 8 && /^\d*$/.test(value)) {
+                      //     setFormData((prev) => ({
+                      //       ...prev,
+                      //       totalValue: value,
+                      //     }));
+                      //   }
+                      // }}
+
+
+
                       onChange={(e) => {
-                        const value = e.target.value;
-                        if (value.length <= 8 && /^\d*$/.test(value)) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            totalValue: value,
-                          }));
-                        }
-                      }}
+    const value = e.target.value;
+
+  
+    const regex = /^\d*\.?\d{0,2}$/;
+
+    if (value.length <= 8 && regex.test(value)) {
+      setFormData((prev) => ({
+        ...prev,
+        totalValue: value,
+      }));
+    }
+  }}
                       maxLength={8}
                       required
                       placeholder="Enter total value"
@@ -707,41 +808,35 @@ if (!isLeadMatrixValid()) {
 
                           {selectedRoles.includes(role) && roleUsers[role] && (
                             <div className="role-users">
-                              {roleUsers[role].map((user) => {
-                                const isChecked = (
-                                  formData.assignedTeamRoles[role] || []
-                                ).includes(user.id);
-                                return (
-                                  <label
-                                    key={user.id}
-                                    className="user-checkbox-pill"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={(e) => {
-                                        const prevSelected =
-                                          formData.assignedTeamRoles[role] ||
-                                          [];
-                                        const updatedUsers = e.target.checked
-                                          ? [...prevSelected, user.id]
-                                          : prevSelected.filter(
-                                            (id) => id !== user.id
-                                          );
+     {roleUsers[role]?.map((user) => {
+  const isChecked = (formData.assignedTeamRoles[role] || []).includes(user.id);
 
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          assignedTeamRoles: {
-                                            ...prev.assignedTeamRoles,
-                                            [role]: updatedUsers,
-                                          },
-                                        }));
-                                      }}
-                                    />
-                                    {user.firstName} {user.email}
-                                  </label>
-                                );
-                              })}
+  return (
+    <label key={user.id} className="user-checkbox-pill">
+     <input
+  type="checkbox"
+  checked={isChecked}
+  onChange={(e) => {
+    const prevSelected = formData.assignedTeamRoles[role] || [];
+    const updatedUsers = e.target.checked
+      ? [...prevSelected, user.id]
+      : prevSelected.filter((id) => id !== user.id);
+
+    setFormData((prev) => ({
+      ...prev,
+      assignedTeamRoles: {
+        ...prev.assignedTeamRoles,
+        [role]: updatedUsers,
+      },
+    }));
+  }}
+/>
+  {user.firstName} {user.email}
+    </label>
+  );
+})}
+
+                            
                               {role === "Account Manager" &&
                                 (!formData.assignedTeamRoles[
                                   "Account Manager"
