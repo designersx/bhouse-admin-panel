@@ -349,20 +349,28 @@ const EditProject = () => {
     }));
   };
 
-  const handleFileChange = (category, e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-  
-    setFiles((prev) => ({
-      ...prev,
-      [category]: [file], 
-    }));
-  
-    setFormData((prev) => ({
-      ...prev,
-      [category]: [],
-    }));
-  };
+const handleFileChange = (category, e) => {
+  const selectedFiles = Array.from(e.target.files);
+  if (selectedFiles.length === 0) return;
+
+  setFiles((prev) => ({
+    ...prev,
+    [category]: [...(prev[category] || []), ...selectedFiles],
+  }));
+
+  // Optionally clear uploaded URLs if you're re-uploading
+  setFormData((prev) => ({
+    ...prev,
+    [category]: prev[category] || [],
+  }));
+};
+const handleRemoveNewFile = (category, file) => {
+  setFiles((prev) => ({
+    ...prev,
+    [category]: prev[category].filter((f) => f.name !== file.name),
+  }));
+};
+
   
   const handleRemoveExistingFile = (category, url) => {
     setRemovedFiles((prev) => [...prev, url]);
@@ -847,7 +855,7 @@ useEffect(() => {
                     <label>Detailed Proposal </label>
                     <input
                       type="file"
-                   
+                    multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("proposals", e)}
                     />
@@ -893,7 +901,7 @@ useEffect(() => {
                     <label>Pro Forma Invoice</label>
                     <input
                       type="file"
-   
+   multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("floorPlans", e)}
                     />
@@ -941,7 +949,7 @@ useEffect(() => {
                     <label>Final Invoice</label>
                     <input
                       type="file"
-   
+   multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("finalInvoice", e)}
                     />
@@ -992,7 +1000,7 @@ useEffect(() => {
                     <label>Product Maintenance</label>
                     <input
                       type="file"
-            
+           multiple 
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("otherDocuments", e)}
                     />
@@ -1045,7 +1053,7 @@ useEffect(() => {
                     <input
                       type="file"
                       name="presentation"
-              
+              multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("presentation", e)}
                     />
@@ -1098,7 +1106,7 @@ useEffect(() => {
                     <input
                       type="file"
                       name="cad"
-        
+        multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("cad", e)}
                     />
@@ -1143,7 +1151,7 @@ useEffect(() => {
                     <input
                       type="file"
                       name="salesAggrement"
-         
+         multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("salesAggrement", e)}
                     />
@@ -1198,7 +1206,7 @@ useEffect(() => {
 
                     <input
                       type="file"
-          
+          multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("acknowledgements", e)}
                     />
@@ -1253,7 +1261,7 @@ useEffect(() => {
 
                     <input
                       type="file"
-      
+      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("receivingReports", e)}
                     />

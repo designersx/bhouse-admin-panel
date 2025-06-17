@@ -870,17 +870,26 @@ const handleUploadClick = (docType) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
     setMatrix((prev) => prev.filter((_, i) => i !== index));
   };
+
+
+  // const handleFileUpload = (e, category) => {
+  //   const files = Array.from(e.target.files);
+  
+  //   setSelectedFiles((prev) => ({
+  //     ...prev,
+  //     [category]: files,
+  //   }));
+  // };
+
+
+
   const handleFileUpload = (e, category) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 1) {
-      toast.error("Only one file can be uploaded per category.");
-      return;
-    }
-    setSelectedFiles((prev) => ({
-      ...prev,
-      [category]: files,
-    }));
-  };
+  const files = Array.from(e.target.files);
+  setSelectedFiles((prev) => ({
+    ...prev,
+    [category]: [...(prev[category] || []), ...files],
+  }));
+};
 
   const removeSelectedFile = (category, index) => {
     setSelectedFiles((prev) => ({
@@ -1370,15 +1379,17 @@ const handleUploadClick = (docType) => {
                             {rolePermissions?.ProjectDocument?.add ? (
                               <input
                                 type="file"
-                                disabled={
-                                  selectedFiles[docCategory.category]?.length >
-                                    0 ||
-                                  (Array.isArray(
-                                    project[docCategory.category]
-                                  ) &&
-                                    project[docCategory.category].length > 0)
-                                }
-                               
+                                // disabled={
+                                //   selectedFiles[docCategory.category]?.length >
+                                //     0 ||
+                                //   (Array.isArray(
+                                //     project[docCategory.category]
+                                //   ) &&
+                                //     project[docCategory.category].length > 0)
+                                // }
+
+                                disabled={false}
+                               multiple
                                 onChange={(e) =>
                                   handleFileUpload(e, docCategory.category)
                                 }
@@ -1723,7 +1734,7 @@ const handleUploadClick = (docType) => {
               {activeTab === "team" && (
                 <div className="project-info-card">
                   <h2>Assigned Team</h2>
-                  {project.assignedTeamRoles.length > 0 ? (
+                 {Array.isArray(project.assignedTeamRoles) && project.assignedTeamRoles.length > 0 ? (
                     <div className="team-grid">
                       {project.assignedTeamRoles.map((roleGroup, index) => (
                         <div key={index} className="role-card">

@@ -557,23 +557,28 @@ if (!isLeadMatrixValid()) {
       setIsLoading(false);
     }
   };
-  const handleFileInputChange = (e, fieldName) => {
-    const file = e.target.files[0];
+const handleFileInputChange = (e, fieldName) => {
+  const files = Array.from(e.target.files);
+  const existingFiles = formData[fieldName] || [];
 
-    if (!file) return;
+  // Max 3 files
+  const totalFiles = [...existingFiles, ...files].slice(0, 3);
 
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: [file],
-    }));
-  };
-  const handleRemoveFile = (field, index) => {
-    setFormData((prev) => {
-      const updatedFiles = prev[field]?.filter((_, idx) => idx !== index) || [];
-      return { ...prev, [field]: updatedFiles };
-    });
-  };
+  setFormData((prevData) => ({
+    ...prevData,
+    [fieldName]: totalFiles,
+  }));
 
+  // Clear input to allow re-uploading the same file if needed
+  e.target.value = '';
+};
+
+ const handleRemoveFile = (field, index) => {
+  setFormData((prev) => ({
+    ...prev,
+    [field]: prev[field].filter((_, i) => i !== index),
+  }));
+};
 
   return (
     <Layout>
@@ -860,33 +865,40 @@ if (!isLeadMatrixValid()) {
                     <label>Detailed Proposal</label>
                     <input
                       type="file"
+                      multiple
                       name="proposals"
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "proposals")}
-                      disabled={!!formData.proposals?.length}
+                      disabled={formData.proposals?.length>=3}
                     />
 
-                    {formData.proposals && formData.proposals.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.proposals.map((file, idx) => (
-                          <li key={idx}>
-                            <a
-                              href={URL.createObjectURL(file)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {file.name}
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile("proposals", idx)}
-                            >
-                              &times;
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                   {formData.proposals && formData.proposals.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.proposals.map((file, idx) => (
+      <li key={idx}>
+        {file instanceof File || file instanceof Blob ? (
+          <a
+            href={URL.createObjectURL(file)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {file.name}
+          </a>
+        ) : (
+          <span>Invalid file</span>
+        )}
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("proposals", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
+
+                   
                   </div>
 
 
@@ -907,9 +919,10 @@ if (!isLeadMatrixValid()) {
                     <input
                       type="file"
                       name="finalInvoice"
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "finalInvoice")}
-                      disabled={!!formData.finalInvoice?.length}
+                      disabled={formData.finalInvoice?.length>=3}
                     />
 
                     {formData.finalInvoice && formData.finalInvoice.length > 0 && (
@@ -946,9 +959,10 @@ if (!isLeadMatrixValid()) {
                     <input
                       type="file"
                       name="floorPlans"
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "floorPlans")}
-                      disabled={!!formData.floorPlans?.length}
+                      disabled={formData.floorPlans?.length>=3}
                     />
 
                     {formData.floorPlans && formData.floorPlans.length > 0 && (
@@ -981,41 +995,31 @@ if (!isLeadMatrixValid()) {
                     <input
                       type="file"
                       name="otherDocuments"
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "otherDocuments")
                       }
-                      disabled={!!formData.otherDocuments?.length}
+                      disabled={formData.otherDocuments?.length>=3}
                     />
+{formData.otherDocuments?.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.otherDocuments.map((file, idx) => (
+      <li key={idx}>
+        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+          {file.name}
+        </a>
+        <button
+          type="button"
+          onClick={() => handleRemoveFile("otherDocuments", idx)}
+        >
+          &times;
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
 
-                    {formData.otherDocuments?.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.otherDocuments &&
-                          formData.otherDocuments.length > 0 && (
-                            <ul className="file-preview-list">
-                              {formData.otherDocuments.map((file, idx) => (
-                                <li key={idx}>
-                                  <a
-                                    href={URL.createObjectURL(file)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    {file.name}
-                                  </a>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleRemoveFile("otherDocuments", idx)
-                                    }
-                                  >
-                                    &times;
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                      </ul>
-                    )}
                   </div>
                   <div className="form-group">
                     <label>Acknowledgements</label>
@@ -1023,10 +1027,11 @@ if (!isLeadMatrixValid()) {
                       type="file"
                       name="acknowledgements"
                       accept=".jpg,.jpeg,.png,.pdf"
+                      multiple
                       onChange={(e) =>
                         handleFileInputChange(e, "acknowledgements")
                       }
-                      disabled={!!formData.acknowledgements?.length}
+                      disabled={formData.acknowledgements?.length>=3}
                     />
 
                     {formData.acknowledgements &&
@@ -1060,10 +1065,11 @@ if (!isLeadMatrixValid()) {
                       type="file"
                       name="receivingReports"
                       accept=".jpg,.jpeg,.png,.pdf"
+                      multiple
                       onChange={(e) =>
                         handleFileInputChange(e, "receivingReports")
                       }
-                      disabled={!!formData.receivingReports?.length}
+                      disabled={formData.receivingReports?.length>=3}
                     />
 
                     {formData.receivingReports &&
@@ -1098,8 +1104,9 @@ if (!isLeadMatrixValid()) {
                       type="file"
                       name="presentation"
                       accept=".jpg,.jpeg,.png,.pdf"
+                      multiple
                       onChange={(e) => handleFileInputChange(e, "presentation")}
-                      disabled={!!formData.presentation?.length}
+                      disabled={formData.presentation?.length>=3}
                     />
 
                     {formData.presentation &&
@@ -1132,6 +1139,8 @@ if (!isLeadMatrixValid()) {
                     <input
                       type="file"
                       name="cad"
+                      multiple
+                      
                       accept=".pdf"
                       onChange={(e) => handleFileInputChange(e, "cad")}
                     />
@@ -1162,8 +1171,9 @@ if (!isLeadMatrixValid()) {
                     <label>Sales Aggrement</label>
                     <input
                       type="file"
+                      multiple
                       name="salesAggrement"
-                      disabled={!!formData.salesAggrement?.length}
+                      disabled={formData.salesAggrement?.length>=3}
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "salesAggrement")
