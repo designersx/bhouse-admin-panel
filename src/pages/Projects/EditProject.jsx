@@ -353,17 +353,25 @@ const handleFileChange = (category, e) => {
   const selectedFiles = Array.from(e.target.files);
   if (selectedFiles.length === 0) return;
 
+  // 1. Keep your original raw file storage logic
   setFiles((prev) => ({
     ...prev,
     [category]: [...(prev[category] || []), ...selectedFiles],
   }));
 
-  // Optionally clear uploaded URLs if you're re-uploading
+  // 2. Enhance formData to include previewable entries (without removing existing ones)
+  const previewFiles = selectedFiles.map(file => ({
+    name: file.name,
+    url: URL.createObjectURL(file),
+    file, // keeping the File instance if needed later
+  }));
+
   setFormData((prev) => ({
     ...prev,
-    [category]: prev[category] || [],
+    [category]: [...(prev[category] || []), ...previewFiles],
   }));
 };
+
 const handleRemoveNewFile = (category, file) => {
   setFiles((prev) => ({
     ...prev,
@@ -859,41 +867,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("proposals", e)}
                     />
-                    {formData.proposals && formData.proposals.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.proposals.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
+                   {formData.proposals && formData.proposals.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.proposals.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("proposals", url)
-                                }
-                              >
-                                X
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("proposals", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
 
                   {/* Floor Plans & CAD Files */}
@@ -905,41 +911,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("floorPlans", e)}
                     />
-                    {formData.floorPlans && formData.floorPlans.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.floorPlans.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
+               {formData.floorPlans && formData.floorPlans.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.floorPlans.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("floorPlans", url)
-                                }
-                              >
-                                X
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("floorPlans", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
 
 
@@ -954,40 +958,38 @@ useEffect(() => {
                       onChange={(e) => handleFileChange("finalInvoice", e)}
                     />
                     {formData.finalInvoice && formData.finalInvoice.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.finalInvoice.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
+  <ul className="file-preview-list">
+    {formData.finalInvoice.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("finalInvoice", url)
-                                }
-                              >
-                                X
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("finalInvoice", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
 
 {/*  */}
@@ -1004,49 +1006,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("otherDocuments", e)}
                     />
-                    {formData.otherDocuments &&
-                      formData.otherDocuments.length > 0 && (
-                        <ul className="file-preview-list">
-                          {formData.otherDocuments.map((url, idx) => {
-                            const fileName = url.split("/").pop();
-                            const fileExt = fileName.split(".").pop();
-                            const fileUrl = url.startsWith("uploads")
-                              ? `${url2}/${url}`
-                              : url;
+                 {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.otherDocuments.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                            return (
-                              <li key={idx}>
-                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                  <img
-                                    src={fileUrl}
-                                    alt={fileName}
-                                    width="100"
-                                  />
-                                ) : (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {fileName}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingFile(
-                                      "otherDocuments",
-                                      url
-                                    )
-                                  }
-                                >
-                                  X
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("otherDocuments", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
                   <div className="form-group">
                     <label>Options Presentation</label>
@@ -1057,49 +1049,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("presentation", e)}
                     />
-                    {formData.presentation &&
-                      formData.presentation.length > 0 && (
-                        <ul className="file-preview-list">
-                          {formData.presentation.map((url, idx) => {
-                            const fileName = url.split("/").pop();
-                            const fileExt = fileName.split(".").pop();
-                            const fileUrl = url.startsWith("uploads")
-                              ? `${url2}/${url}`
-                              : url;
+                 {formData.presentation && formData.presentation.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.presentation.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                            return (
-                              <li key={idx}>
-                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                  <img
-                                    src={fileUrl}
-                                    alt={fileName}
-                                    width="100"
-                                  />
-                                ) : (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {fileName}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingFile(
-                                      "presentation",
-                                      url
-                                    )
-                                  }
-                                >
-                                  X
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("presentation", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
                   <div className="form-group">
                     <label>CAD Files</label>
@@ -1110,41 +1092,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("cad", e)}
                     />
-                    {formData.cad && formData.cad.length > 0 && (
-                      <ul className="file-preview-list">
-                        {formData.cad.map((url, idx) => {
-                          const fileName = url.split("/").pop();
-                          const fileExt = fileName.split(".").pop();
-                          const fileUrl = url.startsWith("uploads")
-                            ? `${url2}/${url}`
-                            : url;
+                 {formData.cad && formData.cad.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.cad.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                          return (
-                            <li key={idx}>
-                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                <img src={fileUrl} alt={fileName} width="100" />
-                              ) : (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {fileName}
-                                </a>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveExistingFile("cad", url)
-                                }
-                              >
-                                X
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("cad", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
                   <div className="form-group">
                     <label>Sales Aggrement</label>
@@ -1155,49 +1135,39 @@ useEffect(() => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("salesAggrement", e)}
                     />
-                    {formData.salesAggrement &&
-                      formData.salesAggrement.length > 0 && (
-                        <ul className="file-preview-list">
-                          {formData.salesAggrement.map((url, idx) => {
-                            const fileName = url.split("/").pop();
-                            const fileExt = fileName.split(".").pop();
-                            const fileUrl = url.startsWith("uploads")
-                              ? `${url2}/${url}`
-                              : url;
+               {formData.salesAggrement && formData.salesAggrement.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.salesAggrement.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                            return (
-                              <li key={idx}>
-                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                  <img
-                                    src={fileUrl}
-                                    alt={fileName}
-                                    width="100"
-                                  />
-                                ) : (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {fileName}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingFile(
-                                      "salesAggrement",
-                                      url
-                                    )
-                                  }
-                                >
-                                  X
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("salesAggrement", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
                 </div>
                 <div className="form-group-row">
@@ -1211,49 +1181,38 @@ useEffect(() => {
                       onChange={(e) => handleFileChange("acknowledgements", e)}
                     />
 
-                    {formData.acknowledgements &&
-                      formData.acknowledgements.length > 0 && (
-                        <ul className="file-preview-list">
-                          {formData.acknowledgements.map((url, idx) => {
-                            const fileName = url.split("/").pop();
-                            const fileExt = fileName.split(".").pop();
-                            const fileUrl = url.startsWith("uploads")
-                              ? `${url2}/${url}`
-                              : url;
+                    {formData.acknowledgements && formData.acknowledgements.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.acknowledgements.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                            return (
-                              <li key={idx}>
-                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                  <img
-                                    src={fileUrl}
-                                    alt={fileName}
-                                    width="100"
-                                  />
-                                ) : (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {fileName}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingFile(
-                                      "acknowledgements",
-                                      url
-                                    )
-                                  }
-                                >
-                                  X
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("acknowledgements", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
                   </div>
 
                   <div className="form-group">
@@ -1266,49 +1225,39 @@ useEffect(() => {
                       onChange={(e) => handleFileChange("receivingReports", e)}
                     />
 
-                    {formData.receivingReports &&
-                      formData.receivingReports.length > 0 && (
-                        <ul className="file-preview-list">
-                          {formData.receivingReports.map((url, idx) => {
-                            const fileName = url.split("/").pop();
-                            const fileExt = fileName.split(".").pop();
-                            const fileUrl = url.startsWith("uploads")
-                              ? `${url2}/${url}`
-                              : url;
+              {formData.receivingReports && formData.receivingReports.length > 0 && (
+  <ul className="file-preview-list">
+    {formData.receivingReports.map((item, idx) => {
+      const isString = typeof item === "string";
+      const fileUrl = isString
+        ? item.startsWith("uploads") ? `${url2}/${item}` : item
+        : item.url;
+      const fileName = isString ? item.split("/").pop() : item.name;
+      const fileExt = fileName.split(".").pop().toLowerCase();
 
-                            return (
-                              <li key={idx}>
-                                {["jpg", "jpeg", "png"].includes(fileExt) ? (
-                                  <img
-                                    src={fileUrl}
-                                    alt={fileName}
-                                    width="100"
-                                  />
-                                ) : (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    {fileName}
-                                  </a>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingFile(
-                                      "receivingReports",
-                                      url
-                                    )
-                                  }
-                                >
-                                  X
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+      return (
+        <li key={idx}>
+          {["jpg", "jpeg", "png"].includes(fileExt) ? (
+            <img src={fileUrl} alt={fileName} width="100" />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noreferrer">
+              {fileName}
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              handleRemoveExistingFile("receivingReports", item)
+            }
+          >
+            X
+          </button>
+        </li>
+      );
+    })}
+  </ul>
+)}
+
                   </div>
                 </div>
                 <br />

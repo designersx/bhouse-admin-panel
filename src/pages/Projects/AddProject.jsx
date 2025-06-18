@@ -221,65 +221,7 @@ const AddProject = () => {
     fetchCustomers();
   }, []);
 
-  // const handleRoleToggle = async (role) => {
-  //   if (selectedRoles.includes(role)) {
-  //     setSelectedRoles((prev) => prev.filter((r) => r !== role));
-  //     setRoleUsers((prev) => {
-  //       const updated = { ...prev };
-  //       delete updated[role];
-  //       return updated;
-  //     });
-  //     setFormData((prev) => {
-  //       const updated = { ...prev.assignedTeamRoles };
-  //       delete updated[role];
-  //       return { ...prev, assignedTeamRoles: updated };
-  //     });
-  //   } else {
-  //     try {
-  //       const encodedRole = encodeURIComponent(role);
-  //       const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
-  //       const data = await res.json();
-  //       const users = data.users || [];
 
-  //       if (users.length === 0) {
-  //         toast.error(`No users found in the role "${role}"`);
-  //         return;
-  //       }
-
-  //       setSelectedRoles((prev) => [...prev, role]);
-  //       setRoleUsers((prev) => ({ ...prev, [role]: users }));
-
-  //       const loggedInUser = JSON.parse(localStorage.getItem("user"));
-  //       const loggedInUserId = loggedInUser?.user?.id;
-  //       const loggedInUserRole = loggedInUser?.user?.userRole;
-
-  //       let defaultUserIds = [];
-
-  //       if (
-  //         loggedInUserRole === "Account Manager" &&
-  //         users.some((user) => user.id === loggedInUserId)
-  //       ) {
-  //         defaultUserIds = [loggedInUserId];
-  //       } else {
-  //         const defaultUsers = users.filter(
-  //           (user) => user.permissionLevel === 2
-  //         );
-  //         defaultUserIds = defaultUsers.map((user) => user.id);
-  //       }
-
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         assignedTeamRoles: {
-  //           ...prev.assignedTeamRoles,
-  //           [role]: defaultUserIds,
-  //         },
-  //       }));
-  //     } catch (err) {
-  //       console.error(`Error fetching users for role ${role}`, err);
-  //       toast.error("Please try again later.");
-  //     }
-  //   }
-  // };
 
   const handleRoleToggle = async (role) => {
   if (selectedRoles.includes(role)) {
