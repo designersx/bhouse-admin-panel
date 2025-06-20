@@ -365,7 +365,17 @@ const Projects = () => {
                           )}
                         </td>
 
-                        <td>{getAssignedUserNames(project.assignedTeamRoles)}</td>
+<td
+  title={getAssignedUserNames(project.assignedTeamRoles)} // Tooltip with full text
+  style={{
+    maxWidth: '250px', // Adjust width to limit text length
+    whiteSpace: 'nowrap', // Prevent text wrapping
+    overflow: 'hidden',  // Hide overflow text
+    textOverflow: 'ellipsis', // Show ellipsis when text overflows
+  }}
+>
+  {getAssignedUserNames(project.assignedTeamRoles)}
+</td>
                         <td>{project.type}</td>
                         <td className='estimate'>{project.estimatedCompletion}</td>
 
