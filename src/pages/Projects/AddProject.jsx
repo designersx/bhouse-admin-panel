@@ -340,25 +340,11 @@ const isLeadMatrixValid = () => {
   for (let index = 1; index < leadTimeMatrix.length; index++) {
     const item = leadTimeMatrix[index];
 
-    if (!item.tbd) {
-      if (
-        !item.itemName?.trim() ||
-        !item.quantity?.trim() ||
-        !item.expectedDeliveryDate ||
-        !item.expectedArrivalDate ||
-        !item.status 
-      ) {
+    if (!item.itemName) {
+     
         return false;
-      }
-    } else {
-      if (
-        !item.itemName?.trim() ||
-        !item.quantity?.trim() ||
-        !item.status
-      ) {
-        return false;
-      }
-    }
+      
+    } 
   }
   return true;
 };

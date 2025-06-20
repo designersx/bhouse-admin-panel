@@ -550,8 +550,8 @@ const handleUploadClick = (docType) => {
       {
         itemName: "",
         quantity: "",
-        expectedDeliveryDate: "",
-        expectedArrivalDate: "",
+        expectedDeliveryDate: null , 
+        expectedArrivalDate: null,
         status: "Pending",
         projectId,
         arrivalDate : null
