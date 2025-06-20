@@ -1272,7 +1272,7 @@ const handleFileInputChange = (e, fieldName) => {
                           className="user-search-input1"
                           type="date"
                           value={item.expectedDeliveryDate}
-                          min={new Date().toISOString().split("T")[0]}
+                        
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(
@@ -1290,10 +1290,7 @@ const handleFileInputChange = (e, fieldName) => {
                           className="user-search-input1"
                           type="date"
                           value={item.expectedArrivalDate}
-                          min={
-                            item.expectedDeliveryDate ||
-                            new Date().toISOString().split("T")[0]
-                          }
+                         
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(
@@ -1312,10 +1309,7 @@ const handleFileInputChange = (e, fieldName) => {
                           className="user-search-input1"
                           type="date"
                           value={item.arrivalDate}
-                          min={
-                            item.expectedDeliveryDate ||
-                            new Date().toISOString().split("T")[0]
-                          }
+                        
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(

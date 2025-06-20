@@ -1854,16 +1854,10 @@ const handleUploadClick = (docType) => {
                           console.log(buttonClicked, "button clic");
 
                           if (
-                            !item.itemName ||
-                            !item.quantity ||
-                            (!item.tbd &&
-                              (!item.expectedDeliveryDate ||
-                                !item.expectedArrivalDate  )) ||
-                                
-                            !item.status
+                            !item.itemName 
                           ) {
                             return toast.error(
-                              "All required fields must be filled."
+                              "Manufacturer Name is required."
                             );
                           }
 
@@ -1970,7 +1964,7 @@ const handleUploadClick = (docType) => {
                                 value={
                                   item.expectedDeliveryDate?.slice(0, 10) || ""
                                 }
-                                min={new Date().toISOString().split("T")[0]}
+                                
                                 disabled={item.tbd || !isEditable}
                                 onChange={(e) =>
                                   handleItemChange(
@@ -1993,7 +1987,7 @@ const handleUploadClick = (docType) => {
                                 value={
                                   item.expectedArrivalDate?.slice(0, 10) || ""
                                 }
-                                min={new Date().toISOString().split("T")[0]}
+                              
                                 disabled={item.tbd || !isEditable}
                                 onChange={(e) =>
                                   handleItemChange(
@@ -2016,7 +2010,7 @@ const handleUploadClick = (docType) => {
                                 value={
                                   item.arrivalDate?.slice(0, 10) || ""
                                 }
-                                min={new Date().toISOString().split("T")[0]}
+                               
                                 disabled={item.tbd || !isEditable}
                                 onChange={(e) =>
                                   handleItemChange(
