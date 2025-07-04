@@ -114,4 +114,30 @@
     color: #555;
     padding: 2rem 0;
   }
+
+  @media(max-width:1400px){
+    .request-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+  }
+
+
+  @media(max-width:1200px){
+    .request-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+  }
+
+
+    @media(max-width:991px){
+    .request-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    gap: 1.5rem;
+}
+  }
   
