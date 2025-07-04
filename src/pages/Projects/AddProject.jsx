@@ -653,15 +653,23 @@ const handleFileInputChange = (e, fieldName) => {
                   <div className="form-group">
                     <label>Advance Payment</label>
 
-                    <input
-                      type="number"
-                      name="advancePayment"
-                      value={formData.advancePayment}
-                      onChange={handleChange}
-                      maxLength={8}
-                      required
-                      placeholder="Enter Advance Amount"
-                    />
+  <input
+  type="text"
+  name="advancePayment"
+  value={formData.advancePayment}
+  onChange={handleChange}
+  inputMode="decimal"
+  maxLength={8}
+  required
+  placeholder="Enter Advance Amount"
+  onInput={(e) => {
+    const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (!regex.test(value)) {
+      e.target.value = formData.advancePayment; // reset to previous valid value
+    }
+  }}
+/>
                   </div>
                   <div className="form-group">
                     <label>
