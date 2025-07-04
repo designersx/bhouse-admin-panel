@@ -1289,13 +1289,13 @@ const handleUploadClick = (docType) => {
                     <h2>Point of Contact</h2>
                     <div className="info-group">
                       <strong>Name:</strong>{" "}
-                      {project.pocName   || "N/A"}
+                      {project.pocName === "null"  ?  "N/A" : project.pocName || "NA" }
                     </div>
                     <div className="info-group">
-                      <strong>Email:</strong> {project.pocEmail || "N/A"}
+                      <strong>Email:</strong>  {project.pocEmail === "null"  ?  "N/A" : project.pocEmail || "NA" } 
                     </div>
                      <div className="info-group">
-                      <strong> Phone</strong> {project.pocNumber || "N/A"}
+                      <strong> Phone</strong> {project.pocNumber === "null"  ?  "N/A" : project.pocNumber || "NA" }   
                     </div>
                     </div>
                 </div>

@@ -59,7 +59,12 @@ const Users = () => {
       else if (loggedInUser?.user.userRole === "Admin") {
         setUsers(data.filter(user => user.id !== loggedInUser?.user.id && user?.userRole !== "Super Admin"));
 
-      } else {
+      }
+       else if (loggedInUser?.user.userRole === "Operations") {
+        setUsers(data.filter(user => user.id !== loggedInUser?.user.id && user?.userRole !== "Super Admin" && user?.userRole !== "Admin" && user?.userRole !== "Account Manager" ));
+
+      }
+      else {
         // Filter users based on the logged-in user's role level
         const loggedInUserRoleLevel = roleLevels[loggedInUser?.user.userRole];
 
