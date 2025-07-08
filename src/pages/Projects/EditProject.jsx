@@ -726,12 +726,19 @@ useEffect(() => {
                       Advance Payment
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="advancePayment"
                       value={formData.advancePayment}
                       onChange={handleChange}
                       required
                       placeholder="Enter total value"
+                       onInput={(e) => {
+     const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (!regex.test(value)) {
+      e.target.value = formData.advancePayment; // reset to previous valid value
+    }
+  }}
                     />
                   </div>
                   <div className="form-group">
@@ -739,34 +746,27 @@ useEffect(() => {
                       Total Value <span className="required-star">*</span>
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="totalValue"
                       value={formData.totalValue}
-                      // onChange={handleChange}
-                      // onChange={(e) => {
-                      //   const value = e.target.value;
-                      //   if (value.length <= 8 && /^\d*$/.test(value)) {
-                      //     setFormData((prev) => ({
-                      //       ...prev,
-                      //       totalValue: value,
-                      //     }));
-                      //   }
-                      // }}
-                          onChange={(e) => {
-    const value = e.target.value;
-
-  
-    const regex = /^\d*\.?\d{0,2}$/;
-
-    if (value.length <= 8 && regex.test(value)) {
-      setFormData((prev) => ({
-        ...prev,
-        totalValue: value,
-      }));
-    }
-  }}
+                   onChange={(e) => {    const value = e.target.value;
+                  const regex = /^\d*\.?\d{0,2}$/;
+                     if (value.length <= 8 && regex.test(value)) {
+                       setFormData((prev) => ({
+                       ...prev,
+                      totalValue: value,
+                             }));
+                          }
+                             }}
                       required
                       placeholder="Enter total value"
+                       onInput={(e) => {
+    const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (!regex.test(value)) {
+      e.target.value = formData.totalValue; // reset to previous valid value
+    }
+  }}
                     />
                   </div>
                 </div>
