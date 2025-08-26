@@ -14,27 +14,31 @@ const AddProject = () => {
     const savedStep = localStorage.getItem("addProjectStep");
     return savedStep ? Number(savedStep) : 1;
   });
+  const normalizeArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
 
-  let [clientId, setClientId] = useState();
   const [formData, setFormData] = useState(() => {
-    const savedData = localStorage.getItem("addProjectFormData");
-    return savedData
-      ? JSON.parse(savedData)
-      : {
-        name: "",
-        type: "Corporate Office",
-        clientName: "",
-        description: "",
-        startDate: "",
-        estimatedCompletion: "",
-        totalValue: "",
-        advancePayment: "",
-        deliveryAddress: "",
-        deliveryHours: "",
-        assignedTeamRoles: {},
-        clientId: "",
-      };
+    const saved = localStorage.getItem("addProjectFormData");
+    const initial = saved ? JSON.parse(saved) : {
+      name: "",
+      type: "Corporate Office",
+      clientName: [],
+      description: "",
+      startDate: "",
+      estimatedCompletion: "",
+      totalValue: "",
+      advancePayment: "",
+      deliveryAddress: "",
+      deliveryHours: "",
+      assignedTeamRoles: {},
+      clientId: [],
+    };
+    return {
+      ...initial,
+      clientName: normalizeArray(initial.clientName),
+      clientId: normalizeArray(initial.clientId),
+    };
   });
+
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
@@ -52,7 +56,7 @@ const AddProject = () => {
           expectedDeliveryDate: "",
           expectedArrivalDate: "",
           status: "Pending",
-          arrivalDate : ""
+          arrivalDate: ""
         },
       ];
   });
@@ -87,43 +91,56 @@ const AddProject = () => {
 
   const validateStep1 = () => {
     const {
-      name,
-      type,
-      clientName,
-      estimatedCompletion,
-      totalValue,
-      advancePayment,
+      name, type, clientId, clientName, estimatedCompletion,
+      totalValue, advancePayment,
     } = formData;
 
-    const today = new Date().toISOString().split("T")[0];
-
     if (!name.trim()) return "Project Name is required.";
-    if (!/[a-zA-Z]/.test(name))
-      return "Project Name must include at least one alphabet character.";
+    if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
-    if (!clientName) return "Customer selection is required.";
+
+    if (!Array.isArray(clientId) || clientId.length === 0)
+      return "Customer selection is required.";
+    if (clientName.length !== clientId.length)
+      return "Selected client names and ids do not match.";
 
     if (!estimatedCompletion) return "Estimated Occupancy Date is required.";
-    // if (estimatedCompletion < today)
-
-    //   return "Estimated Occupancy Date cannot be in the past.";
-
-    if (!totalValue || totalValue <= 0)
-      return "Total Value must be a positive number.";
-    if (
-      advancePayment !== undefined &&
-      advancePayment !== null &&
-      advancePayment !== "" &&
-      advancePayment <= 0
-    ) {
+    if (!totalValue || totalValue <= 0) return "Total Value must be a positive number.";
+    if (advancePayment !== undefined && advancePayment !== null && advancePayment !== "" && advancePayment <= 0)
       return "Advance Payment must be a positive number.";
-    }
-
-    if (parseFloat(advancePayment) > parseFloat(totalValue)) {
+    if (parseFloat(advancePayment) > parseFloat(totalValue))
       return "Advance Payment cannot be more than Total Value.";
-    }
-
     return null;
+  };
+
+  const handleAddCustomer = (e) => {
+    const idStr = e.target.value;
+    if (!idStr) return;
+    const selected = customers.find(c => String(c.id) === idStr);
+    if (!selected) return;
+
+    setFormData(prev => {
+      const ids = Array.isArray(prev.clientId) ? prev.clientId : [];
+      const names = Array.isArray(prev.clientName) ? prev.clientName : [];
+      if (ids.includes(selected.id)) return prev;
+
+      return {
+        ...prev,
+        clientId: [...ids, selected.id],
+        clientName: [...names, selected.full_name],
+        deliveryAddress: prev.deliveryAddress || selected.delivery_address || "",
+      };
+    });
+    e.target.value = "";
+  };
+
+  const removeCustomer = (idToRemove) => {
+    setFormData(prev => {
+      const idx = (prev.clientId || []).indexOf(idToRemove);
+      const newIds = (prev.clientId || []).filter(id => id !== idToRemove);
+      const newNames = (prev.clientName || []).filter((_, i) => i !== idx);
+      return { ...prev, clientId: newIds, clientName: newNames };
+    });
   };
 
   const validateStep2 = () => {
@@ -195,7 +212,7 @@ const AddProject = () => {
         expectedDeliveryDate: null,
         expectedArrivalDate: null,
         status: "Pending",
-        arrivalDate : null
+        arrivalDate: null
       },
     ]);
   };
@@ -224,79 +241,79 @@ const AddProject = () => {
 
 
   const handleRoleToggle = async (role) => {
-  if (selectedRoles.includes(role)) {
-    // Remove role and cleanup
-    setSelectedRoles((prev) => prev.filter((r) => r !== role));
-    setRoleUsers((prev) => {
-      const updated = { ...prev };
-      delete updated[role];
-      return updated;
-    });
-    setFormData((prev) => {
-      const updated = { ...prev.assignedTeamRoles };
-      delete updated[role];
-      return { ...prev, assignedTeamRoles: updated };
-    });
-  } else {
-    try {
-      const encodedRole = encodeURIComponent(role);
-      const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
-      const data = await res.json();
-      let users = data.users || [];
+    if (selectedRoles.includes(role)) {
+      // Remove role and cleanup
+      setSelectedRoles((prev) => prev.filter((r) => r !== role));
+      setRoleUsers((prev) => {
+        const updated = { ...prev };
+        delete updated[role];
+        return updated;
+      });
+      setFormData((prev) => {
+        const updated = { ...prev.assignedTeamRoles };
+        delete updated[role];
+        return { ...prev, assignedTeamRoles: updated };
+      });
+    } else {
+      try {
+        const encodedRole = encodeURIComponent(role);
+        const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
+        const data = await res.json();
+        let users = data.users || [];
 
-      // Add static Admin user if role is Account Manager
-      if (role === "Account Manager") {
-        const adminUser = { id: 143, firstName: "Admin", email: "mfernandez-edge@bhouse.design", isStatic: true };
-        const adminExists = users.some((user) => user.id === 143);
-        if (!adminExists) {
-          users = [...users, adminUser];
+        // Add static Admin user if role is Account Manager
+        if (role === "Account Manager") {
+          const adminUser = { id: 143, firstName: "Admin", email: "mfernandez-edge@bhouse.design", isStatic: true };
+          const adminExists = users.some((user) => user.id === 143);
+          if (!adminExists) {
+            users = [...users, adminUser];
+          }
         }
+
+        if (users.length === 0) {
+          toast.error(`No users found in the role "${role}"`);
+          return;
+        }
+
+        setSelectedRoles((prev) => [...prev, role]);
+        setRoleUsers((prev) => ({ ...prev, [role]: users }));
+
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        const loggedInUserId = loggedInUser?.user?.id;
+        const loggedInUserRole = loggedInUser?.user?.userRole;
+
+        let defaultUserIds = [];
+
+        if (
+          loggedInUserRole === "Account Manager" &&
+          users.some((user) => user.id === loggedInUserId)
+        ) {
+          defaultUserIds = [loggedInUserId];
+        } else {
+          const defaultUsers = users.filter(
+            (user) => user.permissionLevel === 2
+          );
+          defaultUserIds = defaultUsers.map((user) => user.id);
+        }
+
+        // 🔐 Always include Admin (id 143) if role is Account Manager
+        if (role === "Account Manager" && !defaultUserIds.includes(143)) {
+          defaultUserIds.push(143);
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          assignedTeamRoles: {
+            ...prev.assignedTeamRoles,
+            [role]: defaultUserIds,
+          },
+        }));
+      } catch (err) {
+        console.error(`Error fetching users for role ${role}`, err);
+        toast.error("Please try again later.");
       }
-
-      if (users.length === 0) {
-        toast.error(`No users found in the role "${role}"`);
-        return;
-      }
-
-      setSelectedRoles((prev) => [...prev, role]);
-      setRoleUsers((prev) => ({ ...prev, [role]: users }));
-
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const loggedInUserId = loggedInUser?.user?.id;
-      const loggedInUserRole = loggedInUser?.user?.userRole;
-
-      let defaultUserIds = [];
-
-      if (
-        loggedInUserRole === "Account Manager" &&
-        users.some((user) => user.id === loggedInUserId)
-      ) {
-        defaultUserIds = [loggedInUserId];
-      } else {
-        const defaultUsers = users.filter(
-          (user) => user.permissionLevel === 2
-        );
-        defaultUserIds = defaultUsers.map((user) => user.id);
-      }
-
-      // 🔐 Always include Admin (id 143) if role is Account Manager
-      if (role === "Account Manager" && !defaultUserIds.includes(143)) {
-        defaultUserIds.push(143);
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        assignedTeamRoles: {
-          ...prev.assignedTeamRoles,
-          [role]: defaultUserIds,
-        },
-      }));
-    } catch (err) {
-      console.error(`Error fetching users for role ${role}`, err);
-      toast.error("Please try again later.");
     }
-  }
-};
+  };
 
 
 
@@ -336,29 +353,29 @@ const AddProject = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const isLeadMatrixValid = () => {
-  for (let index = 1; index < leadTimeMatrix.length; index++) {
-    const item = leadTimeMatrix[index];
+  const isLeadMatrixValid = () => {
+    for (let index = 1; index < leadTimeMatrix.length; index++) {
+      const item = leadTimeMatrix[index];
 
-    if (!item.itemName) {
-     
+      if (!item.itemName) {
+
         return false;
-      
-    } 
-  }
-  return true;
-};
+
+      }
+    }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formDataToSend = new FormData();
-      if (selectedRoles.includes("Account Manager")) {
-    const currentAM = formData.assignedTeamRoles["Account Manager"] || [];
-    if (!currentAM.includes(143)) {
-      formData.assignedTeamRoles["Account Manager"] = [...currentAM, 143];
+    if (selectedRoles.includes("Account Manager")) {
+      const currentAM = formData.assignedTeamRoles["Account Manager"] || [];
+      if (!currentAM.includes(143)) {
+        formData.assignedTeamRoles["Account Manager"] = [...currentAM, 143];
+      }
     }
-  }
     const transformedRoles = Object.entries(formData.assignedTeamRoles).map(
       ([role, users]) => ({
         role,
@@ -400,15 +417,15 @@ const isLeadMatrixValid = () => {
       expectedArrivalDate: item.expectedArrivalDate
         ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
-        
 
-        arrivalDate: item.arrivalDate
+
+      arrivalDate: item.arrivalDate
         ? new Date(item.arrivalDate).toISOString().slice(0, 19).replace("T", " ")
         : null,
       status: item.status || "Pending",
-      tbd: !!item.tbd, 
+      tbd: !!item.tbd,
     }));
-    
+
     console.log(sanitizedMatrix);
     if (sanitizedMatrix[0].itemName !== "") {
       formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
@@ -420,7 +437,7 @@ const isLeadMatrixValid = () => {
     for (let file of formData.proposals || []) {
       formDataToSend.append("proposals", file);
     }
-      for (let file of formData.finalInvoice || []) {
+    for (let file of formData.finalInvoice || []) {
       formDataToSend.append("finalInvoice", file);
     }
     for (let file of formData.floorPlans || []) {
@@ -444,14 +461,14 @@ const isLeadMatrixValid = () => {
     for (let file of formData.acknowledgements || []) {
       formDataToSend.append("acknowledgements", file);
     }
-if (!isLeadMatrixValid()) {
-  Swal.fire({
-    icon: "warning",
-    title: "Incomplete Lead Time Matrix Row",
-    text: "Please fill the newly added Lead Time Matrix rows before submitting.",
-  });
-  return;
-}
+    if (!isLeadMatrixValid()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Lead Time Matrix Row",
+        text: "Please fill the newly added Lead Time Matrix rows before submitting.",
+      });
+      return;
+    }
     try {
       setIsLoading(true);
       const response = await fetch(`${url}/projects`, {
@@ -471,7 +488,7 @@ if (!isLeadMatrixValid()) {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-           text: `Error: ${data.error}`,
+          text: `Error: ${data.error}`,
         });
       }
     } catch (error) {
@@ -485,28 +502,28 @@ if (!isLeadMatrixValid()) {
       setIsLoading(false);
     }
   };
-const handleFileInputChange = (e, fieldName) => {
-  const files = Array.from(e.target.files);
-  const existingFiles = formData[fieldName] || [];
+  const handleFileInputChange = (e, fieldName) => {
+    const files = Array.from(e.target.files);
+    const existingFiles = formData[fieldName] || [];
 
-  // Max 3 files
-  const totalFiles = [...existingFiles, ...files].slice(0, 3);
+    // Max 3 files
+    const totalFiles = [...existingFiles, ...files].slice(0, 3);
 
-  setFormData((prevData) => ({
-    ...prevData,
-    [fieldName]: totalFiles,
-  }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [fieldName]: totalFiles,
+    }));
 
-  // Clear input to allow re-uploading the same file if needed
-  e.target.value = '';
-};
+    // Clear input to allow re-uploading the same file if needed
+    e.target.value = '';
+  };
 
- const handleRemoveFile = (field, index) => {
-  setFormData((prev) => ({
-    ...prev,
-    [field]: prev[field].filter((_, i) => i !== index),
-  }));
-};
+  const handleRemoveFile = (field, index) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: prev[field].filter((_, i) => i !== index),
+    }));
+  };
 
   return (
     <Layout>
@@ -569,24 +586,9 @@ const handleFileInputChange = (e, fieldName) => {
                     <label>
                       Select Customer <span className="required-star">*</span>
                     </label>
-
                     <select
-                      name="clientName"
-                      value={formData.clientId}
-                      onChange={(e) => {
-                        const selectedCustomer = customers.find(
-                          (customer) => String(customer.id) === e.target.value
-                        );
-
-                        setFormData({
-                          ...formData,
-                          clientName: selectedCustomer?.full_name || "",
-                          clientId: selectedCustomer?.id || "",
-                          deliveryAddress:
-                            selectedCustomer?.delivery_address || "",
-                        });
-                        setClientId(selectedCustomer?.id);
-                      }}
+                      onChange={handleAddCustomer}
+                      value=""
                       required
                     >
                       <option value="">Select a customer</option>
@@ -596,7 +598,29 @@ const handleFileInputChange = (e, fieldName) => {
                         </option>
                       ))}
                     </select>
+
+                    {/* Selected customers as removable chips */}
+                    <div className="selected-customers">
+                      {formData.clientId?.map((cid, idx) => {
+                        const name = formData.clientName?.[idx] ?? `#${cid}`;
+                        const c = customers.find(cc => cc.id === cid);
+                        return (
+                          <span key={cid} className="chip">
+                            {name}{c ? ` (${c.email})` : ""}
+                            <button
+                              type="button"
+                              className="chip-close"
+                              aria-label={`Remove ${name}`}
+                              onClick={() => removeCustomer(cid)}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
+
                   <div className="form-group">
                     <label>Description</label>
                     <textarea
@@ -641,35 +665,35 @@ const handleFileInputChange = (e, fieldName) => {
                     </label>
 
                     <input
-  type="date"
-  name="estimatedCompletion"
-  value={formData.estimatedCompletion}
-  onChange={handleChange}
-  required
-/>
+                      type="date"
+                      name="estimatedCompletion"
+                      value={formData.estimatedCompletion}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="form-group-row">
                   <div className="form-group">
                     <label>Advance Payment</label>
 
-  <input
-  type="text"
-  name="advancePayment"
-  value={formData.advancePayment}
-  onChange={handleChange}
-  inputMode="decimal"
-  maxLength={8}
-  required
-  placeholder="Enter Advance Amount"
-  onInput={(e) => {
-    const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (!regex.test(value)) {
-      e.target.value = formData.advancePayment; // reset to previous valid value
-    }
-  }}
-/>
+                    <input
+                      type="text"
+                      name="advancePayment"
+                      value={formData.advancePayment}
+                      onChange={handleChange}
+                      inputMode="decimal"
+                      maxLength={8}
+                      required
+                      placeholder="Enter Advance Amount"
+                      onInput={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(value)) {
+                          e.target.value = formData.advancePayment; // reset to previous valid value
+                        }
+                      }}
+                    />
                   </div>
                   <div className="form-group">
                     <label>
@@ -694,18 +718,18 @@ const handleFileInputChange = (e, fieldName) => {
 
 
                       onChange={(e) => {
-    const value = e.target.value;
+                        const value = e.target.value;
 
-  
-    const regex = /^\d*\.?\d{0,2}$/;
 
-    if (value.length <= 8 && regex.test(value)) {
-      setFormData((prev) => ({
-        ...prev,
-        totalValue: value,
-      }));
-    }
-  }}
+                        const regex = /^\d*\.?\d{0,2}$/;
+
+                        if (value.length <= 8 && regex.test(value)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            totalValue: value,
+                          }));
+                        }
+                      }}
                       maxLength={8}
                       required
                       placeholder="Enter total value"
@@ -749,35 +773,35 @@ const handleFileInputChange = (e, fieldName) => {
 
                           {selectedRoles.includes(role) && roleUsers[role] && (
                             <div className="role-users">
-     {roleUsers[role]?.map((user) => {
-  const isChecked = (formData.assignedTeamRoles[role] || []).includes(user.id);
+                              {roleUsers[role]?.map((user) => {
+                                const isChecked = (formData.assignedTeamRoles[role] || []).includes(user.id);
 
-  return (
-    <label key={user.id} className="user-checkbox-pill">
-     <input
-  type="checkbox"
-  checked={isChecked}
-  onChange={(e) => {
-    const prevSelected = formData.assignedTeamRoles[role] || [];
-    const updatedUsers = e.target.checked
-      ? [...prevSelected, user.id]
-      : prevSelected.filter((id) => id !== user.id);
+                                return (
+                                  <label key={user.id} className="user-checkbox-pill">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => {
+                                        const prevSelected = formData.assignedTeamRoles[role] || [];
+                                        const updatedUsers = e.target.checked
+                                          ? [...prevSelected, user.id]
+                                          : prevSelected.filter((id) => id !== user.id);
 
-    setFormData((prev) => ({
-      ...prev,
-      assignedTeamRoles: {
-        ...prev.assignedTeamRoles,
-        [role]: updatedUsers,
-      },
-    }));
-  }}
-/>
-  {user.firstName} {user.email}
-    </label>
-  );
-})}
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          assignedTeamRoles: {
+                                            ...prev.assignedTeamRoles,
+                                            [role]: updatedUsers,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                    {user.firstName} {user.email}
+                                  </label>
+                                );
+                              })}
 
-                            
+
                               {role === "Account Manager" &&
                                 (!formData.assignedTeamRoles[
                                   "Account Manager"
@@ -805,36 +829,36 @@ const handleFileInputChange = (e, fieldName) => {
                       name="proposals"
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "proposals")}
-                      disabled={formData.proposals?.length>=3}
+                      disabled={formData.proposals?.length >= 3}
                     />
 
-                   {formData.proposals && formData.proposals.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.proposals.map((file, idx) => (
-      <li key={idx}>
-        {file instanceof File || file instanceof Blob ? (
-          <a
-            href={URL.createObjectURL(file)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {file.name}
-          </a>
-        ) : (
-          <span>Invalid file</span>
-        )}
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("proposals", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.proposals && formData.proposals.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((file, idx) => (
+                          <li key={idx}>
+                            {file instanceof File || file instanceof Blob ? (
+                              <a
+                                href={URL.createObjectURL(file)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {file.name}
+                              </a>
+                            ) : (
+                              <span>Invalid file</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("proposals", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
-                   
+
                   </div>
 
 
@@ -850,7 +874,7 @@ const handleFileInputChange = (e, fieldName) => {
 
                   {/*  */}
 
-  <div className="form-group">
+                  <div className="form-group">
                     <label>Final Invoice</label>
                     <input
                       type="file"
@@ -858,7 +882,7 @@ const handleFileInputChange = (e, fieldName) => {
                       multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "finalInvoice")}
-                      disabled={formData.finalInvoice?.length>=3}
+                      disabled={formData.finalInvoice?.length >= 3}
                     />
 
                     {formData.finalInvoice && formData.finalInvoice.length > 0 && (
@@ -898,7 +922,7 @@ const handleFileInputChange = (e, fieldName) => {
                       multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileInputChange(e, "floorPlans")}
-                      disabled={formData.floorPlans?.length>=3}
+                      disabled={formData.floorPlans?.length >= 3}
                     />
 
                     {formData.floorPlans && formData.floorPlans.length > 0 && (
@@ -936,25 +960,25 @@ const handleFileInputChange = (e, fieldName) => {
                       onChange={(e) =>
                         handleFileInputChange(e, "otherDocuments")
                       }
-                      disabled={formData.otherDocuments?.length>=3}
+                      disabled={formData.otherDocuments?.length >= 3}
                     />
-{formData.otherDocuments?.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.otherDocuments.map((file, idx) => (
-      <li key={idx}>
-        <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
-          {file.name}
-        </a>
-        <button
-          type="button"
-          onClick={() => handleRemoveFile("otherDocuments", idx)}
-        >
-          &times;
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                    {formData.otherDocuments?.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.otherDocuments.map((file, idx) => (
+                          <li key={idx}>
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile("otherDocuments", idx)}
+                            >
+                              &times;
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
                   </div>
                   <div className="form-group">
@@ -967,7 +991,7 @@ const handleFileInputChange = (e, fieldName) => {
                       onChange={(e) =>
                         handleFileInputChange(e, "acknowledgements")
                       }
-                      disabled={formData.acknowledgements?.length>=3}
+                      disabled={formData.acknowledgements?.length >= 3}
                     />
 
                     {formData.acknowledgements &&
@@ -1005,7 +1029,7 @@ const handleFileInputChange = (e, fieldName) => {
                       onChange={(e) =>
                         handleFileInputChange(e, "receivingReports")
                       }
-                      disabled={formData.receivingReports?.length>=3}
+                      disabled={formData.receivingReports?.length >= 3}
                     />
 
                     {formData.receivingReports &&
@@ -1042,7 +1066,7 @@ const handleFileInputChange = (e, fieldName) => {
                       accept=".jpg,.jpeg,.png,.pdf"
                       multiple
                       onChange={(e) => handleFileInputChange(e, "presentation")}
-                      disabled={formData.presentation?.length>=3}
+                      disabled={formData.presentation?.length >= 3}
                     />
 
                     {formData.presentation &&
@@ -1076,7 +1100,7 @@ const handleFileInputChange = (e, fieldName) => {
                       type="file"
                       name="cad"
                       multiple
-                      
+
                       accept=".pdf"
                       onChange={(e) => handleFileInputChange(e, "cad")}
                     />
@@ -1109,7 +1133,7 @@ const handleFileInputChange = (e, fieldName) => {
                       type="file"
                       multiple
                       name="salesAggrement"
-                      disabled={formData.salesAggrement?.length>=3}
+                      disabled={formData.salesAggrement?.length >= 3}
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) =>
                         handleFileInputChange(e, "salesAggrement")
@@ -1229,17 +1253,17 @@ const handleFileInputChange = (e, fieldName) => {
 
                       {/* ✅ TBD Checkbox */}
                       <div className="form-group2">
-                      <label>
-  <span
-    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-    style={{cursor: "pointer", }}>
-    TBD
-  </span>
-</label>
+                        <label>
+                          <span
+                            title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
+                            style={{ cursor: "pointer", }}>
+                            TBD
+                          </span>
+                        </label>
 
                         <div
-                          style={{display: "flex", alignItems: "center",  gap: "10px",}}>
-                          <input  type="checkbox" checked={item.tbd || false}
+                          style={{ display: "flex", alignItems: "center", gap: "10px", }}>
+                          <input type="checkbox" checked={item.tbd || false}
                             onChange={(e) => {
                               const checked = e.target.checked;
                               handleItemChange(index, "tbd", checked);
@@ -1266,7 +1290,7 @@ const handleFileInputChange = (e, fieldName) => {
                           className="user-search-input1"
                           type="date"
                           value={item.expectedDeliveryDate}
-                        
+
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(
@@ -1284,7 +1308,7 @@ const handleFileInputChange = (e, fieldName) => {
                           className="user-search-input1"
                           type="date"
                           value={item.expectedArrivalDate}
-                         
+
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(
@@ -1297,13 +1321,13 @@ const handleFileInputChange = (e, fieldName) => {
                       </div>
 
 
-                           <div className="form-group1">
+                      <div className="form-group1">
                         <label> Arrival Date</label>
                         <input
                           className="user-search-input1"
                           type="date"
                           value={item.arrivalDate}
-                        
+
                           disabled={item.tbd}
                           onChange={(e) =>
                             handleItemChange(
