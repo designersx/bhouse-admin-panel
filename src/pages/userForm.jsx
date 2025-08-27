@@ -93,6 +93,9 @@ const [showPasswordModal, setShowPasswordModal] = useState(false);
       }
       else if (userRole === "Admin") {
         filteredRoles = allRoles.filter(role => role.title !== "Super Admin");
+      }
+       else if (userRole === "Operations") {
+        filteredRoles = allRoles.filter(role => role.title !== "Admin" && role.title !== "Super Admin" && role.title !== "Account Manager");
       } else {
         filteredRoles = allRoles.filter((role) => {
           const isPredefinedAndAbove = role.defaultPermissionLevel < 7 && role.defaultPermissionLevel > userLevel;

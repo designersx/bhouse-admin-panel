@@ -1,3 +1,28 @@
+.selected-customers {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  background: #f7f7f7;
+  font-size: 13px;
+}
+.chip-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.chip-close:hover { opacity: 0.7; }
 
 .error-text {
   color: red;
@@ -42,7 +67,7 @@
 }
 .add-project-container {
   max-width: 950px;
-  margin: 20px auto;
+  margin: 45px auto 20px;
   background: #fff;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   border-radius: 8px;

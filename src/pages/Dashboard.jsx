@@ -139,7 +139,7 @@ const Dashboard = () => {
       try {
         const response = await fetch(`${url}/dashboard/stats`);
         const data = await response.json();
-        setStats(data || {}); // Ensure stats is not undefined
+        setStats(data || {}); 
       } catch (err) {
         console.error("Error fetching dashboard stats:", err);
       }
@@ -163,14 +163,6 @@ const Dashboard = () => {
       </Layout>
     );
   }
-  
-  // if (stats.totalProjects === 0) {
-  //   return (
-  //     <Layout>
-  //       <NoProject />
-  //     </Layout>
-  //   );
-  // }
   
   return (
     <Layout>

@@ -461,13 +461,24 @@ const InvoiceManagement = ({ projectId }) => {
             <h3>Add New Invoice</h3>
 
             <label>Total Amount</label>
-            <input
-              type="number"
-              name="totalAmount"
-              value={invoiceData.totalAmount}
-              onChange={handleInvoiceChange}
-              maxLength={6}
-            />
+      <input
+  type="text"
+  name="totalAmount"
+  value={invoiceData.totalAmount}
+  onChange={handleInvoiceChange}
+  onInput={(e) => {
+    const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (regex.test(value) || value === '') {
+      // valid input — allow change
+    } else {
+      // invalid — remove last character
+      e.target.value = invoiceData.totalAmount; // prevent update
+    }
+  }}
+  maxLength={8}
+/>
+
 
             <label>Status</label>
             <select
@@ -483,13 +494,21 @@ const InvoiceManagement = ({ projectId }) => {
             {invoiceData.status === "Partly Paid" && (
               <div>
                 <label>Paid Ammount</label>
-                <input
-                  type="number"
-                  name="advancePaid"
-                  value={invoiceData.advancePaid}
-                  onChange={handleInvoiceChange}
-                  maxLength={6}
-                />
+              <input
+  type="text"
+  name="advancePaid"
+  value={invoiceData.advancePaid}
+  onChange={handleInvoiceChange}
+  onInput={(e) => {
+    const value = e.target.value;
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (!regex.test(value) && value !== '') {
+      e.target.value = invoiceData.advancePaid; // prevent invalid input
+    }
+  }}
+  maxLength={6}
+/>
+
               </div>
             )}
             <label>Description (optional)</label>

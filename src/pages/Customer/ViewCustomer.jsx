@@ -144,12 +144,6 @@ function ViewCustomer() {
                     >
                         Project Details
                     </button>
-                    {/* <button 
-                    className={`tab-button ${activeTab === "projects" ? "active" : ""}`} 
-                    onClick={() => setActiveTab("projects")}
-                >
-                   Documents
-                </button> */}
                 </div>
 
                 {/* Tab Content */}

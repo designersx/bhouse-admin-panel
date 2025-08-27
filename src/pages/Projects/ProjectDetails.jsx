@@ -17,6 +17,7 @@ import { FaTelegramPlane } from "react-icons/fa";
 import useRolePermissions from "../../hooks/useRolePermissions";
 import InvoiceManagement from "./InvoiceManagment";
 import SpinnerLoader from "../../components/SpinnerLoader";
+import * as XLSX from "xlsx";
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -52,7 +53,34 @@ const ProjectDetails = () => {
   const [docsData, setDocsData] = useState({});
   const [commentLoading, setCommentLoading] = useState(false);
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
-   const [currentDocType, setCurrentDocType] = useState('');
+  const [currentDocType, setCurrentDocType] = useState('');
+  const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
+  const isZeroDate = (v) =>
+    v === "0000-00-00" || v === "0000-00-00 00:00:00";
+
+  const normalizeDate = (v) => {
+    if (!v || v === "TBD" || isZeroDate(v)) return null;
+    return v;
+  };
+  const toDateStr = (d) => (!d || isZeroDate(d) ? "" : String(d).slice(0, 10));
+  const handleDownloadLeadTimeExcel = () => {
+    const rows = (items || []).map((i) => ({
+      "Manufacturer Name": i.itemName || "",
+      Description: i.quantity || "",
+      TBD: i.tbd ? "Yes" : "No",
+      ETD: i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate),
+      ETA: i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate),
+      Arrival: i.tbd ? "TBD" : toDateStr(i.arrivalDate),
+      Status: i.status || "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Lead Time Matrix");
+
+    const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
+    XLSX.writeFile(wb, `${safeName}_lead_time_matrix.xlsx`);
+  };
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState(
@@ -91,7 +119,7 @@ const ProjectDetails = () => {
     // "Final Invoice": "Final Invoice",
     // "Sales Agreement": "Sales Agreement",
   };
- const normalize = (str) => str.trim().toLowerCase().replace(/\s+/g, '');
+  const normalize = (str) => str.trim().toLowerCase().replace(/\s+/g, '');
 
   const [data, setData] = useState();
   const fetchDocuments = async () => {
@@ -113,8 +141,8 @@ const ProjectDetails = () => {
   };
 
 
-    const fetchDocs = async () => {
- 
+  const fetchDocs = async () => {
+
     try {
       const res = await axios.get(`${url}/customerDoc/document/${projectId}`);
       setDocsData(res.data || []);
@@ -122,7 +150,7 @@ const ProjectDetails = () => {
       console.error('Failed to fetch documents:', err);
     }
   };
-  
+
   const [unreadCounts, setUnreadCounts] = useState({});
   const fetchUnreadCountsForAllDocs = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -162,53 +190,53 @@ const ProjectDetails = () => {
   }, [data]);
 
 
-const [fileupload , setFileUpload] = useState(false);
+  const [fileupload, setFileUpload] = useState(false);
   const handleFileChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !currentDocType) return;
+    const file = e.target.files[0];
+    if (!file || !currentDocType) return;
 
-  setLoading(true);
+    setLoading(true);
 
 
-  const existingDoc = Object.keys(docsData).some(
-    (docType) => normalize(docType) === normalize(currentDocType)
-  );
+    const existingDoc = Object.keys(docsData).some(
+      (docType) => normalize(docType) === normalize(currentDocType)
+    );
 
-  const endpoint = existingDoc ? 'update' : 'add';
-  const method = existingDoc ? 'put' : 'post';
+    const endpoint = existingDoc ? 'update' : 'add';
+    const method = existingDoc ? 'put' : 'post';
 
-  const formData = new FormData();
-  formData.append('documentType', currentDocType);
-  formData.append('document', file);
-  formData.append('projectId', projectId);
+    const formData = new FormData();
+    formData.append('documentType', currentDocType);
+    formData.append('document', file);
+    formData.append('projectId', projectId);
 
-  try {
-    const config = {
-      method,
-      url: `${url}/customerDoc/${endpoint}`,
-      data: formData,
-    };
+    try {
+      const config = {
+        method,
+        url: `${url}/customerDoc/${endpoint}`,
+        data: formData,
+      };
 
-    const res = await axios(config);
-    if (res) {
-      setFileUpload(true);
-      // fetchDocs(); 
+      const res = await axios(config);
+      if (res) {
+        setFileUpload(true);
+        // fetchDocs(); 
+      }
+
+    } catch (err) {
+      console.error('Upload/Update failed:', err);
+    } finally {
+      setLoading(false);
+      setFileUpload(false);
+      setCurrentDocType('');
     }
-  
-  } catch (err) {
-    console.error('Upload/Update failed:', err);
-  } finally {
-    setLoading(false);
-     setFileUpload(false);
-    setCurrentDocType('');
-  }
-};
+  };
 
 
-useEffect(()=>{
-fetchDocs()
-fetchDocuments()
-} , [fileupload , currentDocType]);
+  useEffect(() => {
+    fetchDocs()
+    fetchDocuments()
+  }, [fileupload, currentDocType]);
 
 
   const openPunchComment = async (punchId) => {
@@ -341,16 +369,16 @@ fetchDocuments()
     }
   };
 
-const handleUploadClick = (docType) => {
-  setCurrentDocType(docType);
-  if (fileInputRef.current) {
-    fileInputRef.current.click();
-  }
-};
+  const handleUploadClick = (docType) => {
+    setCurrentDocType(docType);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   const formatDate = (date) => {
     const d = new Date(date);
-  
+
     const options = {
       weekday: 'short',
       day: 'numeric',
@@ -360,13 +388,13 @@ const handleUploadClick = (docType) => {
       minute: '2-digit',
       hour12: true,
     };
-  
+
     // Format with lowercase am/pm
     let formatted = d.toLocaleString('en-GB', options);
-  
+
     // Capitalize AM/PM
     formatted = formatted.replace(/\b(am|pm)\b/, (match) => match.toUpperCase());
-  
+
     return formatted;
   };
   const [selectedFiles, setSelectedFiles] = useState({
@@ -379,7 +407,7 @@ const handleUploadClick = (docType) => {
 
     acknowledgements: [],
     receivingReports: [],
-    finalInvoice : []
+    finalInvoice: []
   });
   const roleId = JSON.parse(localStorage.getItem("user"));
   const { rolePermissions } = useRolePermissions(roleId?.user?.roleId);
@@ -481,8 +509,8 @@ const handleUploadClick = (docType) => {
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : [],
+              ? issue.productImages
+              : [],
       }));
       setPunchList(parsed);
       const initialStatus = {};
@@ -550,11 +578,11 @@ const handleUploadClick = (docType) => {
       {
         itemName: "",
         quantity: "",
-        expectedDeliveryDate: "",
-        expectedArrivalDate: "",
+        expectedDeliveryDate: null,
+        expectedArrivalDate: null,
         status: "Pending",
         projectId,
-        arrivalDate : null
+        arrivalDate: null
       },
     ]);
   };
@@ -643,7 +671,7 @@ const handleUploadClick = (docType) => {
   useEffect(() => {
     fetchItemsComments();
   }, [items]);
-  const [matrix, setMatrix] = useState();
+  const [matrix, setMatrix] = useState([]);
   const [itemsByManufacturerId, setItemsByManufacturerId] = useState({});
   useEffect(() => {
     const fetchItems = async () => {
@@ -716,15 +744,15 @@ const handleUploadClick = (docType) => {
         )
           ? fetchedProject.acknowledgements
           : JSON.parse(fetchedProject.acknowledgements || "[]");
-       
- fetchedProject.finalInvoice = Array.isArray(
+
+        fetchedProject.finalInvoice = Array.isArray(
           fetchedProject.finalInvoice
         )
           ? fetchedProject.finalInvoice
           : JSON.parse(fetchedProject.finalInvoice || "[]");
-         
-          
-          
+
+
+
 
         setInvoiceFiles(fetchedProject.invoice);
 
@@ -874,7 +902,7 @@ const handleUploadClick = (docType) => {
 
   // const handleFileUpload = (e, category) => {
   //   const files = Array.from(e.target.files);
-  
+
   //   setSelectedFiles((prev) => ({
   //     ...prev,
   //     [category]: files,
@@ -884,12 +912,12 @@ const handleUploadClick = (docType) => {
 
 
   const handleFileUpload = (e, category) => {
-  const files = Array.from(e.target.files);
-  setSelectedFiles((prev) => ({
-    ...prev,
-    [category]: [...(prev[category] || []), ...files],
-  }));
-};
+    const files = Array.from(e.target.files);
+    setSelectedFiles((prev) => ({
+      ...prev,
+      [category]: [...(prev[category] || []), ...files],
+    }));
+  };
 
   const removeSelectedFile = (category, index) => {
     setSelectedFiles((prev) => ({
@@ -1008,24 +1036,24 @@ const handleUploadClick = (docType) => {
     }
   };
 
- const handleCustomerFileDelete = async (docType) => {
-  try {
-    const res = await axios.delete(`${url}/customerDoc/delete`, {
-      data: {
-        documentType: docType,
-        projectId: projectId
-      }
-    });
+  const handleCustomerFileDelete = async (docType) => {
+    try {
+      const res = await axios.delete(`${url}/customerDoc/delete`, {
+        data: {
+          documentType: docType,
+          projectId: projectId
+        }
+      });
 
-    if (res?.status === 200 || res?.status === 204) {
-      fetchDocs(); // refresh view
-      Swal.fire("Deleted!", "File has been removed.", "success");
+      if (res?.status === 200 || res?.status === 204) {
+        fetchDocs(); // refresh view
+        Swal.fire("Deleted!", "File has been removed.", "success");
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      Swal.fire("Error", "File deletion failed. Try again.", "error");
     }
-  } catch (err) {
-    console.error("Delete failed:", err);
-    Swal.fire("Error", "File deletion failed. Try again.", "error");
-  }
-};
+  };
 
   const toggleEditRow = (index) => {
     setEditableRows((prev) => ({
@@ -1047,8 +1075,8 @@ const handleUploadClick = (docType) => {
           typeof issue.productImages === "string"
             ? JSON.parse(issue.productImages)
             : Array.isArray(issue.productImages)
-            ? issue.productImages
-            : [],
+              ? issue.productImages
+              : [],
       }));
       setPunchList(parsed);
     } catch (err) {
@@ -1161,7 +1189,7 @@ const handleUploadClick = (docType) => {
     }
   };
 
-    const handleToNotifyCustomerofPunchList = async () => {
+  const handleToNotifyCustomerofPunchList = async () => {
     const data = { projectId };
 
     Swal.fire({
@@ -1232,11 +1260,11 @@ const handleUploadClick = (docType) => {
                 }
               )}
             </div><input
-  type="file"
-  ref={fileInputRef}
-  onChange={handleFileChange}
-  style={{ display: "none" }}
-/>
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
             {/* Project Tabing View */}
             <div className="tab-content">
               {activeTab === "overview" && (
@@ -1279,25 +1307,25 @@ const handleUploadClick = (docType) => {
                     <div className="info-group">
                       <strong>Hours:</strong> {project.deliveryHours || "N/A"}
                     </div>
-                     <div className="info-group">
+                    <div className="info-group">
                       <strong>Delivery Date:</strong> {project.deliveryDate || "N/A"}
                     </div>
-                   
+
                   </div>
 
-                   <div className="project-info-card">
+                  <div className="project-info-card">
                     <h2>Point of Contact</h2>
                     <div className="info-group">
                       <strong>Name:</strong>{" "}
-                      {project.pocName   || "N/A"}
+                      {project.pocName === "null" ? "N/A" : project.pocName || "NA"}
                     </div>
                     <div className="info-group">
-                      <strong>Email:</strong> {project.pocEmail || "N/A"}
+                      <strong>Email:</strong>  {project.pocEmail === "null" ? "N/A" : project.pocEmail || "NA"}
                     </div>
-                     <div className="info-group">
-                      <strong> Phone</strong> {project.pocNumber || "N/A"}
+                    <div className="info-group">
+                      <strong> Phone</strong> {project.pocNumber === "null" ? "N/A" : project.pocNumber || "NA"}
                     </div>
-                    </div>
+                  </div>
                 </div>
               )}
               {activeTab === "documents" && (
@@ -1305,17 +1333,15 @@ const handleUploadClick = (docType) => {
                   <div className="tabs-container">
                     <div className="tabs-header">
                       <button
-                        className={`tab-button ${
-                          activeTabing === "Admin" ? "active" : ""
-                        }`}
+                        className={`tab-button ${activeTabing === "Admin" ? "active" : ""
+                          }`}
                         onClick={() => handleSubTabChange("Admin")}
                       >
                         BHOUSE
                       </button>
                       <button
-                        className={`tab-button ${
-                          activeTabing === "Customer" ? "active" : ""
-                        }`}
+                        className={`tab-button ${activeTabing === "Customer" ? "active" : ""
+                          }`}
                         onClick={() => handleSubTabChange("Customer")}
                       >
                         CUSTOMER
@@ -1326,7 +1352,6 @@ const handleUploadClick = (docType) => {
                     {activeTabing === "Admin" && (
                       <div className="tab-panel">
                         <h2>Uploaded Documents</h2>
-
                         {[
                           {
                             title: "Detailed Proposal",
@@ -1368,7 +1393,7 @@ const handleUploadClick = (docType) => {
                             files: project.receivingReports,
                             category: "receivingReports",
                           },
-                            {
+                          {
                             title: "Final Invoice",
                             files: project.finalInvoice,
                             category: "finalInvoice",
@@ -1379,17 +1404,8 @@ const handleUploadClick = (docType) => {
                             {rolePermissions?.ProjectDocument?.add ? (
                               <input
                                 type="file"
-                                // disabled={
-                                //   selectedFiles[docCategory.category]?.length >
-                                //     0 ||
-                                //   (Array.isArray(
-                                //     project[docCategory.category]
-                                //   ) &&
-                                //     project[docCategory.category].length > 0)
-                                // }
-
                                 disabled={false}
-                               multiple
+                                multiple
                                 onChange={(e) =>
                                   handleFileUpload(e, docCategory.category)
                                 }
@@ -1398,44 +1414,44 @@ const handleUploadClick = (docType) => {
 
                             {selectedFiles[docCategory.category]?.length >
                               0 && (
-                              <div className="file-preview-section">
-                                <h4>Files to be uploaded:</h4>
-                                <ul className="preview-list">
-                                  {selectedFiles[docCategory.category].map(
-                                    (file, i) => (
-                                      <li key={i} className="preview-item">
-                                        {file.name}
-                                        <span
-                                          className="remove-preview"
-                                          onClick={() =>
-                                            removeSelectedFile(
-                                              docCategory.category,
-                                              i
-                                            )
-                                          }
-                                        >
-                                          ×
-                                        </span>
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                                <button
-                                  className="upload-btn"
-                                  onClick={() =>
-                                    uploadSelectedFiles(docCategory.category)
-                                  }
-                                >
-                                  Upload
-                                </button>
-                              </div>
-                            )}
+                                <div className="file-preview-section">
+                                  <h4>Files to be uploaded:</h4>
+                                  <ul className="preview-list">
+                                    {selectedFiles[docCategory.category].map(
+                                      (file, i) => (
+                                        <li key={i} className="preview-item">
+                                          {file.name}
+                                          <span
+                                            className="remove-preview"
+                                            onClick={() =>
+                                              removeSelectedFile(
+                                                docCategory.category,
+                                                i
+                                              )
+                                            }
+                                          >
+                                            ×
+                                          </span>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                  <button
+                                    className="upload-btn"
+                                    onClick={() =>
+                                      uploadSelectedFiles(docCategory.category)
+                                    }
+                                  >
+                                    Upload
+                                  </button>
+                                </div>
+                              )}
                             {(() => {
                               const files = Array.isArray(docCategory?.files)
                                 ? docCategory.files
                                 : typeof docCategory.files === "string"
-                                ? JSON.parse(docCategory.files)
-                                : [];
+                                  ? JSON.parse(docCategory.files)
+                                  : [];
 
                               return files.length > 0 ? (
                                 <div className="uploaded-files">
@@ -1485,24 +1501,24 @@ const handleUploadClick = (docType) => {
                                               ?.toLowerCase()
                                               .startsWith(".")
                                               ? fileUrl
-                                                  .split(".")
-                                                  .pop()
-                                                  .toLowerCase()
+                                                .split(".")
+                                                .pop()
+                                                .toLowerCase()
                                               : `.${fileUrl
-                                                  .split(".")
-                                                  .pop()
-                                                  .toLowerCase()}`
+                                                .split(".")
+                                                .pop()
+                                                .toLowerCase()}`
                                           ) && (
-                                            <button
-                                              className="file-action-btn"
-                                              onClick={() =>
-                                                window.open(fileUrl, "_blank")
-                                              }
-                                              title="View"
-                                            >
-                                              <FaEye />
-                                            </button>
-                                          )}
+                                              <button
+                                                className="file-action-btn"
+                                                onClick={() =>
+                                                  window.open(fileUrl, "_blank")
+                                                }
+                                                title="View"
+                                              >
+                                                <FaEye />
+                                              </button>
+                                            )}
                                           <button
                                             className="file-action-btn"
                                             onClick={handleDownload}
@@ -1584,149 +1600,160 @@ const handleUploadClick = (docType) => {
                         ))}
                       </div>
                     )}
-                  
-
-           {activeTabing === "Customer" && (
-  <div className="tab-panel">
-    <h2>Uploaded Documents</h2>
-
-    {Object.keys(docMap).map((key, idx) => {
-      const normalizedKey = normalize(key);
-      const fileEntry = Object.entries(docsData).find(
-        ([docType]) => normalize(docType) === normalizedKey
-      );
-      const filePath = fileEntry?.[1];
-      const fileName = filePath?.split("/").pop();
-      const fileUrl = filePath?.startsWith("uploads")
-        ? `${url2}/${filePath}`
-        : filePath;
-
-      const matchedDoc = dataDoc?.find(
-        (doc) => normalize(doc.documentType) === normalizedKey
-      );
-      const documentId = matchedDoc?.id;
-      const docType = fileEntry?.[0] || key;
-
-      return (
-        <div key={idx} className="doc-view-section">
-          <h4>{docMap[key].toUpperCase()}</h4>
 
 
+                    {activeTabing === "Customer" && (
+                      <div className="tab-panel">
+                        <h2>Uploaded Documents</h2>
 
-{filePath ? (
-  <div className="file-item-enhanced">
-    <div>
-      <span className="file-name-enhanced">{fileName}</span>
-    </div>
+                        {Object.keys(docMap).map((key, idx) => {
+                          const normalizedKey = normalize(key);
+                          const fileEntry = Object.entries(docsData).find(
+                            ([docType]) => normalize(docType) === normalizedKey
+                          );
+                          const filePath = fileEntry?.[1];
+                          const fileName = filePath?.split("/").pop();
+                          const fileUrl = filePath?.startsWith("uploads")
+                            ? `${url2}/${filePath}`
+                            : filePath;
 
-    <div className="uploaded-icon">
-     
-      <button
-        className="file-action-btn eye"
-        onClick={() => window.open(fileUrl, "_blank")}
-        title="View"
-      >
-        <FaEye />
-      </button>
+                          const matchedDoc = dataDoc?.find(
+                            (doc) => normalize(doc.documentType) === normalizedKey
+                          );
+                          const documentId = matchedDoc?.id;
+                          const uploaderName =
+                            (matchedDoc?.uploadedByCustomerName && matchedDoc.uploadedByCustomerName.trim()) ||
+                            "Bhouse";
 
-  
-      <button
-        className="file-action-btn"
-        title="Download"
-        onClick={async () => {
-          try {
-            const response = await fetch(fileUrl);
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = downloadUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(downloadUrl);
-          } catch (error) {
-            console.error("Download failed", error);
-            alert("Download failed, please try again.");
-          }
-        }}
-      >
-        <FaDownload />
-      </button>
-
-     
-      <button
-        className="file-action-btn"
-        title="Delete"
-        onClick={() => {
-          Swal.fire({
-            title: "Are you sure?",
-            text: "Do you want to delete this document?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, delete it!",
-            cancelButtonText: "Cancel",
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              await handleCustomerFileDelete( docType); 
-            }
-          });
-        }}
-      >
-        <MdDelete />
-      </button>
-
-     
-      {matchedDoc && (
-        <div onClick={() => markReadCustomerDocComment(documentId)}>
-          <button
-            className="file-action-btn"
-            onClick={() =>
-              navigate(`/customerDoc/comment/${docType}/${documentId}`, {
-                state: {
-                  data: dataDoc,
-                  fileName: docType,
-                  filePath,
-                },
-              })
-            }
-            title="Comment"
-          >
-            <FaComment />
-          </button>
-
-          {unreadCounts[documentId] > 0 && (
-            <span style={{ color: "red", fontWeight: "bold" }}>
-              ({unreadCounts[documentId]})
-            </span>
-          )}
-        </div>
-      )}
-
-      
-      {/* <button onClick={() => handleUploadClick(docType)}>
-        {matchedDoc || filePath ? "Update" : "Upload"}
-      </button> */}
-    </div>
-  </div>
-) : (
-
-  <><p>No document uploaded.</p>
-  
-   <div style={{ marginTop: "8px" }}>
-    <button onClick={() => handleUploadClick(docType)}>
-      {filePath ? "Update" : "Upload"}
-    </button>
-  </div></>
-)}
+                          const uploadedAt = matchedDoc?.updatedAt || matchedDoc?.createdAt || null;
 
 
-        
-        </div>
-      );
-    })}
-  </div>
-)}
+                          const docType = fileEntry?.[0] || key;
+
+                          return (
+                            <div key={idx} className="doc-view-section">
+                              <h4>{docMap[key].toUpperCase()}</h4>
+
+
+
+                              {filePath ? (
+                                <div className="file-item-enhanced">
+                                  <div>
+                                    <span className="file-name-enhanced">{fileName}</span>
+
+                                    {/* Always show; default to Bhouse if no name */}
+                                    <div className="file-meta" style={{ marginTop: 4, fontSize: 12, color: "#666" }}>
+                                      Uploaded by <strong>{uploaderName}</strong>
+                                      {uploadedAt && (
+                                        <>
+                                          {" "}•{" "}
+                                          {new Date(uploadedAt).toLocaleString()}
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+
+                                  <div className="uploaded-icon">
+                                    <button
+                                      className="file-action-btn eye"
+                                      onClick={() => window.open(fileUrl, "_blank")}
+                                      title="View"
+                                    >
+                                      <FaEye />
+                                    </button>
+
+                                    <button
+                                      className="file-action-btn"
+                                      title="Download"
+                                      onClick={async () => {
+                                        try {
+                                          const response = await fetch(fileUrl);
+                                          const blob = await response.blob();
+                                          const downloadUrl = window.URL.createObjectURL(blob);
+                                          const a = document.createElement("a");
+                                          a.href = downloadUrl;
+                                          a.download = fileName;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          a.remove();
+                                          window.URL.revokeObjectURL(downloadUrl);
+                                        } catch (error) {
+                                          console.error("Download failed", error);
+                                          alert("Download failed, please try again.");
+                                        }
+                                      }}
+                                    >
+                                      <FaDownload />
+                                    </button>
+
+                                    <button
+                                      className="file-action-btn"
+                                      title="Delete"
+                                      onClick={() => {
+                                        Swal.fire({
+                                          title: "Are you sure?",
+                                          text: "Do you want to delete this document?",
+                                          icon: "warning",
+                                          showCancelButton: true,
+                                          confirmButtonText: "Yes, delete it!",
+                                          cancelButtonText: "Cancel",
+                                        }).then(async (result) => {
+                                          if (result.isConfirmed) {
+                                            await handleCustomerFileDelete(docType);
+                                          }
+                                        });
+                                      }}
+                                    >
+                                      <MdDelete />
+                                    </button>
+
+                                    {matchedDoc && (
+                                      <div onClick={() => markReadCustomerDocComment(documentId)}>
+                                        <button
+                                          className="file-action-btn"
+                                          onClick={() =>
+                                            navigate(`/customerDoc/comment/${docType}/${documentId}`, {
+                                              state: {
+                                                data: dataDoc,
+                                                fileName: docType,
+                                                filePath,
+                                              },
+                                            })
+                                          }
+                                          title="Comment"
+                                        >
+                                          <FaComment />
+                                        </button>
+
+                                        {unreadCounts[documentId] > 0 && (
+                                          <span style={{ color: "red", fontWeight: "bold" }}>
+                                            ({unreadCounts[documentId]})
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <p>No document uploaded.</p>
+                                  <div style={{ marginTop: "8px" }}>
+                                    <button onClick={() => handleUploadClick(docType)}>
+                                      {filePath ? "Update" : "Upload"}
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+
+
+
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                   </div>
                 </div>
@@ -1734,7 +1761,7 @@ const handleUploadClick = (docType) => {
               {activeTab === "team" && (
                 <div className="project-info-card">
                   <h2>Assigned Team</h2>
-                 {Array.isArray(project.assignedTeamRoles) && project.assignedTeamRoles.length > 0 ? (
+                  {Array.isArray(project.assignedTeamRoles) && project.assignedTeamRoles.length > 0 ? (
                     <div className="team-grid">
                       {project.assignedTeamRoles.map((roleGroup, index) => (
                         <div key={index} className="role-card">
@@ -1798,332 +1825,328 @@ const handleUploadClick = (docType) => {
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
-                         <p >
-            <b>Last Updated:{" "}</b>
-            {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
-              ? formatDate(project.lastNotificationSentAt)
-              : "Not Updated"}
-          </p>
-                    {matrix.length > 0 ? (
-                      <button
-                        className="leadtimematrixheadingbutton"
-                        disabled={notifyCustomerLoading}
-                        onClick={() => handleToNotifyCustomer()}
-                      >
-                        {notifyCustomerLoading ? (
-                          <>
-                            Notify customer <SpinnerLoader size={10} />
-                          </>
-                        ) : (
-                          "Notify customer"
-                        )}
-                      </button>
+                    <p >
+                      <b>Last Updated:{" "}</b>
+                      {project?.lastNotificationSentAt && !isNaN(new Date(project?.lastNotificationSentAt))
+                        ? formatDate(project?.lastNotificationSentAt)
+                        : "Not Updated"}
+                    </p>
+                    {Array.isArray(matrix) && matrix.length > 0 ? (
+                      <div className="leadbuttons">
+                        <button
+                          className="leadtimematrixheadingbutton"
+                          disabled={notifyCustomerLoading}
+                          onClick={() => handleToNotifyCustomer()}
+                        >
+                          {notifyCustomerLoading ? <>Notify customer <SpinnerLoader size={10} /></> : "Notify customer"}
+                        </button>
+
+                        <button
+                          className="leadtimematrixheadingbutton"
+                          onClick={() => setIsPreviewAllOpen(true)}
+                        >
+                          Preview All
+                        </button>
+                      </div>
                     ) : null}
                   </div>
                   <div className="matrixTableMain">
-                  <table className="matrix-table">
-                    {items.length > 0 ? (
-                      <thead>
-                        <tr>
-                          <th>Manufacturer Name</th>
-                          <th>Description</th>
-                          <th>
-                            <span
-                              title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-                              style={{
-                                cursor: "pointer",
-                              }}
-                            >
-                              TBD
-                            </span>
-                          </th>
-                          <th title="Estimated Departurn">ETD</th>
-                          <th title="Expected Arrival">ETA</th>
-                          <th>Arrival</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                    ) : null}
-
-                    <tbody>
-                      {items.map((item, index) => {
-                        const isEditable = editableRows[index] || !item.id;
-
-                        const handleSave = () => {
-                          console.log(buttonClicked, "button clic");
-
-                          if (
-                            !item.itemName ||
-                            !item.quantity ||
-                            (!item.tbd &&
-                              (!item.expectedDeliveryDate ||
-                                !item.expectedArrivalDate  )) ||
-                                
-                            !item.status
-                          ) {
-                            return toast.error(
-                              "All required fields must be filled."
-                            );
-                          }
-
-                          if (item.id) {
-                            updateItem(item);
-                          } else {
-                            addNewItemToBackend(item, index);
-                          }
-
-                         
-                          setEditableRows((prev) => ({
-                            ...prev,
-                            [index]: false,
-                          }));
-                        };
-
-                        return (
-                          <tr key={item.id || index}>
-                            <td>
-                              <input
+                    <table className="matrix-table">
+                      {items.length > 0 ? (
+                        <thead>
+                          <tr>
+                            <th>Manufacturer Name</th>
+                            <th>Description</th>
+                            <th>
+                              <span
+                                title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
                                 style={{
-                                  height: "30px",
-                                  borderRadius: "5px",
-                                  border: "1px solid #ccc",
-                                }}
-                                value={item.itemName}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "itemName",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <textarea
-                                type="text"
-                                value={item.quantity}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "quantity",
-                                    e.target.value
-                                  )
-                                }
-                                className="item-description-input"
-                                maxLength={50}
-                                style={{
-                                  height: "30px",
-                                  borderRadius: "5px",
-                                  border: "1px solid #ccc",
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <label
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "5px",
+                                  cursor: "pointer",
                                 }}
                               >
+                                TBD
+                              </span>
+                            </th>
+                            <th title="Estimated Departurn">ETD</th>
+                            <th title="Expected Arrival">ETA</th>
+                            <th>Arrival</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                      ) : null}
+
+                      <tbody>
+                        {items.map((item, index) => {
+                          const isEditable = editableRows[index] || !item.id;
+
+                          const handleSave = () => {
+
+                            if (
+                              !item.itemName
+                            ) {
+                              return toast.error(
+                                "Manufacturer Name is required."
+                              );
+                            }
+                            const payload = {
+                              ...item,
+                              expectedDeliveryDate: item.tbd ? null : normalizeDate(item.expectedDeliveryDate),
+                              expectedArrivalDate: item.tbd ? null : normalizeDate(item.expectedArrivalDate),
+                              arrivalDate: item.tbd ? null : normalizeDate(item.arrivalDate),
+                            };
+
+                            if (item.id) {
+                              updateItem(payload);
+                            } else {
+                              addNewItemToBackend(payload, index);
+                            }
+
+
+                            setEditableRows((prev) => ({
+                              ...prev,
+                              [index]: false,
+                            }));
+                          };
+
+                          return (
+                            <tr key={item.id || index}>
+                              <td>
                                 <input
-                                  type="checkbox"
-                                  checked={item.tbd || false}
+                                  style={{
+                                    height: "30px",
+                                    borderRadius: "5px",
+                                    border: "1px solid #ccc",
+                                  }}
+                                  value={item.itemName}
                                   disabled={!isEditable}
-                                  onChange={(e) => {
-                                    const checked = e.target.checked;
-                                    handleItemChange(index, "tbd", checked);
-                                    if (checked) {
-                                      handleItemChange(
-                                        index,
-                                        "expectedDeliveryDate",
-                                        ""
-                                      );
-                                      handleItemChange(
-                                        index,
-                                        "expectedArrivalDate",
-                                        ""
-                                      );
-                                        handleItemChange(
-                                        index,
-                                        "arrivalDate",
-                                        ""
-                                      );
-                                    }
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "itemName",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <textarea
+                                  type="text"
+                                  value={item.quantity}
+                                  disabled={!isEditable}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "quantity",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="item-description-input"
+                                  maxLength={50}
+                                  style={{
+                                    height: "30px",
+                                    borderRadius: "5px",
+                                    border: "1px solid #ccc",
                                   }}
                                 />
-                                TBD
-                              </label>
-                            </td>
+                              </td>
+                              <td>
+                                <label
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={item.tbd || false}
+                                    disabled={!isEditable}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      handleItemChange(index, "tbd", checked);
+                                      if (checked) {
+                                        handleItemChange(
+                                          index,
+                                          "expectedDeliveryDate",
+                                          null
+                                        );
+                                        handleItemChange(
+                                          index,
+                                          "expectedArrivalDate",
+                                          null
+                                        );
+                                        handleItemChange(
+                                          index,
+                                          "arrivalDate",
+                                          null
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  TBD
+                                </label>
+                              </td>
 
-                            <td>
-                              <input
-                                type="date"
-                                style={{
-                                  height: "30px",
-                                  borderRadius: "5px",
-                                  border: "1px solid #ccc",
-                                }}
-                                value={
-                                  item.expectedDeliveryDate?.slice(0, 10) || ""
-                                }
-                                min={new Date().toISOString().split("T")[0]}
-                                disabled={item.tbd || !isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "expectedDeliveryDate",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
+                              <td>
+                                <input
+                                  type="date"
+                                  style={{
+                                    height: "30px",
+                                    borderRadius: "5px",
+                                    border: "1px solid #ccc",
+                                  }}
+                                  value={toDateStr(item.expectedDeliveryDate)}
 
-                            <td>
-                              <input
-                                type="date"
-                                style={{
-                                  height: "30px",
-                                  borderRadius: "5px",
-                                  border: "1px solid #ccc",
-                                }}
-                                value={
-                                  item.expectedArrivalDate?.slice(0, 10) || ""
-                                }
-                                min={new Date().toISOString().split("T")[0]}
-                                disabled={item.tbd || !isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "expectedArrivalDate",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
+                                  disabled={item.tbd || !isEditable}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "expectedDeliveryDate",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
 
-                             <td>
-                              <input
-                                type="date"
-                                style={{
-                                  height: "30px",
-                                  borderRadius: "5px",
-                                  border: "1px solid #ccc",
-                                }}
-                                value={
-                                  item.arrivalDate?.slice(0, 10) || ""
-                                }
-                                min={new Date().toISOString().split("T")[0]}
-                                disabled={item.tbd || !isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "arrivalDate",
-                                    e.target.value
+                              <td>
+                                <input
+                                  type="date"
+                                  style={{
+                                    height: "30px",
+                                    borderRadius: "5px",
+                                    border: "1px solid #ccc",
+                                  }}
+                                  value={toDateStr(item.expectedArrivalDate)}
+
+                                  disabled={item.tbd || !isEditable}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "expectedArrivalDate",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  type="date"
+                                  style={{
+                                    height: "30px",
+                                    borderRadius: "5px",
+                                    border: "1px solid #ccc",
+                                  }}
+                                  value={toDateStr(item.arrivalDate)}
+
+                                  disabled={item.tbd || !isEditable}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "arrivalDate",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <select
+                                  value={item.status}
+                                  disabled={!isEditable}
+                                  onChange={(e) =>
+                                    handleItemChange(
+                                      index,
+                                      "status",
+                                      e.target.value
+                                    )
+                                  }
+                                >
+                                  <option value="Pending">Pending</option>
+                                  <option value="In Transit">In Transit</option>
+                                  <option value="Delivered">Delivered</option>
+                                  <option value="Installed">Installed</option>
+                                  <option value="Arrived">Arrived</option>
+                                </select>
+                              </td>
+                              <td>
+                                {item.id ? (
+                                  isEditable ? (
+                                    <button
+                                      disabled={buttonClicked ? true : false}
+                                    >
+                                      {" "}
+                                      {buttonClicked ? (
+                                        "..."
+                                      ) : (
+                                        <span onClick={handleSave}>Save</span>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => toggleEditRow(index)}
+                                      >
+                                        <MdEdit />
+                                      </button>
+                                      <button onClick={() => deleteItem(item.id)}>
+                                        <MdDelete />
+                                      </button>
+                                      <div
+                                        onClick={() =>
+                                          itemMarkItemCommentsAsRead(item?.id)
+                                        }
+                                      >
+                                        <button
+                                          onClick={() => openItemComment(item.id)}
+                                          title="Comment"
+                                        >
+                                          <FaCommentAlt />
+                                          {commentCountsByManufacturerId[
+                                            item.id
+                                          ] > 0 && (
+                                              <span
+                                                style={{
+                                                  color: "red",
+                                                  fontWeight: "bold",
+                                                }}
+                                              >
+                                                (
+                                                {
+                                                  commentCountsByManufacturerId[
+                                                  item.id
+                                                  ]
+                                                }
+                                                )
+                                              </span>
+                                            )}
+                                        </button>
+                                      </div>
+                                    </>
                                   )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <select
-                                value={item.status}
-                                disabled={!isEditable}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "status",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="In Transit">In Transit</option>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Installed">Installed</option>
-                                <option value="Arrived">Arrived</option>
-                              </select>
-                            </td>
-                            <td>
-                              {item.id ? (
-                                isEditable ? (
-                                  <button
-                                    disabled={buttonClicked ? true : false}
-                                  >
-                                    {" "}
-                                    {buttonClicked ? (
-                                      "..."
-                                    ) : (
-                                      <span onClick={handleSave}>Save</span>
-                                    )}
-                                  </button>
                                 ) : (
                                   <>
                                     <button
-                                      onClick={() => toggleEditRow(index)}
+                                      disabled={buttonClicked ? true : false}
                                     >
-                                      <MdEdit />
+                                      {" "}
+                                      {buttonClicked ? (
+                                        "Saving"
+                                      ) : (
+                                        <span onClick={handleSave}>Save</span>
+                                      )}
                                     </button>
-                                    <button onClick={() => deleteItem(item.id)}>
-                                      <MdDelete />
+                                    <button onClick={() => removeRow(index)}>
+                                      Remove
                                     </button>
-                                    <div
-                                      onClick={() =>
-                                        itemMarkItemCommentsAsRead(item?.id)
-                                      }
-                                    >
-                                      <button
-                                        onClick={() => openItemComment(item.id)}
-                                        title="Comment"
-                                      >
-                                        <FaCommentAlt />
-                                        {commentCountsByManufacturerId[
-                                          item.id
-                                        ] > 0 && (
-                                          <span
-                                            style={{
-                                              color: "red",
-                                              fontWeight: "bold",
-                                            }}
-                                          >
-                                            (
-                                            {
-                                              commentCountsByManufacturerId[
-                                                item.id
-                                              ]
-                                            }
-                                            )
-                                          </span>
-                                        )}
-                                      </button>
-                                    </div>
                                   </>
-                                )
-                              ) : (
-                                <>
-                                  <button
-                                    disabled={buttonClicked ? true : false}
-                                  >
-                                    {" "}
-                                    {buttonClicked ? (
-                                      "Saving"
-                                    ) : (
-                                      <span onClick={handleSave}>Save</span>
-                                    )}
-                                  </button>
-                                  <button onClick={() => removeRow(index)}>
-                                    Remove
-                                  </button>
-                                </>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                   <div
                     className="button1"
@@ -2137,36 +2160,36 @@ const handleUploadClick = (docType) => {
               )}
               {activeTab === "punchlist" && (
                 <div className="project-info-card">
-                 
+
                   <div style={{ textAlign: "right", marginBottom: "1rem" }} className="xyzxc">
-                                             <p >
-            <b>Last Updated:{" "}</b>
-            {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
-              ? formatDate(project.lastNotificationSentAt)
-              : "Not Updated"}
-          </p>
-                      <button
-                        className="leadtimematrixheadingbutton"
-                        disabled={notifyCustomerLoading}
-                        onClick={() => handleToNotifyCustomerofPunchList()}
-                      >
-                        {notifyCustomerLoading ? (
-                          <>
-                            Notify customer <SpinnerLoader size={10} />
-                          </>
-                        ) : (
-                          "Notify customer"
-                        )}
-                      </button>
+                    <p >
+                      <b>Last Updated:{" "}</b>
+                      {project.lastNotificationSentAt && !isNaN(new Date(project.lastNotificationSentAt))
+                        ? formatDate(project.lastNotificationSentAt)
+                        : "Not Updated"}
+                    </p>
+                    <button
+                      className="leadtimematrixheadingbutton"
+                      disabled={notifyCustomerLoading}
+                      onClick={() => handleToNotifyCustomerofPunchList()}
+                    >
+                      {notifyCustomerLoading ? (
+                        <>
+                          Notify customer <SpinnerLoader size={10} />
+                        </>
+                      ) : (
+                        "Notify customer"
+                      )}
+                    </button>
                     <button
                       className="ledbutton"
                       onClick={() => setShowPunchModal(true)}
                     >
                       + Add
                     </button>
-                    
+
                   </div>
-                  
+
                   {showPunchModal && (
                     <div className="modal-overlay1">
                       <div className="modal-content">
@@ -2374,9 +2397,8 @@ const handleUploadClick = (docType) => {
                             <div className="punch-card-top">
                               <h4>{issue.title}</h4>
                               <span
-                                className={`status-badge ${
-                                  issue.status?.toLowerCase() || "pending"
-                                }`}
+                                className={`status-badge ${issue.status?.toLowerCase() || "pending"
+                                  }`}
                               >
                                 {issue.status || "Pending"}
                               </span>
@@ -2467,9 +2489,8 @@ const handleUploadClick = (docType) => {
                             <p>
                               <strong>Created By:</strong>{" "}
                               {issue.createdByType === "user"
-                                ? `${issue.creatorUser?.firstName || ""} ${
-                                    issue.creatorUser?.lastName || ""
-                                  }`
+                                ? `${issue.creatorUser?.firstName || ""} ${issue.creatorUser?.lastName || ""
+                                }`
                                 : issue.creatorCustomer?.full_name || "N/A"}
                             </p>
                             <div
@@ -2523,6 +2544,54 @@ const handleUploadClick = (docType) => {
           </>
         )}
       </div>
+
+      {isPreviewAllOpen && (
+        <div className="ltm-overlay">
+          <div className="ltm-modal">
+            <h3 className="ltm-title">Lead Time Matrix — All Items</h3>
+
+            <div className="ltm-table-wrap">
+              <table className="ltm-table">
+                <thead>
+                  <tr>
+                    <th>Manufacturer Name</th>
+                    <th>Description</th>
+                    <th>TBD</th>
+                    <th title="Estimated Departure">ETD</th>
+                    <th title="Expected Arrival">ETA</th>
+                    <th>Arrival</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(items || []).map((i) => (
+                    <tr key={i.id || `${i.itemName}-${Math.random()}`}>
+                      <td>{i.itemName || ""}</td>
+                      <td className="ltm-desc">{i.quantity || ""}</td>
+                      <td>{i.tbd ? "Yes" : "No"}</td>
+                      <td>{i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate)}</td>
+                      <td>{i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate)}</td>
+                      <td>{i.tbd ? "TBD" : toDateStr(i.arrivalDate)}</td>
+                      <td>{i.status || ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="ltm-actions">
+              <button className="ltm-btn" onClick={handleDownloadLeadTimeExcel}>
+                Download Excel
+              </button>
+              <button className="ltm-btn ltm-btn--secondary" onClick={() => setIsPreviewAllOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/*team comment canvas*/}
       <Offcanvas
