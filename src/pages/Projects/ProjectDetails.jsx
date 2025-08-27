@@ -18,6 +18,8 @@ import useRolePermissions from "../../hooks/useRolePermissions";
 import InvoiceManagement from "./InvoiceManagment";
 import SpinnerLoader from "../../components/SpinnerLoader";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -55,6 +57,69 @@ const ProjectDetails = () => {
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const [currentDocType, setCurrentDocType] = useState('');
   const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
+  
+  const handleDownloadLeadTimePDF = () => {
+    try {
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt" });
+
+      const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
+      const title = `${project?.name || "Project"} — Lead Time Matrix`;
+      const generatedAt = new Date().toLocaleString();
+
+
+      doc.setFontSize(14);
+      doc.text(title, 40, 40);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${generatedAt}`, 40, 58);
+
+      const head = [
+        ["Manufacturer Name", "Description", "TBD", "ETD", "ETA", "Arrival", "Status"],
+      ];
+
+      const body = (items || []).map((i) => [
+        i.itemName || "",
+        i.quantity || "",
+        i.tbd ? "Yes" : "No",
+        i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate),
+        i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate),
+        i.tbd ? "TBD" : toDateStr(i.arrivalDate),
+        i.status || "",
+      ]);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 80,
+        margin: { left: 40, right: 40 },
+        styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
+        headStyles: { fillColor: [230, 230, 230] },
+        columnStyles: {
+          0: { cellWidth: 160 },
+          1: { cellWidth: 240 },
+          2: { cellWidth: 50, halign: "center" },
+          3: { cellWidth: 80 },
+          4: { cellWidth: 80 },
+          5: { cellWidth: 80 },
+          6: { cellWidth: 80 },
+        },
+        didDrawPage(data) {
+          // Footer page number
+          const pageCount = doc.getNumberOfPages();
+          doc.setFontSize(9);
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.getWidth() - 90,
+            doc.internal.pageSize.getHeight() - 20
+          );
+        },
+      });
+
+      doc.save(`${safeName}_lead_time_matrix.pdf`);
+    } catch (e) {
+      console.error("PDF generation failed:", e);
+    }
+  };
+
   const isZeroDate = (v) =>
     v === "0000-00-00" || v === "0000-00-00 00:00:00";
 
@@ -2583,7 +2648,17 @@ const ProjectDetails = () => {
               <button className="ltm-btn" onClick={handleDownloadLeadTimeExcel}>
                 Download Excel
               </button>
-              <button className="ltm-btn ltm-btn--secondary" onClick={() => setIsPreviewAllOpen(false)}>
+              <button
+                className="ltm-btn"
+                onClick={handleDownloadLeadTimePDF}
+                disabled={!items?.length}
+              >
+                Download PDF
+              </button>
+              <button
+                className="ltm-btn ltm-btn--secondary"
+                onClick={() => setIsPreviewAllOpen(false)}
+              >
                 Close
               </button>
             </div>
