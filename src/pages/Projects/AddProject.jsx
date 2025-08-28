@@ -39,7 +39,7 @@ const AddProject = () => {
     };
   });
 
-
+  const [canAddMultipleClients, setCanAddMultipleClients] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
   const [allRoles, setAllRoles] = useState([]);
@@ -94,7 +94,8 @@ const AddProject = () => {
       name, type, clientId, clientName, estimatedCompletion,
       totalValue, advancePayment,
     } = formData;
-
+    if (!canAddMultipleClients && clientId.length > 1)
+      return "Your role permits only one customer per project.";
     if (!name.trim()) return "Project Name is required.";
     if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
@@ -116,14 +117,17 @@ const AddProject = () => {
   const handleAddCustomer = (e) => {
     const idStr = e.target.value;
     if (!idStr) return;
+    if (!canAddMultipleClients && (formData.clientId?.length || 0) >= 1) {
+      toast.error("Your role allows only one customer per project.");
+      e.target.value = "";
+      return;
+    }
     const selected = customers.find(c => String(c.id) === idStr);
     if (!selected) return;
-
     setFormData(prev => {
       const ids = Array.isArray(prev.clientId) ? prev.clientId : [];
       const names = Array.isArray(prev.clientName) ? prev.clientName : [];
       if (ids.includes(selected.id)) return prev;
-
       return {
         ...prev,
         clientId: [...ids, selected.id],
@@ -133,6 +137,7 @@ const AddProject = () => {
     });
     e.target.value = "";
   };
+
 
   const removeCustomer = (idToRemove) => {
     setFormData(prev => {
@@ -260,8 +265,6 @@ const AddProject = () => {
         const res = await fetch(`${url}/auth/users-by-role/${encodedRole}`);
         const data = await res.json();
         let users = data.users || [];
-
-        // Add static Admin user if role is Account Manager
         if (role === "Account Manager") {
           const adminUser = { id: 143, firstName: "Admin", email: "mfernandez-edge@bhouse.design", isStatic: true };
           const adminExists = users.some((user) => user.id === 143);
@@ -295,8 +298,6 @@ const AddProject = () => {
           );
           defaultUserIds = defaultUsers.map((user) => user.id);
         }
-
-        // 🔐 Always include Admin (id 143) if role is Account Manager
         if (role === "Account Manager" && !defaultUserIds.includes(143)) {
           defaultUserIds.push(143);
         }
@@ -315,38 +316,34 @@ const AddProject = () => {
     }
   };
 
+useEffect(() => {
+  const fetchRoles = async () => {
+    const res = await fetch(`${url}/roles`);
+    const data = await res.json();
+    if (data.success) {
+      const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
+      const filtered = data.data.filter((role) =>
+        allowedLevels.includes(role.defaultPermissionLevel)
+      );
+      const roleTitles = filtered.map((role) => role.title);
+      setAllRoles(roleTitles);
 
+      const loggedInUser = JSON.parse(localStorage.getItem("user"));
+      const userRole = loggedInUser?.user?.userRole;
 
+      const currentRoleObj = (data.data || []).find(r => r.title === userRole);
+      const level = Number(currentRoleObj?.defaultPermissionLevel);
+      setCanAddMultipleClients([0, 1, 2].includes(level));
 
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const res = await fetch(`${url}/roles`);
-      const data = await res.json();
-      if (data.success) {
-        const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
-
-        const filtered = data.data.filter((role) =>
-          allowedLevels.includes(role.defaultPermissionLevel)
-        );
-        const roleTitles = filtered.map((role) => role.title);
-        setAllRoles(roleTitles);
-
-        // ✅ Pre-select "Account Manager" if current user has that role
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
-        const userRole = loggedInUser?.user?.userRole;
-
-        if (
-          userRole === "Account Manager" &&
-          roleTitles.includes("Account Manager")
-        ) {
-          // Simulate toggle to auto-select
-          handleRoleToggle("Account Manager");
-        }
+      if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
+        handleRoleToggle("Account Manager");
       }
-    };
-    fetchRoles();
-  }, []);
+    }
+  };
+  fetchRoles();
+}, []);
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -590,6 +587,7 @@ const AddProject = () => {
                       onChange={handleAddCustomer}
                       value=""
                       required
+                      disabled={!canAddMultipleClients && (formData.clientId?.length || 0) >= 1}
                     >
                       <option value="">Select a customer</option>
                       {customers.map((customer) => (
@@ -598,6 +596,10 @@ const AddProject = () => {
                         </option>
                       ))}
                     </select>
+
+                    {!canAddMultipleClients && (formData.clientId?.length || 0) >= 1 && (
+                      <small className="help-text">Only one customer allowed for your role.</small>
+                    )}
 
                     {/* Selected customers as removable chips */}
                     <div className="selected-customers">

@@ -68,7 +68,7 @@ const EditProject = () => {
     totalValue: "",
   });
   const [notifyClient, setNotifyClient] = useState(false);
-  // Prefill when formData loads from DB
+  const [canEditMultipleClients, setCanEditMultipleClients] = useState(false);
   useEffect(() => {
     const existing = formData.deliveryHours;
     if (predefinedOptions.includes(existing)) {
@@ -104,12 +104,20 @@ const EditProject = () => {
   const fetchRoles = async () => {
     const res = await axios.get(`${url}/roles`);
     const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const filtered = res.data?.data.filter((role) =>
+    const roles = res.data?.data || [];
+
+    const filtered = roles.filter((role) =>
       allowedLevels.includes(role.defaultPermissionLevel)
     );
     const roleTitles = filtered.map((role) => role.title);
     setAllRoles(roleTitles);
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    const userRole = loggedInUser?.user?.userRole;
+    const currentRoleObj = roles.find(r => r.title === userRole);
+    const level = Number(currentRoleObj?.defaultPermissionLevel);
+    setCanEditMultipleClients([0, 1, 2].includes(level));
   };
+
 
   const fetchProjectDetails = async () => {
     try {
@@ -191,6 +199,12 @@ const EditProject = () => {
   const handleAddCustomer = (e) => {
     const idStr = e.target.value;
     if (!idStr) return;
+    if (!canEditMultipleClients && (formData.clientId?.length || 0) >= 1) {
+      toast.error("Your role allows only one customer for this project.");
+      e.target.value = "";
+      return;
+    }
+
     const selected = customers.find((c) => String(c.id) === idStr);
     if (!selected) return;
 
@@ -208,6 +222,7 @@ const EditProject = () => {
     });
     e.target.value = "";
   };
+
 
   const removeCustomer = (idToRemove) => {
     setFormData((prev) => {
@@ -558,6 +573,9 @@ const EditProject = () => {
       ) {
         return "Advance Payment must be a positive number.";
       }
+      if (!canEditMultipleClients && clientId.length > 1)
+        return "Your role permits only one customer for this project.";
+
     }
 
     if (step === 2) {
@@ -681,6 +699,7 @@ const EditProject = () => {
                       onChange={handleAddCustomer}
                       value=""
                       required={!(formData.clientId && formData.clientId.length)}
+                      disabled={!canEditMultipleClients && (formData.clientId?.length || 0) >= 1}
                     >
                       <option value="">Select a customer</option>
                       {customers.map((customer) => (
@@ -689,6 +708,11 @@ const EditProject = () => {
                         </option>
                       ))}
                     </select>
+
+                    {!canEditMultipleClients && (formData.clientId?.length || 0) >= 1 && (
+                      <small className="help-text">Only one customer allowed for your role. Remove the current one to pick another.</small>
+                    )}
+
                     <div className="selected-customers" style={{ marginTop: 8 }}>
                       {formData.clientId?.map((cid, idx) => {
                         const name = formData.clientName?.[idx] ?? `#${cid}`;
