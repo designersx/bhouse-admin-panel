@@ -39,7 +39,7 @@ const AddProject = () => {
     };
   });
 
-  const [canAddMultipleClients, setCanAddMultipleClients] = useState(false);
+  const [canAddMultipleClients, setCanAddMultipleClients] = useState(true);
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [roleUsers, setRoleUsers] = useState({});
   const [allRoles, setAllRoles] = useState([]);
@@ -94,8 +94,8 @@ const AddProject = () => {
       name, type, clientId, clientName, estimatedCompletion,
       totalValue, advancePayment,
     } = formData;
-    if (!canAddMultipleClients && clientId.length > 1)
-      return "Your role permits only one customer per project.";
+if (!canAddMultipleClients && clientId.length > 1)
+  return "Your role permits only one customer per project.";
     if (!name.trim()) return "Project Name is required.";
     if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
@@ -333,7 +333,7 @@ useEffect(() => {
 
       const currentRoleObj = (data.data || []).find(r => r.title === userRole);
       const level = Number(currentRoleObj?.defaultPermissionLevel);
-      setCanAddMultipleClients([0, 1, 2].includes(level));
+      setCanAddMultipleClients(level !== 6);
 
       if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
         handleRoleToggle("Account Manager");
@@ -342,6 +342,7 @@ useEffect(() => {
   };
   fetchRoles();
 }, []);
+
 
 
 
