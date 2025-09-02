@@ -642,6 +642,36 @@ const EditProject = () => {
     //   },
     // }));
   }, [projectFormData, clicked]);
+  const handleMoneyChange = (name) => (e) => {
+    let v = e.target.value;
+
+    // allow clearing
+    if (v === "") {
+      setFormData((p) => ({ ...p, [name]: "" }));
+      return;
+    }
+
+    // keep only digits and a single dot
+    if (!/^\d*\.?\d*$/.test(v)) return;
+
+    // limit integer part to 8 digits, decimals to 2
+    const [intPartRaw, decRaw = ""] = v.split(".");
+    const intPart = intPartRaw.slice(0, 8);
+    const decPart = decRaw.slice(0, 2);
+
+    const next = decRaw !== "" ? `${intPart}.${decPart}` : intPart;
+    setFormData((p) => ({ ...p, [name]: next }));
+  };
+
+  const normalizeMoneyOnBlur = (name) => (e) => {
+    const v = e.target.value;
+    if (v === "" || v === ".") return;
+    const n = Number(v);
+    if (Number.isFinite(n)) {
+      // format to 2 decimals on blur
+      setFormData((p) => ({ ...p, [name]: n.toFixed(2) }));
+    }
+  };
 
 
   return (
@@ -801,7 +831,7 @@ const EditProject = () => {
                         const value = e.target.value;
                         const regex = /^\d*\.?\d{0,2}$/;
                         if (!regex.test(value)) {
-                          e.target.value = formData.advancePayment; // reset to previous valid value
+                          e.target.value = formData.advancePayment; 
                         }
                       }}
                     />
@@ -814,23 +844,15 @@ const EditProject = () => {
                       type="text"
                       name="totalValue"
                       value={formData.totalValue}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const regex = /^\d*\.?\d{0,2}$/;
-                        if (value.length <= 8 && regex.test(value)) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            totalValue: value,
-                          }));
-                        }
-                      }}
+                      onChange={handleMoneyChange("totalValue")}
+                      onBlur={normalizeMoneyOnBlur("totalValue")}
                       required
                       placeholder="Enter total value"
                       onInput={(e) => {
                         const value = e.target.value;
                         const regex = /^\d*\.?\d{0,2}$/;
                         if (!regex.test(value)) {
-                          e.target.value = formData.totalValue; // reset to previous valid value
+                          e.target.value = formData.totalValue; 
                         }
                       }}
                     />
