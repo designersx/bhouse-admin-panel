@@ -68,7 +68,7 @@ const EditProject = () => {
     totalValue: "",
   });
   const [notifyClient, setNotifyClient] = useState(false);
-  const [canEditMultipleClients, setCanEditMultipleClients] = useState(false);
+  const [canEditMultipleClients, setCanEditMultipleClients] = useState(true);
   useEffect(() => {
     const existing = formData.deliveryHours;
     if (predefinedOptions.includes(existing)) {
@@ -115,7 +115,7 @@ const EditProject = () => {
     const userRole = loggedInUser?.user?.userRole;
     const currentRoleObj = roles.find(r => r.title === userRole);
     const level = Number(currentRoleObj?.defaultPermissionLevel);
-    setCanEditMultipleClients([0, 1, 2].includes(level));
+    setCanEditMultipleClients(currentRoleObj ? level !== 6 : true);
   };
 
 
