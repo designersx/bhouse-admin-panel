@@ -46,19 +46,20 @@ const AddProject = () => {
   const [files, setFiles] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState(() => {
-    const savedMatrix = localStorage.getItem("addProjectLeadMatrix");
-    return savedMatrix
-      ? JSON.parse(savedMatrix)
-      : [
-        {
-          itemName: "",
-          quantity: "",
-          expectedDeliveryDate: "",
-          expectedArrivalDate: "",
-          status: "Pending",
-          arrivalDate: ""
-        },
-      ];
+    const saved = localStorage.getItem("addProjectLeadMatrix");
+    return saved
+      ? JSON.parse(saved)
+      : [{
+        itemName: "",
+        quantity: "",
+        expectedDeliveryDate: "",
+        expectedArrivalDate: "",
+        arrivalDate: "",
+        tbdETD: false,
+        tbdETA: false,
+        tbdArrival: false,
+        status: "Pending",
+      }];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -94,8 +95,8 @@ const AddProject = () => {
       name, type, clientId, clientName, estimatedCompletion,
       totalValue, advancePayment,
     } = formData;
-if (!canAddMultipleClients && clientId.length > 1)
-  return "Your role permits only one customer per project.";
+    if (!canAddMultipleClients && clientId.length > 1)
+      return "Your role permits only one customer per project.";
     if (!name.trim()) return "Project Name is required.";
     if (!/[a-zA-Z]/.test(name)) return "Project Name must include at least one alphabet character.";
     if (!type) return "Project Type is required.";
@@ -192,35 +193,49 @@ if (!canAddMultipleClients && clientId.length > 1)
   const prevStep = () => setStep(step - 1);
 
   const handleItemChange = (index, field, value) => {
-    const updated = [...leadTimeMatrix];
+    setLeadTimeMatrix(prev => {
+      const updated = [...prev];
+      const row = { ...updated[index] };
 
-    if (field === "tbd") {
-      updated[index][field] = value;
-      if (value) {
-        // If TBD is true, clear both dates
-        updated[index].expectedDeliveryDate = "";
-        updated[index].expectedArrivalDate = "";
-        updated[index].arrivalDate = "";
+      if (field === "tbdETD") {
+        row.tbdETD = value;
+        if (value) row.expectedDeliveryDate = "";
+      } else if (field === "tbdETA") {
+        row.tbdETA = value;
+        if (value) row.expectedArrivalDate = "";
+      } else if (field === "tbdArrival") {
+        row.tbdArrival = value;
+        if (value) row.arrivalDate = "";
+      } else {
+        row[field] = value;
+        // if user fills a date, auto-clear its TBD
+        if (field === "expectedDeliveryDate" && value) row.tbdETD = false;
+        if (field === "expectedArrivalDate" && value) row.tbdETA = false;
+        if (field === "arrivalDate" && value) row.tbdArrival = false;
       }
-    } else {
-      updated[index][field] = value;
-    }
 
-    setLeadTimeMatrix(updated);
+      updated[index] = row;
+      return updated;
+    });
   };
+
   const handleAddItemRow = () => {
-    setLeadTimeMatrix([
-      ...leadTimeMatrix,
+    setLeadTimeMatrix(prev => ([
+      ...prev,
       {
-        itemName: null,
-        quantity: null,
-        expectedDeliveryDate: null,
-        expectedArrivalDate: null,
+        itemName: "",
+        quantity: "",
+        expectedDeliveryDate: "",
+        expectedArrivalDate: "",
+        arrivalDate: "",
+        tbdETD: false,
+        tbdETA: false,
+        tbdArrival: false,
         status: "Pending",
-        arrivalDate: null
       },
-    ]);
+    ]));
   };
+
 
   const handleRemoveItemRow = (index) => {
     const updated = [...leadTimeMatrix];
@@ -316,32 +331,32 @@ if (!canAddMultipleClients && clientId.length > 1)
     }
   };
 
-useEffect(() => {
-  const fetchRoles = async () => {
-    const res = await fetch(`${url}/roles`);
-    const data = await res.json();
-    if (data.success) {
-      const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
-      const filtered = data.data.filter((role) =>
-        allowedLevels.includes(role.defaultPermissionLevel)
-      );
-      const roleTitles = filtered.map((role) => role.title);
-      setAllRoles(roleTitles);
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const res = await fetch(`${url}/roles`);
+      const data = await res.json();
+      if (data.success) {
+        const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9];
+        const filtered = data.data.filter((role) =>
+          allowedLevels.includes(role.defaultPermissionLevel)
+        );
+        const roleTitles = filtered.map((role) => role.title);
+        setAllRoles(roleTitles);
 
-      const loggedInUser = JSON.parse(localStorage.getItem("user"));
-      const userRole = loggedInUser?.user?.userRole;
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        const userRole = loggedInUser?.user?.userRole;
 
-      const currentRoleObj = (data.data || []).find(r => r.title === userRole);
-      const level = Number(currentRoleObj?.defaultPermissionLevel);
-      setCanAddMultipleClients(level !== 6);
+        const currentRoleObj = (data.data || []).find(r => r.title === userRole);
+        const level = Number(currentRoleObj?.defaultPermissionLevel);
+        setCanAddMultipleClients(level !== 6);
 
-      if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
-        handleRoleToggle("Account Manager");
+        if (userRole === "Account Manager" && roleTitles.includes("Account Manager")) {
+          handleRoleToggle("Account Manager");
+        }
       }
-    }
-  };
-  fetchRoles();
-}, []);
+    };
+    fetchRoles();
+  }, []);
 
 
 
@@ -352,17 +367,16 @@ useEffect(() => {
   };
 
   const isLeadMatrixValid = () => {
-    for (let index = 1; index < leadTimeMatrix.length; index++) {
-      const item = leadTimeMatrix[index];
-
-      if (!item.itemName) {
-
-        return false;
-
-      }
-    }
-    return true;
+    return leadTimeMatrix.every(row => {
+      const filled = [
+        row.itemName, row.quantity, row.expectedDeliveryDate,
+        row.expectedArrivalDate, row.arrivalDate
+      ].some(v => (v ?? "").toString().trim() !== "");
+      if (!filled) return true;
+      return (row.itemName || "").trim() !== "";
+    });
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -406,28 +420,26 @@ useEffect(() => {
       "assignedTeamRoles",
       JSON.stringify(transformedRoles)
     );
-    const sanitizedMatrix = leadTimeMatrix.map((item) => ({
-      itemName: item.itemName,
-      quantity: item.quantity,
-      expectedDeliveryDate: item.expectedDeliveryDate
-        ? new Date(item.expectedDeliveryDate).toISOString().slice(0, 19).replace("T", " ")
-        : null,
-      expectedArrivalDate: item.expectedArrivalDate
-        ? new Date(item.expectedArrivalDate).toISOString().slice(0, 19).replace("T", " ")
-        : null,
+    const toDateOnly = (d) => (d ? d : null);
 
+    const sanitizedMatrix = leadTimeMatrix
+      .filter(row => (row.itemName || "").trim() !== "")
+      .map(item => ({
+        itemName: item.itemName?.trim() || "",
+        quantity: item.quantity || "",
+        expectedDeliveryDate: (item.tbdETD || !item.expectedDeliveryDate) ? null : toDateOnly(item.expectedDeliveryDate),
+        expectedArrivalDate: (item.tbdETA || !item.expectedArrivalDate) ? null : toDateOnly(item.expectedArrivalDate),
+        arrivalDate: (item.tbdArrival || !item.arrivalDate) ? null : toDateOnly(item.arrivalDate),
+        status: item.status || "Pending",
+        tbdETD: !!item.tbdETD,
+        tbdETA: !!item.tbdETA,
+        tbdArrival: !!item.tbdArrival,
+      }));
 
-      arrivalDate: item.arrivalDate
-        ? new Date(item.arrivalDate).toISOString().slice(0, 19).replace("T", " ")
-        : null,
-      status: item.status || "Pending",
-      tbd: !!item.tbd,
-    }));
-
-    console.log(sanitizedMatrix);
-    if (sanitizedMatrix[0].itemName !== "") {
+    if (sanitizedMatrix.length > 0) {
       formDataToSend.append("leadTimeMatrix", JSON.stringify(sanitizedMatrix));
     }
+
 
     for (let file of files) {
       formDataToSend.append("files", file);
@@ -1255,7 +1267,7 @@ useEffect(() => {
                       </div>
 
                       {/* ✅ TBD Checkbox */}
-                      <div className="form-group2">
+                      {/* <div className="form-group2">
                         <label>
                           <span
                             title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
@@ -1285,62 +1297,74 @@ useEffect(() => {
                             }}
                           />
                         </div>
-                      </div>
+                      </div> */}
 
+                      {/* ETD */}
                       <div className="form-group1">
-                        <label title="Expected Delivery Date">ETD</label>
-                        <input
-                          className="user-search-input1"
-                          type="date"
-                          value={item.expectedDeliveryDate}
-
-                          disabled={item.tbd}
-                          onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              "expectedDeliveryDate",
-                              e.target.value
-                            )
-                          }
-                        />
+                        <label title="Estimated Time of Departure">ETD</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <input
+                            className="user-search-input1"
+                            type="date"
+                            value={item.expectedDeliveryDate}
+                            disabled={item.tbdETD}
+                            onChange={(e) => handleItemChange(index, "expectedDeliveryDate", e.target.value)}
+                          />
+                          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.tbdETD}
+                              onChange={(e) => handleItemChange(index, "tbdETD", e.target.checked)}
+                            />
+                            TBD
+                          </label>
+                        </div>
                       </div>
 
+                      {/* ETA */}
                       <div className="form-group1">
-                        <label title="Expected Arrival Date">EAD</label>
-                        <input
-                          className="user-search-input1"
-                          type="date"
-                          value={item.expectedArrivalDate}
-
-                          disabled={item.tbd}
-                          onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              "expectedArrivalDate",
-                              e.target.value
-                            )
-                          }
-                        />
+                        <label title="Estimated Time of Arrival">ETA</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <input
+                            className="user-search-input1"
+                            type="date"
+                            value={item.expectedArrivalDate}
+                            disabled={item.tbdETA}
+                            onChange={(e) => handleItemChange(index, "expectedArrivalDate", e.target.value)}
+                          />
+                          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.tbdETA}
+                              onChange={(e) => handleItemChange(index, "tbdETA", e.target.checked)}
+                            />
+                            TBD
+                          </label>
+                        </div>
                       </div>
 
-
+                      {/* Arrival */}
                       <div className="form-group1">
-                        <label> Arrival Date</label>
-                        <input
-                          className="user-search-input1"
-                          type="date"
-                          value={item.arrivalDate}
-
-                          disabled={item.tbd}
-                          onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              "arrivalDate",
-                              e.target.value
-                            )
-                          }
-                        />
+                        <label>Arrival</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <input
+                            className="user-search-input1"
+                            type="date"
+                            value={item.arrivalDate}
+                            disabled={item.tbdArrival}
+                            onChange={(e) => handleItemChange(index, "arrivalDate", e.target.value)}
+                          />
+                          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <input
+                              type="checkbox"
+                              checked={!!item.tbdArrival}
+                              onChange={(e) => handleItemChange(index, "tbdArrival", e.target.checked)}
+                            />
+                            TBD
+                          </label>
+                        </div>
                       </div>
+
 
                       <div className="form-group1">
                         <label>Status</label>
