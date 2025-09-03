@@ -86,14 +86,16 @@ const EditProject = () => {
       setLeadTimeItems(
         (res.data || []).map((item) => ({
           ...item,
-          tbd: typeof item.tbd === "boolean" ? item.tbd : false,
+          tbdETD: !!item.tbdETD,
+          tbdETA: !!item.tbdETA,
+          tbdArrival: !!item.tbdArrival,
         }))
       );
-
     } catch (error) {
       console.error("Error fetching lead time items:", error);
     }
   };
+
 
   useEffect(() => {
     fetchRoles();
@@ -188,14 +190,18 @@ const EditProject = () => {
       {
         itemName: "",
         quantity: "",
-        expectedDeliveryDate: null,
-        expectedArrivalDate: null,
+        expectedDeliveryDate: "",
+        expectedArrivalDate: "",
+        arrivalDate: "",
+        tbdETD: false,
+        tbdETA: false,
+        tbdArrival: false,
         status: "Pending",
         projectId,
-        arrivalDate: null
       },
     ]);
   };
+
   const handleAddCustomer = (e) => {
     const idStr = e.target.value;
     if (!idStr) return;
@@ -236,11 +242,9 @@ const EditProject = () => {
 
   const addNewItemToBackend = async (item, index) => {
     try {
-      const res = await axios.post(`${url}/items/project-items`, {
-        ...item,
-        projectId,
-      });
-
+      const payload = buildItemPayload(item);
+      delete payload.id; // new item
+      const res = await axios.post(`${url}/items/project-items`, payload);
       const updated = [...leadTimeItems];
       updated[index] = res.data;
       setLeadTimeItems(updated);
@@ -262,28 +266,53 @@ const EditProject = () => {
       console.error(`Failed to fetch users for role: ${role}`, err);
     }
   };
+
   const handleItemChange = (index, field, value) => {
-    const updated = [...leadTimeItems];
+    setLeadTimeItems((prev) => {
+      const updated = [...prev];
+      const row = { ...updated[index] };
 
-    if (field === "tbd") {
-      updated[index][field] = value;
-
-      if (value) {
-        // If TBD is checked, clear the date fields
-        updated[index].expectedDeliveryDate = "";
-        updated[index].expectedArrivalDate = "";
-        updated[index].arrivalDate = "";
+      if (field === "tbdETD") {
+        row.tbdETD = value;
+        if (value) row.expectedDeliveryDate = "";
+      } else if (field === "tbdETA") {
+        row.tbdETA = value;
+        if (value) row.expectedArrivalDate = "";
+      } else if (field === "tbdArrival") {
+        row.tbdArrival = value;
+        if (value) row.arrivalDate = "";
+      } else {
+        row[field] = value;
+        // auto-uncheck TBD if a date is typed
+        if (field === "expectedDeliveryDate" && value) row.tbdETD = false;
+        if (field === "expectedArrivalDate" && value) row.tbdETA = false;
+        if (field === "arrivalDate" && value) row.tbdArrival = false;
       }
-    } else {
-      updated[index][field] = value;
-    }
 
-    setLeadTimeItems(updated);
+      updated[index] = row;
+      return updated;
+    });
   };
+const toDateOnly = (d) => (d ? d : null);
+  const buildItemPayload = (it) => ({
+    id: it.id,
+    projectId,
+    itemName: it.itemName?.trim() || "",
+    quantity: it.quantity || "",
+    expectedDeliveryDate: it.tbdETD ? null : toDateOnly(it.expectedDeliveryDate),
+    expectedArrivalDate: it.tbdETA ? null : toDateOnly(it.expectedArrivalDate),
+    arrivalDate: it.tbdArrival ? null : toDateOnly(it.arrivalDate),
+    status: it.status || "Pending",
+    tbdETD: !!it.tbdETD,
+    tbdETA: !!it.tbdETA,
+    tbdArrival: !!it.tbdArrival,
+  });
+
 
   const updateItem = async (item) => {
     try {
-      await axios.put(`${url}/items/project-items/${item.id}`, item);
+      const payload = buildItemPayload(item);
+      await axios.put(`${url}/items/project-items/${item.id}`, payload);
       Swal.fire("Manufacturer updated!");
     } catch (err) {
       Swal.fire("Error updating item.");
@@ -831,7 +860,7 @@ const EditProject = () => {
                         const value = e.target.value;
                         const regex = /^\d*\.?\d{0,2}$/;
                         if (!regex.test(value)) {
-                          e.target.value = formData.advancePayment; 
+                          e.target.value = formData.advancePayment;
                         }
                       }}
                     />
@@ -852,7 +881,7 @@ const EditProject = () => {
                         const value = e.target.value;
                         const regex = /^\d*\.?\d{0,2}$/;
                         if (!regex.test(value)) {
-                          e.target.value = formData.totalValue; 
+                          e.target.value = formData.totalValue;
                         }
                       }}
                     />
@@ -1409,25 +1438,14 @@ const EditProject = () => {
                       <tr>
                         <th>Manufacturer Name</th>
                         <th>Description</th>
-                        <th>
-                          <span
-                            title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-                            style={{
-                              cursor: "pointer",
-                            }}
-                          >
-                            TBD
-                          </span>
-                        </th>
-
-
-                        <th>Expected Departure</th>
-                        <th>Expected Arrival</th>
+                        <th>Expected Departure (ETD)</th>
+                        <th>Expected Arrival (ETA)</th>
                         <th>Arrival Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {leadTimeItems.map((item, index) => (
                         <tr key={item.id || index}>
@@ -1462,7 +1480,7 @@ const EditProject = () => {
                           </td>
 
                           {/* ✅ TBD Checkbox Column */}
-                          <td>
+                          {/* <td>
                             <input
                               type="checkbox"
                               checked={item.tbd || false}
@@ -1470,62 +1488,83 @@ const EditProject = () => {
                                 handleItemChange(index, "tbd", e.target.checked)
                               }
                             />
-                          </td>
+                          </td> */}
 
+                          {/* ETD */}
                           <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.expectedDeliveryDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "expectedDeliveryDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={
+                                  item.tbdETD ? "" : (item.expectedDeliveryDate?.slice(0, 10) || "")
+                                }
+                                onChange={(e) =>
+                                  handleItemChange(index, "expectedDeliveryDate", e.target.value)
+                                }
+                                disabled={item.tbdETD}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdETD}
+                                  onChange={(e) => handleItemChange(index, "tbdETD", e.target.checked)}
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
 
+                          {/* ETA */}
                           <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.expectedArrivalDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "expectedArrivalDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={
+                                  item.tbdETA ? "" : (item.expectedArrivalDate?.slice(0, 10) || "")
+                                }
+                                onChange={(e) =>
+                                  handleItemChange(index, "expectedArrivalDate", e.target.value)
+                                }
+                                disabled={item.tbdETA}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdETA}
+                                  onChange={(e) => handleItemChange(index, "tbdETA", e.target.checked)}
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
 
-
+                          {/* Arrival */}
                           <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.arrivalDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "arrivalDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={item.tbdArrival ? "" : (item.arrivalDate?.slice(0, 10) || "")}
+                                onChange={(e) =>
+                                  handleItemChange(index, "arrivalDate", e.target.value)
+                                }
+                                disabled={item.tbdArrival}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdArrival}
+                                  onChange={(e) =>
+                                    handleItemChange(index, "tbdArrival", e.target.checked)
+                                  }
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
+
 
                           <td>
                             <select

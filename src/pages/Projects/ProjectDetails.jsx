@@ -57,7 +57,7 @@ const ProjectDetails = () => {
   const [notifyCustomerLoading, setNotifyCustomerLoading] = useState(false);
   const [currentDocType, setCurrentDocType] = useState('');
   const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
-  
+
   const handleDownloadLeadTimePDF = () => {
     try {
       const doc = new jsPDF({ orientation: "landscape", unit: "pt" });
@@ -72,19 +72,18 @@ const ProjectDetails = () => {
       doc.setFontSize(10);
       doc.text(`Generated: ${generatedAt}`, 40, 58);
 
-      const head = [
-        ["Manufacturer Name", "Description", "TBD", "ETD", "ETA", "Arrival", "Status"],
-      ];
+      const head = [["Manufacturer Name", "Description", "ETD", "ETA", "Arrival", "Status"]];
+
 
       const body = (items || []).map((i) => [
         i.itemName || "",
         i.quantity || "",
-        i.tbd ? "Yes" : "No",
-        i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate),
-        i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate),
-        i.tbd ? "TBD" : toDateStr(i.arrivalDate),
+        i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
+        i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
+        i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
         i.status || "",
       ]);
+
 
       autoTable(doc, {
         head,
@@ -94,13 +93,12 @@ const ProjectDetails = () => {
         styles: { fontSize: 9, cellPadding: 6, overflow: "linebreak" },
         headStyles: { fillColor: [230, 230, 230] },
         columnStyles: {
-          0: { cellWidth: 160 },
-          1: { cellWidth: 240 },
-          2: { cellWidth: 50, halign: "center" },
-          3: { cellWidth: 80 },
-          4: { cellWidth: 80 },
-          5: { cellWidth: 80 },
-          6: { cellWidth: 80 },
+          0: { cellWidth: 160 }, // Manufacturer
+          1: { cellWidth: 240 }, // Description
+          2: { cellWidth: 80 },  // ETD
+          3: { cellWidth: 80 },  // ETA
+          4: { cellWidth: 80 },  // Arrival
+          5: { cellWidth: 80 },  // Status
         },
         didDrawPage(data) {
           // Footer page number
@@ -128,14 +126,14 @@ const ProjectDetails = () => {
     return v;
   };
   const toDateStr = (d) => (!d || isZeroDate(d) ? "" : String(d).slice(0, 10));
+
   const handleDownloadLeadTimeExcel = () => {
     const rows = (items || []).map((i) => ({
       "Manufacturer Name": i.itemName || "",
       Description: i.quantity || "",
-      TBD: i.tbd ? "Yes" : "No",
-      ETD: i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate),
-      ETA: i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate),
-      Arrival: i.tbd ? "TBD" : toDateStr(i.arrivalDate),
+      ETD: i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
+      ETA: i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
+      Arrival: i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
       Status: i.status || "",
     }));
 
@@ -1290,6 +1288,26 @@ const ProjectDetails = () => {
       }
     });
   };
+  const parseArrayish = (v) => {
+    if (Array.isArray(v)) return v;
+    if (typeof v === "string") {
+      try {
+        const parsed = JSON.parse(v);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (_) { }
+      return v ? v.split(",").map(s => s.trim()).filter(Boolean) : [];
+    }
+    if (v && typeof v === "object") {
+      const maybe = v.name || [v.firstName, v.lastName].filter(Boolean).join(" ");
+      return maybe ? [maybe] : [];
+    }
+    return [];
+  };
+
+  const formatClientName = (value) => {
+    const arr = parseArrayish(value);
+    return arr.join(", ");
+  };
 
   return (
     <Layout>
@@ -1337,7 +1355,7 @@ const ProjectDetails = () => {
                   <div className="project-info-card">
                     <h2>Project Overview</h2>
                     <div className="info-group">
-                      <strong>Client:</strong> {project.clientName}
+                      <strong>Client:</strong> {formatClientName(project.clientName)}
                     </div>
                     <div className="info-group">
                       <strong>Status:</strong> {project.status}
@@ -1910,7 +1928,7 @@ const ProjectDetails = () => {
                           className="leadtimematrixheadingbutton"
                           onClick={() => setIsPreviewAllOpen(true)}
                         >
-                          Preview All
+                          Preview
                         </button>
                       </div>
                     ) : null}
@@ -1922,23 +1940,14 @@ const ProjectDetails = () => {
                           <tr>
                             <th>Manufacturer Name</th>
                             <th>Description</th>
-                            <th>
-                              <span
-                                title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-                                style={{
-                                  cursor: "pointer",
-                                }}
-                              >
-                                TBD
-                              </span>
-                            </th>
-                            <th title="Estimated Departurn">ETD</th>
+                            <th title="Estimated Departure">ETD</th>
                             <th title="Expected Arrival">ETA</th>
                             <th>Arrival</th>
                             <th>Status</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
+
                       ) : null}
 
                       <tbody>
@@ -1956,9 +1965,9 @@ const ProjectDetails = () => {
                             }
                             const payload = {
                               ...item,
-                              expectedDeliveryDate: item.tbd ? null : normalizeDate(item.expectedDeliveryDate),
-                              expectedArrivalDate: item.tbd ? null : normalizeDate(item.expectedArrivalDate),
-                              arrivalDate: item.tbd ? null : normalizeDate(item.arrivalDate),
+                              expectedDeliveryDate: item.tbdETD ? null : normalizeDate(item.expectedDeliveryDate),
+                              expectedArrivalDate: item.tbdETA ? null : normalizeDate(item.expectedArrivalDate),
+                              arrivalDate: item.tbdArrival ? null : normalizeDate(item.arrivalDate),
                             };
 
                             if (item.id) {
@@ -2015,7 +2024,7 @@ const ProjectDetails = () => {
                                   }}
                                 />
                               </td>
-                              <td>
+                              {/* <td>
                                 <label
                                   style={{
                                     display: "flex",
@@ -2051,70 +2060,92 @@ const ProjectDetails = () => {
                                   />
                                   TBD
                                 </label>
-                              </td>
+                              </td> */}
 
+                              {/* ETD */}
                               <td>
-                                <input
-                                  type="date"
-                                  style={{
-                                    height: "30px",
-                                    borderRadius: "5px",
-                                    border: "1px solid #ccc",
-                                  }}
-                                  value={toDateStr(item.expectedDeliveryDate)}
-
-                                  disabled={item.tbd || !isEditable}
-                                  onChange={(e) =>
-                                    handleItemChange(
-                                      index,
-                                      "expectedDeliveryDate",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <input
+                                    type="date"
+                                    style={{ height: "30px", borderRadius: "5px", border: "1px solid #ccc" }}
+                                    value={toDateStr(item.expectedDeliveryDate)}
+                                    disabled={(item.tbdETD ?? false) || !isEditable}
+                                    onChange={(e) =>
+                                      handleItemChange(index, "expectedDeliveryDate", e.target.value)
+                                    }
+                                  />
+                                  <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(item.tbdETD ?? false)}
+                                      disabled={!isEditable}
+                                      onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        handleItemChange(index, "tbdETD", checked);
+                                        if (checked) handleItemChange(index, "expectedDeliveryDate", null);
+                                      }}
+                                    />
+                                    TBD
+                                  </label>
+                                </div>
                               </td>
 
+                              {/* ETA */}
                               <td>
-                                <input
-                                  type="date"
-                                  style={{
-                                    height: "30px",
-                                    borderRadius: "5px",
-                                    border: "1px solid #ccc",
-                                  }}
-                                  value={toDateStr(item.expectedArrivalDate)}
-
-                                  disabled={item.tbd || !isEditable}
-                                  onChange={(e) =>
-                                    handleItemChange(
-                                      index,
-                                      "expectedArrivalDate",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <input
+                                    type="date"
+                                    style={{ height: "30px", borderRadius: "5px", border: "1px solid #ccc" }}
+                                    value={toDateStr(item.expectedArrivalDate)}
+                                    disabled={(item.tbdETA ?? false) || !isEditable}
+                                    onChange={(e) =>
+                                      handleItemChange(index, "expectedArrivalDate", e.target.value)
+                                    }
+                                  />
+                                  <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(item.tbdETA ?? false)}
+                                      disabled={!isEditable}
+                                      onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        handleItemChange(index, "tbdETA", checked);
+                                        if (checked) handleItemChange(index, "expectedArrivalDate", null);
+                                      }}
+                                    />
+                                    TBD
+                                  </label>
+                                </div>
                               </td>
 
+                              {/* Arrival */}
                               <td>
-                                <input
-                                  type="date"
-                                  style={{
-                                    height: "30px",
-                                    borderRadius: "5px",
-                                    border: "1px solid #ccc",
-                                  }}
-                                  value={toDateStr(item.arrivalDate)}
-
-                                  disabled={item.tbd || !isEditable}
-                                  onChange={(e) =>
-                                    handleItemChange(
-                                      index,
-                                      "arrivalDate",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <input
+                                    type="date"
+                                    style={{ height: "30px", borderRadius: "5px", border: "1px solid #ccc" }}
+                                    value={toDateStr(item.arrivalDate)}
+                                    disabled={(item.tbdArrival ?? false) || !isEditable}
+                                    onChange={(e) =>
+                                      handleItemChange(index, "arrivalDate", e.target.value)
+                                    }
+                                  />
+                                  <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!(item.tbdArrival ?? false)}
+                                      disabled={!isEditable}
+                                      onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        handleItemChange(index, "tbdArrival", checked);
+                                        if (checked) handleItemChange(index, "arrivalDate", null);
+                                      }}
+                                    />
+                                    TBD
+                                  </label>
+                                </div>
                               </td>
+
                               <td>
                                 <select
                                   value={item.status}
@@ -2621,22 +2652,22 @@ const ProjectDetails = () => {
                   <tr>
                     <th>Manufacturer Name</th>
                     <th>Description</th>
-                    <th>TBD</th>
                     <th title="Estimated Departure">ETD</th>
                     <th title="Expected Arrival">ETA</th>
                     <th>Arrival</th>
                     <th>Status</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {(items || []).map((i) => (
                     <tr key={i.id || `${i.itemName}-${Math.random()}`}>
                       <td>{i.itemName || ""}</td>
                       <td className="ltm-desc">{i.quantity || ""}</td>
-                      <td>{i.tbd ? "Yes" : "No"}</td>
-                      <td>{i.tbd ? "TBD" : toDateStr(i.expectedDeliveryDate)}</td>
-                      <td>{i.tbd ? "TBD" : toDateStr(i.expectedArrivalDate)}</td>
-                      <td>{i.tbd ? "TBD" : toDateStr(i.arrivalDate)}</td>
+                      <td>{(i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate))}</td>
+                      <td>{(i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate))}</td>
+                      <td>{(i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate))}</td>
+
                       <td>{i.status || ""}</td>
                     </tr>
                   ))}
