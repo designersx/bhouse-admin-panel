@@ -272,6 +272,19 @@ const ProjectDetails = () => {
       console.error("Failed to fetch documents", error);
     }
   };
+const refreshMatrixFromApi = async () => {
+  try {
+    const { data } = await axios.get(`${url}/items/${projectId}/`);
+    setMatrix(data);          
+  } catch (e) {
+    console.error("Failed to refresh preview data", e);
+  }
+};
+
+const openPreview = async () => {
+  await refreshMatrixFromApi(); // ensure fresh server data
+  setIsPreviewAllOpen(true);
+};
 
 
   const fetchDocs = async () => {
@@ -2007,7 +2020,7 @@ const ProjectDetails = () => {
 
                         <button
                           className="leadtimematrixheadingbutton"
-                          onClick={() => setIsPreviewAllOpen(true)}
+                          onClick={openPreview}
                         >
                           Preview
                         </button>
