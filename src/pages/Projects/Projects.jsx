@@ -68,14 +68,14 @@ const Projects = () => {
 
 
     return assignedTeamRoles
-    .flatMap(roleEntry =>
-      Array.isArray(roleEntry.users)
-        ? roleEntry.users
+      .flatMap(roleEntry =>
+        Array.isArray(roleEntry.users)
+          ? roleEntry.users
             .map(userId => userMap[userId])
             .filter(Boolean) // removes undefined (i.e., deleted users)
-        : []
-    )
-    .join(", ");
+          : []
+      )
+      .join(", ");
   };
 
   useEffect(() => {
@@ -148,11 +148,13 @@ const Projects = () => {
     let filtered = [...projects];
 
     if (query) {
+      const q = query.toLowerCase();
       filtered = filtered.filter(project =>
-        project.name.toLowerCase().includes(query.toLowerCase()) ||
-        project.clientName.toLowerCase().includes(query.toLowerCase())
+        project.name?.toLowerCase().includes(q) ||
+        formatClientName(project.clientName).toLowerCase().includes(q)
       );
     }
+
 
     sortAndSetProjects(filtered, sortOrder);
   };
@@ -258,14 +260,14 @@ const Projects = () => {
       confirmButtonText: 'Yes, send it!',
       cancelButtonText: 'Cancel',
     });
-  
+
     if (result.isConfirmed) {
       setMailLoadingId(projectId);
       try {
         const response = await axios.post(`${url}/reviews`, {
           projectId: projectId
         });
-  
+
         if (response.data.message) {
           toast.success('Review email sent successfully!');
         }
@@ -277,6 +279,36 @@ const Projects = () => {
       }
     }
   }
+  const parseArrayish = (v) => {
+    if (Array.isArray(v)) return v;
+    if (typeof v === "string") {
+      try {
+        const parsed = JSON.parse(v);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (_) { }
+      return v ? v.split(",").map(s => s.trim()).filter(Boolean) : [];
+    }
+    if (v && typeof v === "object") {
+      const maybe = v.name || [v.firstName, v.lastName].filter(Boolean).join(" ");
+      return maybe ? [maybe] : [];
+    }
+    return [];
+  };
+
+  const formatClientName = (value) => {
+    const arr = parseArrayish(value);
+    return arr.join(", ");
+  };
+  const getClientNameDisplay = (value, limit = 2) => {
+    const arr = parseArrayish(value);
+    const full = arr.join(", ");
+    const short =
+      arr.length <= limit
+        ? full
+        : `${arr.slice(0, limit).join(", ")} +${arr.length - limit} more`;
+    return { short, full };
+  };
+
   return (
     <Layout>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
@@ -341,7 +373,18 @@ const Projects = () => {
                       <tr key={project.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{project.name}</td>
-                        <td>{project.clientName}</td>
+                        <td
+                          title={getClientNameDisplay(project.clientName).full}
+                          style={{
+                            maxWidth: '250px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {getClientNameDisplay(project.clientName).short}
+                        </td>
+
                         <td>
                           {statusLoadingId === project.id ? (
                             <SpinnerLoader />
@@ -365,17 +408,17 @@ const Projects = () => {
                           )}
                         </td>
 
-<td
-  title={getAssignedUserNames(project.assignedTeamRoles)} // Tooltip with full text
-  style={{
-    maxWidth: '250px', // Adjust width to limit text length
-    whiteSpace: 'nowrap', // Prevent text wrapping
-    overflow: 'hidden',  // Hide overflow text
-    textOverflow: 'ellipsis', // Show ellipsis when text overflows
-  }}
->
-  {getAssignedUserNames(project.assignedTeamRoles)}
-</td>
+                        <td
+                          title={getAssignedUserNames(project.assignedTeamRoles)} // Tooltip with full text
+                          style={{
+                            maxWidth: '250px', // Adjust width to limit text length
+                            whiteSpace: 'nowrap', // Prevent text wrapping
+                            overflow: 'hidden',  // Hide overflow text
+                            textOverflow: 'ellipsis', // Show ellipsis when text overflows
+                          }}
+                        >
+                          {getAssignedUserNames(project.assignedTeamRoles)}
+                        </td>
                         <td>{project.type}</td>
                         <td className='estimate'>{project.estimatedCompletion}</td>
 
@@ -401,15 +444,15 @@ const Projects = () => {
                               onClick={() => handleArchiveProject(project.id)}
                             />
                           )}
-                         {mailLoadingId === project.id ? (
-  <SpinnerLoader size={10} />
-) : (
-  <MdReviews
-    style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
-    title="Send Review Mail"
-    onClick={() => sendGoogleReviewEmail(project.id)}
-  />
-)}
+                          {mailLoadingId === project.id ? (
+                            <SpinnerLoader size={10} />
+                          ) : (
+                            <MdReviews
+                              style={{ color: "#004680", fontSize: "20px", cursor: "pointer" }}
+                              title="Send Review Mail"
+                              onClick={() => sendGoogleReviewEmail(project.id)}
+                            />
+                          )}
 
                         </td>
                       </tr>

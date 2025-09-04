@@ -8,6 +8,19 @@ import Swal from "sweetalert2";
 import { toast, ToastContainer } from "react-toastify";
 import { url2 } from "../../lib/api";
 import SpinnerLoader from "../../components/SpinnerLoader";
+
+const parseArrayish = (v) => {
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    try {
+      const p = JSON.parse(v);
+      if (Array.isArray(p)) return p;
+    } catch (_) { }
+    return v ? [v] : [];
+  }
+  return v ? [v] : [];
+};
+
 const EditProject = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -17,13 +30,13 @@ const EditProject = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [clicked, setClicked] = useState(false);
-  console.log({clicked})
+
   const [formData, setFormData] = useState({
     name: "",
     type: "Corporate Office",
-    clientName: "",
+    clientName: [],
     description: "",
-    clientId: "",
+    clientId: [],
     advancePayment: "",
     estimatedCompletion: "",
     totalValue: "",
@@ -37,10 +50,10 @@ const EditProject = () => {
     cad: [],
     salesAggrement: [],
     acknowledgements: [],
-    finalInvoice : [] ,
-
+    finalInvoice: [],
     receivingReports: [],
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [leadTimeMatrix, setLeadTimeMatrix] = useState([]);
   const [files, setFiles] = useState([]);
@@ -55,11 +68,7 @@ const EditProject = () => {
     totalValue: "",
   });
   const [notifyClient, setNotifyClient] = useState(false);
-
-
-
-
-  // Prefill when formData loads from DB
+  const [canEditMultipleClients, setCanEditMultipleClients] = useState(true);
   useEffect(() => {
     const existing = formData.deliveryHours;
     if (predefinedOptions.includes(existing)) {
@@ -77,14 +86,16 @@ const EditProject = () => {
       setLeadTimeItems(
         (res.data || []).map((item) => ({
           ...item,
-          tbd: typeof item.tbd === "boolean" ? item.tbd : false,
+          tbdETD: !!item.tbdETD,
+          tbdETA: !!item.tbdETA,
+          tbdArrival: !!item.tbdArrival,
         }))
       );
-      
     } catch (error) {
       console.error("Error fetching lead time items:", error);
     }
   };
+
 
   useEffect(() => {
     fetchRoles();
@@ -95,17 +106,62 @@ const EditProject = () => {
   const fetchRoles = async () => {
     const res = await axios.get(`${url}/roles`);
     const allowedLevels = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const filtered = res.data?.data.filter((role) =>
+    const roles = res.data?.data || [];
+
+    const filtered = roles.filter((role) =>
       allowedLevels.includes(role.defaultPermissionLevel)
     );
     const roleTitles = filtered.map((role) => role.title);
     setAllRoles(roleTitles);
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    const userRole = loggedInUser?.user?.userRole;
+    const currentRoleObj = roles.find(r => r.title === userRole);
+    const level = Number(currentRoleObj?.defaultPermissionLevel);
+    setCanEditMultipleClients(currentRoleObj ? level !== 6 : true);
   };
+  const isSet = (v) => v !== null && v !== undefined && String(v).trim() !== "";
+  const validDateChoice = (dateVal, tbdFlag) =>
+    (isSet(dateVal) && !tbdFlag) || (!isSet(dateVal) && !!tbdFlag);
+  const validateItemRow = (row, idx) => {
+    const touched =
+      isSet(row.itemName) ||
+      isSet(row.quantity) ||
+      isSet(row.expectedDeliveryDate) ||
+      isSet(row.expectedArrivalDate) ||
+      isSet(row.arrivalDate) ||
+      row.tbdETD || row.tbdETA || row.tbdArrival;
+
+    if (!touched) return null;
+
+    if (!row.itemName?.trim())
+      return `Row ${idx + 1}: Manufacturer Name is required.`;
+
+    if (!validDateChoice(row.expectedDeliveryDate, row.tbdETD))
+      return `Row ${idx + 1}: For ETD, choose a date or mark TBD.`;
+
+    if (!validDateChoice(row.expectedArrivalDate, row.tbdETA))
+      return `Row ${idx + 1}: For ETA, choose a date or mark TBD.`;
+
+    if (!validDateChoice(row.arrivalDate, row.tbdArrival))
+      return `Row ${idx + 1}: For Arrival, choose a date or mark TBD.`;
+
+    return null;
+  };
+
+  // (optional) used at submit to detect any unsaved filled rows
+  const hasTouched = (r) =>
+    isSet(r.itemName) || isSet(r.quantity) ||
+    isSet(r.expectedDeliveryDate) || isSet(r.expectedArrivalDate) || isSet(r.arrivalDate) ||
+    r.tbdETD || r.tbdETA || r.tbdArrival;
+
 
   const fetchProjectDetails = async () => {
     try {
       const res = await axios.get(`${url}/projects/${projectId}`);
       const project = res.data;
+
+      const parsedClientIds = parseArrayish(project.clientId).map((n) => Number(n));
+      const parsedClientNames = parseArrayish(project.clientName);
 
       const parsedRoles =
         typeof project.assignedTeamRoles === "string"
@@ -125,16 +181,14 @@ const EditProject = () => {
 
       const formatDate = (dateString) =>
         dateString ? new Date(dateString).toISOString().slice(0, 10) : "";
-
-      // 🟡 Set initial financial values
       setInitialFinance({
         advancePayment: project.advancePayment,
         totalValue: project.totalValue,
       });
-
-      // 🟡 Set formData
       setFormData({
         ...project,
+        clientId: parsedClientIds,
+        clientName: parsedClientNames,
         assignedTeamRoles: roleMap,
         startDate: formatDate(project.startDate),
 
@@ -151,8 +205,6 @@ const EditProject = () => {
         finalInvoice: JSON.parse(project.finalInvoice || "[]"),
 
       });
-
-      // 🟡 Lead Time Matrix
       setLeadTimeMatrix(
         typeof project.leadTimeMatrix === "string"
           ? JSON.parse(project.leadTimeMatrix || "[]")
@@ -160,8 +212,6 @@ const EditProject = () => {
       );
 
       await fetchLeadTimeItems(projectId);
-
-      // 🟡 Reset checkbox initially
       setNotifyClient(false);
     } catch (error) {
       console.error("Error fetching project details:", error);
@@ -174,22 +224,66 @@ const EditProject = () => {
       {
         itemName: "",
         quantity: "",
-        expectedDeliveryDate:null,
-        expectedArrivalDate:null,
+        expectedDeliveryDate: "",
+        expectedArrivalDate: "",
+        arrivalDate: "",
+        tbdETD: false,
+        tbdETA: false,
+        tbdArrival: false,
         status: "Pending",
         projectId,
-        arrivalDate : null
       },
     ]);
   };
 
-  const addNewItemToBackend = async (item, index) => {
-    try {
-      const res = await axios.post(`${url}/items/project-items`, {
-        ...item,
-        projectId,
-      });
+  const handleAddCustomer = (e) => {
+    const idStr = e.target.value;
+    if (!idStr) return;
+    if (!canEditMultipleClients && (formData.clientId?.length || 0) >= 1) {
+      toast.error("Your role allows only one customer for this project.");
+      e.target.value = "";
+      return;
+    }
 
+    const selected = customers.find((c) => String(c.id) === idStr);
+    if (!selected) return;
+
+    setFormData((prev) => {
+      const ids = Array.isArray(prev.clientId) ? prev.clientId : [];
+      const names = Array.isArray(prev.clientName) ? prev.clientName : [];
+      if (ids.includes(selected.id)) return prev;
+
+      return {
+        ...prev,
+        clientId: [...ids, selected.id],
+        clientName: [...names, selected.full_name],
+        deliveryAddress: prev.deliveryAddress || selected.delivery_address || "",
+      };
+    });
+    e.target.value = "";
+  };
+
+
+  const removeCustomer = (idToRemove) => {
+    setFormData((prev) => {
+      const idx = (prev.clientId || []).indexOf(idToRemove);
+      const newIds = (prev.clientId || []).filter((id) => id !== idToRemove);
+      const newNames = (prev.clientName || []).filter((_, i) => i !== idx);
+      return { ...prev, clientId: newIds, clientName: newNames };
+    });
+  };
+
+
+  const addNewItemToBackend = async (item, index) => {
+    const err = validateItemRow(item, index);
+    if (err) {
+      Swal.fire({ icon: "warning", title: "Invalid Lead Time Row", text: err });
+      return;
+    }
+    try {
+      const payload = buildItemPayload(item);
+      delete payload.id; // new item
+      const res = await axios.post(`${url}/items/project-items`, payload);
       const updated = [...leadTimeItems];
       updated[index] = res.data;
       setLeadTimeItems(updated);
@@ -211,28 +305,58 @@ const EditProject = () => {
       console.error(`Failed to fetch users for role: ${role}`, err);
     }
   };
+
   const handleItemChange = (index, field, value) => {
-    const updated = [...leadTimeItems];
+    setLeadTimeItems((prev) => {
+      const updated = [...prev];
+      const row = { ...updated[index] };
 
-    if (field === "tbd") {
-      updated[index][field] = value;
-
-      if (value) {
-        // If TBD is checked, clear the date fields
-        updated[index].expectedDeliveryDate = "";
-        updated[index].expectedArrivalDate = "";
-        updated[index].arrivalDate = "";
+      if (field === "tbdETD") {
+        row.tbdETD = value;
+        if (value) row.expectedDeliveryDate = "";
+      } else if (field === "tbdETA") {
+        row.tbdETA = value;
+        if (value) row.expectedArrivalDate = "";
+      } else if (field === "tbdArrival") {
+        row.tbdArrival = value;
+        if (value) row.arrivalDate = "";
+      } else {
+        row[field] = value;
+        // auto-uncheck TBD if a date is typed
+        if (field === "expectedDeliveryDate" && value) row.tbdETD = false;
+        if (field === "expectedArrivalDate" && value) row.tbdETA = false;
+        if (field === "arrivalDate" && value) row.tbdArrival = false;
       }
-    } else {
-      updated[index][field] = value;
-    }
 
-    setLeadTimeItems(updated);
+      updated[index] = row;
+      return updated;
+    });
   };
+  const toDateOnly = (d) => (d ? d : null);
+  const buildItemPayload = (it) => ({
+    id: it.id,
+    projectId,
+    itemName: it.itemName?.trim() || "",
+    quantity: it.quantity || "",
+    expectedDeliveryDate: it.tbdETD ? null : toDateOnly(it.expectedDeliveryDate),
+    expectedArrivalDate: it.tbdETA ? null : toDateOnly(it.expectedArrivalDate),
+    arrivalDate: it.tbdArrival ? null : toDateOnly(it.arrivalDate),
+    status: it.status || "Pending",
+    tbdETD: !!it.tbdETD,
+    tbdETA: !!it.tbdETA,
+    tbdArrival: !!it.tbdArrival,
+  });
 
-  const updateItem = async (item) => {
+
+  const updateItem = async (item, index) => {
+    const err = validateItemRow(item, index);
+    if (err) {
+      Swal.fire({ icon: "warning", title: "Invalid Lead Time Row", text: err });
+      return;
+    }
     try {
-      await axios.put(`${url}/items/project-items/${item.id}`, item);
+      const payload = buildItemPayload(item);
+      await axios.put(`${url}/items/project-items/${item.id}`, payload);
       Swal.fire("Manufacturer updated!");
     } catch (err) {
       Swal.fire("Error updating item.");
@@ -278,63 +402,59 @@ const EditProject = () => {
         return { ...prev, assignedTeamRoles: updated };
       });
     } else {
-  try {
-    const res = await axios.get(
-      `${url}/auth/users-by-role/${encodeURIComponent(role)}`
-    );
-    let users = res.data?.users || [];
+      try {
+        const res = await axios.get(
+          `${url}/auth/users-by-role/${encodeURIComponent(role)}`
+        );
+        let users = res.data?.users || [];
+        if (role === "Account Manager") {
+          setClicked(true)
+          const mercedesUser = {
+            id: 143,
+            firstName: "Mercedes",
+            lastName: "",
+          };
 
-    // Inject Mercedes user statically for Account Manager
-    if (role === "Account Manager") {
-      setClicked(true)
-      const mercedesUser = {
-        id: 143,
-        firstName: "Mercedes",
-        lastName: "",
-      };
+          // Prevent duplicates
+          const userExists = users.find((u) => u.id === mercedesUser.id);
+          if (!userExists) users.push(mercedesUser);
+        }
 
-      // Prevent duplicates
-      const userExists = users.find((u) => u.id === mercedesUser.id);
-      if (!userExists) users.push(mercedesUser);
+        if (users.length === 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "No Users Found",
+            text: `There are no users available for the role "${role}".`,
+          });
+          return;
+        }
+
+        setSelectedRoles((prev) => [...prev, role]);
+        setUsersByRole((prev) => ({ ...prev, [role]: users }));
+        const preAssigned = formData.assignedTeamRoles[role] || [];
+        const alreadyHasMercedes = preAssigned.includes(143);
+
+        setFormData((prev) => ({
+          ...prev,
+          assignedTeamRoles: {
+            ...prev.assignedTeamRoles,
+            [role]: alreadyHasMercedes ? preAssigned : [],
+          },
+        }));
+      } catch (err) {
+        console.error(`Failed to fetch users for role: ${role}`, err);
+        Swal.fire({
+          icon: "error",
+          title: "Fetch Error",
+          text: `Unable to get users for role "${role}"`,
+        });
+      }
     }
-
-    if (users.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Users Found",
-        text: `There are no users available for the role "${role}".`,
-      });
-      return;
-    }
-
-    setSelectedRoles((prev) => [...prev, role]);
-    setUsersByRole((prev) => ({ ...prev, [role]: users }));
-
-    // Pre-check Mercedes if 143 already exists in assignedTeamRoles
-    const preAssigned = formData.assignedTeamRoles[role] || [];
-    const alreadyHasMercedes = preAssigned.includes(143);
-
-    setFormData((prev) => ({
-      ...prev,
-      assignedTeamRoles: {
-        ...prev.assignedTeamRoles,
-        [role]: alreadyHasMercedes ? preAssigned : [],
-      },
-    }));
-  } catch (err) {
-    console.error(`Failed to fetch users for role: ${role}`, err);
-    Swal.fire({
-      icon: "error",
-      title: "Fetch Error",
-      text: `Unable to get users for role "${role}"`,
-    });
-  }
-}
 
   };
 
   const handleUserCheckbox = (role, userId, checked) => {
-    setClicked(true)  
+    setClicked(true)
     const prevSelected = formData.assignedTeamRoles[role] || [];
     const updatedUsers = checked
       ? [...prevSelected, userId]
@@ -349,37 +469,33 @@ const EditProject = () => {
     }));
   };
 
-const handleFileChange = (category, e) => {
-  const selectedFiles = Array.from(e.target.files);
-  if (selectedFiles.length === 0) return;
+  const handleFileChange = (category, e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length === 0) return;
+    setFiles((prev) => ({
+      ...prev,
+      [category]: [...(prev[category] || []), ...selectedFiles],
+    }));
+    const previewFiles = selectedFiles.map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+      file,
+    }));
 
-  // 1. Keep your original raw file storage logic
-  setFiles((prev) => ({
-    ...prev,
-    [category]: [...(prev[category] || []), ...selectedFiles],
-  }));
+    setFormData((prev) => ({
+      ...prev,
+      [category]: [...(prev[category] || []), ...previewFiles],
+    }));
+  };
 
-  // 2. Enhance formData to include previewable entries (without removing existing ones)
-  const previewFiles = selectedFiles.map(file => ({
-    name: file.name,
-    url: URL.createObjectURL(file),
-    file, // keeping the File instance if needed later
-  }));
+  const handleRemoveNewFile = (category, file) => {
+    setFiles((prev) => ({
+      ...prev,
+      [category]: prev[category].filter((f) => f.name !== file.name),
+    }));
+  };
 
-  setFormData((prev) => ({
-    ...prev,
-    [category]: [...(prev[category] || []), ...previewFiles],
-  }));
-};
 
-const handleRemoveNewFile = (category, file) => {
-  setFiles((prev) => ({
-    ...prev,
-    [category]: prev[category].filter((f) => f.name !== file.name),
-  }));
-};
-
-  
   const handleRemoveExistingFile = (category, url) => {
     setRemovedFiles((prev) => [...prev, url]);
     setFormData((prev) => ({
@@ -395,7 +511,7 @@ const handleRemoveNewFile = (category, file) => {
   useEffect(() => {
     const shouldEnableCheckbox =
       parseFloat(formData.advancePayment) !==
-        parseFloat(initialFinance.advancePayment) ||
+      parseFloat(initialFinance.advancePayment) ||
       parseFloat(formData.totalValue) !== parseFloat(initialFinance.totalValue);
 
     // Only enable/disable the checkbox — do not set it to true
@@ -408,6 +524,22 @@ const handleRemoveNewFile = (category, file) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const unsavedTouched = leadTimeItems.some(r => !r.id && hasTouched(r));
+    if (unsavedTouched) {
+      Swal.fire({
+        icon: "warning",
+        title: "Unsaved Lead Time Rows",
+        text: "Please 'Add' or remove the new Lead Time Matrix rows before submitting.",
+      });
+      return;
+    }
+    for (let i = 0; i < leadTimeItems.length; i++) {
+      const msg = validateItemRow(leadTimeItems[i], i);
+      if (msg) {
+        Swal.fire({ icon: "warning", title: "Invalid Lead Time Matrix", text: msg });
+        return;
+      }
+    }
 
     const error = validateStep();
     if (error) {
@@ -509,12 +641,17 @@ const handleRemoveNewFile = (category, file) => {
   };
 
   const validateStep = () => {
-    const { name, type, clientName, totalValue, advancePayment } = formData;
+    const { name, type, clientId, clientName, totalValue, advancePayment } = formData;
 
     if (step === 1) {
       if (!name.trim()) return "Project Name is required.";
       if (!type) return "Project Type is required.";
-      if (!clientName) return "Customer selection is required.";
+
+      if (!Array.isArray(clientId) || clientId.length === 0)
+        return "Customer selection is required.";
+      if (!Array.isArray(clientName) || clientName.length !== clientId.length)
+        return "Selected client names and ids do not match.";
+
       if (!totalValue || isNaN(totalValue) || totalValue <= 0)
         return "Total Value must be a valid positive number.";
       if (
@@ -525,14 +662,17 @@ const handleRemoveNewFile = (category, file) => {
       ) {
         return "Advance Payment must be a positive number.";
       }
+      if (!canEditMultipleClients && clientId.length > 1)
+        return "Your role permits only one customer for this project.";
+
     }
 
     if (step === 2) {
       if (!selectedRoles.length) return "At least one role must be assigned.";
     }
-
     return null;
   };
+
 
   const nextStep = () => {
     const error = validateStep();
@@ -542,55 +682,85 @@ const handleRemoveNewFile = (category, file) => {
     }
     localStorage.setItem("projectFormData", nextStep);
     setStep(step + 1);
-    if(step!==2){
+    if (step !== 2) {
       setClicked(false)
     }
     setClicked(true)
   };
 
   const prevStep = () => setStep(step - 1);
-const projectFormData=localStorage.getItem("projectFormData");
+  const projectFormData = localStorage.getItem("projectFormData");
 
-useEffect(() => {
-  // Always add "Account Manager" to selectedRoles
-  setSelectedRoles((prev) =>
-    prev.includes("Account Manager") ? prev : [...prev, "Account Manager"]
-  );
-  // setClicked(true)
+  useEffect(() => {
+    // Always add "Account Manager" to selectedRoles
+    setSelectedRoles((prev) =>
+      prev.includes("Account Manager") ? prev : [...prev, "Account Manager"]
+    );
+    // setClicked(true)
 
-  // Always add Mercedes to usersByRole["Account Manager"]
-  setUsersByRole((prev) => {
-    const existingUsers = prev["Account Manager"] || [];
-    const alreadyPresent = existingUsers.some((u) => u.id === 143);
+    // Always add Mercedes to usersByRole["Account Manager"]
+    setUsersByRole((prev) => {
+      const existingUsers = prev["Account Manager"] || [];
+      const alreadyPresent = existingUsers.some((u) => u.id === 143);
 
-    if (!alreadyPresent) {
-      return {
-        ...prev,
-        "Account Manager": [
-          ...existingUsers,
-          { id: 143, firstName: "Mercedes", lastName: "" },
-        ],
-      };
+      if (!alreadyPresent) {
+        return {
+          ...prev,
+          "Account Manager": [
+            ...existingUsers,
+            { id: 143, firstName: "Mercedes", lastName: "" },
+          ],
+        };
+      }
+      return prev;
+    });
+
+    // ✅ Automatically check Mercedes (id 143) only if she's in the assignedTeamRoles
+    const amUsers = formData.assignedTeamRoles?.["Account Manager"] || [];
+    if (amUsers.includes(143)) {
+      // Already checked – do nothing
+      return;
     }
-    return prev;
-  });
 
-  // ✅ Automatically check Mercedes (id 143) only if she's in the assignedTeamRoles
-  const amUsers = formData.assignedTeamRoles?.["Account Manager"] || [];
-  if (amUsers.includes(143)) {
-    // Already checked – do nothing
-    return;
-  }
+    // Optional: You can auto-check Mercedes the first time
+    // setFormData((prev) => ({
+    //   ...prev,
+    //   assignedTeamRoles: {
+    //     ...prev.assignedTeamRoles,
+    //     "Account Manager": [...amUsers, 143],
+    //   },
+    // }));
+  }, [projectFormData, clicked]);
+  const handleMoneyChange = (name) => (e) => {
+    let v = e.target.value;
 
-  // Optional: You can auto-check Mercedes the first time
-  // setFormData((prev) => ({
-  //   ...prev,
-  //   assignedTeamRoles: {
-  //     ...prev.assignedTeamRoles,
-  //     "Account Manager": [...amUsers, 143],
-  //   },
-  // }));
-}, [projectFormData , clicked]);
+    // allow clearing
+    if (v === "") {
+      setFormData((p) => ({ ...p, [name]: "" }));
+      return;
+    }
+
+    // keep only digits and a single dot
+    if (!/^\d*\.?\d*$/.test(v)) return;
+
+    // limit integer part to 8 digits, decimals to 2
+    const [intPartRaw, decRaw = ""] = v.split(".");
+    const intPart = intPartRaw.slice(0, 8);
+    const decPart = decRaw.slice(0, 2);
+
+    const next = decRaw !== "" ? `${intPart}.${decPart}` : intPart;
+    setFormData((p) => ({ ...p, [name]: next }));
+  };
+
+  const normalizeMoneyOnBlur = (name) => (e) => {
+    const v = e.target.value;
+    if (v === "" || v === ".") return;
+    const n = Number(v);
+    if (Number.isFinite(n)) {
+      // format to 2 decimals on blur
+      setFormData((p) => ({ ...p, [name]: n.toFixed(2) }));
+    }
+  };
 
 
   return (
@@ -643,23 +813,12 @@ useEffect(() => {
                     <label>
                       Select Customer <span className="required-star">*</span>
                     </label>
+
                     <select
-                      name="clientId"
-                      value={String(formData.clientId)}
-                      onChange={(e) => {
-                        const selectedId = Number(e.target.value); // fix type
-                        const selectedCustomer = customers.find(
-                          (c) => c.id === selectedId
-                        );
-                        setFormData((prev) => ({
-                          ...prev,
-                          clientId: selectedCustomer?.id || "",
-                          clientName: selectedCustomer?.full_name || "",
-                          deliveryAddress:
-                            selectedCustomer?.delivery_address || "",
-                        }));
-                      }}
-                      required
+                      onChange={handleAddCustomer}
+                      value=""
+                      required={!(formData.clientId && formData.clientId.length)}
+                      disabled={!canEditMultipleClients && (formData.clientId?.length || 0) >= 1}
                     >
                       <option value="">Select a customer</option>
                       {customers.map((customer) => (
@@ -668,7 +827,32 @@ useEffect(() => {
                         </option>
                       ))}
                     </select>
+
+                    {!canEditMultipleClients && (formData.clientId?.length || 0) >= 1 && (
+                      <small className="help-text">Only one customer allowed for your role. Remove the current one to pick another.</small>
+                    )}
+
+                    <div className="selected-customers" style={{ marginTop: 8 }}>
+                      {formData.clientId?.map((cid, idx) => {
+                        const name = formData.clientName?.[idx] ?? `#${cid}`;
+                        const c = customers.find((cc) => cc.id === cid);
+                        return (
+                          <span key={cid} className="chip">
+                            {name}{c ? ` (${c.email})` : ""}
+                            <button
+                              type="button"
+                              className="chip-close"
+                              aria-label={`Remove ${name}`}
+                              onClick={() => removeCustomer(cid)}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
+
                   <div className="form-group">
                     <label>Description</label>
                     <textarea
@@ -708,15 +892,15 @@ useEffect(() => {
                       Estimated Occupancy Date{" "}
                       <span className="required-star">*</span>
                     </label>
-<input
-  type="date"
-  name="estimatedCompletion"
-  value={formData.estimatedCompletion}
-  onChange={handleChange}
-  required
-/>
+                    <input
+                      type="date"
+                      name="estimatedCompletion"
+                      value={formData.estimatedCompletion}
+                      onChange={handleChange}
+                      required
+                    />
 
-                  
+
                   </div>
                 </div>
 
@@ -732,13 +916,13 @@ useEffect(() => {
                       onChange={handleChange}
                       required
                       placeholder="Enter total value"
-                       onInput={(e) => {
-     const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (!regex.test(value)) {
-      e.target.value = formData.advancePayment; // reset to previous valid value
-    }
-  }}
+                      onInput={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(value)) {
+                          e.target.value = formData.advancePayment;
+                        }
+                      }}
                     />
                   </div>
                   <div className="form-group">
@@ -749,24 +933,17 @@ useEffect(() => {
                       type="text"
                       name="totalValue"
                       value={formData.totalValue}
-                   onChange={(e) => {    const value = e.target.value;
-                  const regex = /^\d*\.?\d{0,2}$/;
-                     if (value.length <= 8 && regex.test(value)) {
-                       setFormData((prev) => ({
-                       ...prev,
-                      totalValue: value,
-                             }));
-                          }
-                             }}
+                      onChange={handleMoneyChange("totalValue")}
+                      onBlur={normalizeMoneyOnBlur("totalValue")}
                       required
                       placeholder="Enter total value"
-                       onInput={(e) => {
-    const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (!regex.test(value)) {
-      e.target.value = formData.totalValue; // reset to previous valid value
-    }
-  }}
+                      onInput={(e) => {
+                        const value = e.target.value;
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(value)) {
+                          e.target.value = formData.totalValue;
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -814,9 +991,8 @@ useEffect(() => {
                   {allRoles.map((role) => (
                     <div
                       key={role}
-                      className={`role-card ${
-                        selectedRoles.includes(role) ? "active" : ""
-                      }`}
+                      className={`role-card ${selectedRoles.includes(role) ? "active" : ""
+                        }`}
                     >
                       <div className="role-header">
                         <label>
@@ -834,21 +1010,21 @@ useEffect(() => {
                           {usersByRole[role].map((user) => (
                             <label key={user.id} className="user-checkbox-pill">
                               <input
-  type="checkbox"
-  checked={(
-    formData.assignedTeamRoles[role] || []
-  ).includes(user.id)}
-  onChange={(e) =>
-    handleUserCheckbox(
-      role,
-      user.id,
-      e.target.checked
-    
-    )
-  }
-/>
+                                type="checkbox"
+                                checked={(
+                                  formData.assignedTeamRoles[role] || []
+                                ).includes(user.id)}
+                                onChange={(e) =>
+                                  handleUserCheckbox(
+                                    role,
+                                    user.id,
+                                    e.target.checked
 
-                              {user.firstName} {user.lastName}                           
+                                  )
+                                }
+                              />
+
+                              {user.firstName} {user.lastName}
                             </label>
                           ))}
                         </div>
@@ -863,42 +1039,42 @@ useEffect(() => {
                     <label>Detailed Proposal </label>
                     <input
                       type="file"
-                    multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("proposals", e)}
                     />
-                   {formData.proposals && formData.proposals.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.proposals.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.proposals && formData.proposals.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.proposals.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("proposals", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("proposals", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
 
@@ -907,92 +1083,92 @@ useEffect(() => {
                     <label>Pro Forma Invoice</label>
                     <input
                       type="file"
-   multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("floorPlans", e)}
                     />
-               {formData.floorPlans && formData.floorPlans.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.floorPlans.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.floorPlans && formData.floorPlans.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.floorPlans.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("floorPlans", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("floorPlans", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
 
 
 
                   {/*  */}
- <div className="form-group">
+                  <div className="form-group">
                     <label>Final Invoice</label>
                     <input
                       type="file"
-   multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("finalInvoice", e)}
                     />
                     {formData.finalInvoice && formData.finalInvoice.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.finalInvoice.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                      <ul className="file-preview-list">
+                        {formData.finalInvoice.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("finalInvoice", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("finalInvoice", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
 
-{/*  */}
+                  {/*  */}
 
 
 
@@ -1002,42 +1178,42 @@ useEffect(() => {
                     <label>Product Maintenance</label>
                     <input
                       type="file"
-           multiple 
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("otherDocuments", e)}
                     />
-                 {formData.otherDocuments && formData.otherDocuments.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.otherDocuments.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.otherDocuments && formData.otherDocuments.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.otherDocuments.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("otherDocuments", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("otherDocuments", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
                   <div className="form-group">
@@ -1045,42 +1221,42 @@ useEffect(() => {
                     <input
                       type="file"
                       name="presentation"
-              multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("presentation", e)}
                     />
-                 {formData.presentation && formData.presentation.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.presentation.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.presentation && formData.presentation.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.presentation.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("presentation", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("presentation", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
                   <div className="form-group">
@@ -1088,42 +1264,42 @@ useEffect(() => {
                     <input
                       type="file"
                       name="cad"
-        multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("cad", e)}
                     />
-                 {formData.cad && formData.cad.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.cad.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.cad && formData.cad.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.cad.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("cad", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("cad", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
                   <div className="form-group">
@@ -1131,42 +1307,42 @@ useEffect(() => {
                     <input
                       type="file"
                       name="salesAggrement"
-         multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("salesAggrement", e)}
                     />
-               {formData.salesAggrement && formData.salesAggrement.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.salesAggrement.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.salesAggrement && formData.salesAggrement.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.salesAggrement.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("salesAggrement", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("salesAggrement", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
                 </div>
@@ -1176,43 +1352,43 @@ useEffect(() => {
 
                     <input
                       type="file"
-          multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("acknowledgements", e)}
                     />
 
                     {formData.acknowledgements && formData.acknowledgements.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.acknowledgements.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                      <ul className="file-preview-list">
+                        {formData.acknowledgements.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("acknowledgements", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("acknowledgements", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1220,43 +1396,43 @@ useEffect(() => {
 
                     <input
                       type="file"
-      multiple
+                      multiple
                       accept=".jpg,.jpeg,.png,.pdf"
                       onChange={(e) => handleFileChange("receivingReports", e)}
                     />
 
-              {formData.receivingReports && formData.receivingReports.length > 0 && (
-  <ul className="file-preview-list">
-    {formData.receivingReports.map((item, idx) => {
-      const isString = typeof item === "string";
-      const fileUrl = isString
-        ? item.startsWith("uploads") ? `${url2}/${item}` : item
-        : item.url;
-      const fileName = isString ? item.split("/").pop() : item.name;
-      const fileExt = fileName.split(".").pop().toLowerCase();
+                    {formData.receivingReports && formData.receivingReports.length > 0 && (
+                      <ul className="file-preview-list">
+                        {formData.receivingReports.map((item, idx) => {
+                          const isString = typeof item === "string";
+                          const fileUrl = isString
+                            ? item.startsWith("uploads") ? `${url2}/${item}` : item
+                            : item.url;
+                          const fileName = isString ? item.split("/").pop() : item.name;
+                          const fileExt = fileName.split(".").pop().toLowerCase();
 
-      return (
-        <li key={idx}>
-          {["jpg", "jpeg", "png"].includes(fileExt) ? (
-            <img src={fileUrl} alt={fileName} width="100" />
-          ) : (
-            <a href={fileUrl} target="_blank" rel="noreferrer">
-              {fileName}
-            </a>
-          )}
-          <button
-            type="button"
-            onClick={() =>
-              handleRemoveExistingFile("receivingReports", item)
-            }
-          >
-            X
-          </button>
-        </li>
-      );
-    })}
-  </ul>
-)}
+                          return (
+                            <li key={idx}>
+                              {["jpg", "jpeg", "png"].includes(fileExt) ? (
+                                <img src={fileUrl} alt={fileName} width="100" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer">
+                                  {fileName}
+                                </a>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveExistingFile("receivingReports", item)
+                                }
+                              >
+                                X
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
 
                   </div>
                 </div>
@@ -1322,25 +1498,14 @@ useEffect(() => {
                       <tr>
                         <th>Manufacturer Name</th>
                         <th>Description</th>
-                        <th>
-  <span
-    title="To Be Determined: Check if the details (like delivery or arrival dates) are not yet finalized."
-    style={{
-      cursor: "pointer",
-    }}
-  >
-    TBD
-  </span>
-</th>
-
-
-                        <th>Expected Departure</th>
-                        <th>Expected Arrival</th>
+                        <th>Expected Departure (ETD)</th>
+                        <th>Expected Arrival (ETA)</th>
                         <th>Arrival Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {leadTimeItems.map((item, index) => (
                         <tr key={item.id || index}>
@@ -1375,7 +1540,7 @@ useEffect(() => {
                           </td>
 
                           {/* ✅ TBD Checkbox Column */}
-                          <td>
+                          {/* <td>
                             <input
                               type="checkbox"
                               checked={item.tbd || false}
@@ -1383,62 +1548,83 @@ useEffect(() => {
                                 handleItemChange(index, "tbd", e.target.checked)
                               }
                             />
+                          </td> */}
+
+                          {/* ETD */}
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={
+                                  item.tbdETD ? "" : (item.expectedDeliveryDate?.slice(0, 10) || "")
+                                }
+                                onChange={(e) =>
+                                  handleItemChange(index, "expectedDeliveryDate", e.target.value)
+                                }
+                                disabled={item.tbdETD}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdETD}
+                                  onChange={(e) => handleItemChange(index, "tbdETD", e.target.checked)}
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
 
+                          {/* ETA */}
                           <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.expectedDeliveryDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "expectedDeliveryDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={
+                                  item.tbdETA ? "" : (item.expectedArrivalDate?.slice(0, 10) || "")
+                                }
+                                onChange={(e) =>
+                                  handleItemChange(index, "expectedArrivalDate", e.target.value)
+                                }
+                                disabled={item.tbdETA}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdETA}
+                                  onChange={(e) => handleItemChange(index, "tbdETA", e.target.checked)}
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
 
+                          {/* Arrival */}
                           <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.expectedArrivalDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "expectedArrivalDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <input
+                                className="edd"
+                                type="date"
+                                value={item.tbdArrival ? "" : (item.arrivalDate?.slice(0, 10) || "")}
+                                onChange={(e) =>
+                                  handleItemChange(index, "arrivalDate", e.target.value)
+                                }
+                                disabled={item.tbdArrival}
+                              />
+                              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!item.tbdArrival}
+                                  onChange={(e) =>
+                                    handleItemChange(index, "tbdArrival", e.target.checked)
+                                  }
+                                />
+                                TBD
+                              </label>
+                            </div>
                           </td>
 
-
-                          <td>
-                            <input
-                              className="edd"
-                              type="date"
-                              value={
-                                item.arrivalDate?.slice(0, 10) || ""
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "arrivalDate",
-                                  e.target.value
-                                )
-                              }
-                              disabled={item.tbd}
-                            />
-                            </td>
 
                           <td>
                             <select
@@ -1466,9 +1652,7 @@ useEffect(() => {
                                 <button
                                   className="add-user-btna"
                                   type="button"
-                                  onClick={() =>
-                                    updateItem(leadTimeItems[index])
-                                  }
+                                  onClick={() => updateItem(leadTimeItems[index], index)}
                                 >
                                   Update
                                 </button>
