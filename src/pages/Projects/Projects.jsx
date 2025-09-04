@@ -299,6 +299,15 @@ const Projects = () => {
     const arr = parseArrayish(value);
     return arr.join(", ");
   };
+  const getClientNameDisplay = (value, limit = 2) => {
+    const arr = parseArrayish(value);
+    const full = arr.join(", ");
+    const short =
+      arr.length <= limit
+        ? full
+        : `${arr.slice(0, limit).join(", ")} +${arr.length - limit} more`;
+    return { short, full };
+  };
 
   return (
     <Layout>
@@ -364,7 +373,18 @@ const Projects = () => {
                       <tr key={project.id}>
                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                         <td>{project.name}</td>
-                        <td>{formatClientName(project.clientName)}</td>
+                        <td
+                          title={getClientNameDisplay(project.clientName).full}
+                          style={{
+                            maxWidth: '250px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {getClientNameDisplay(project.clientName).short}
+                        </td>
+
                         <td>
                           {statusLoadingId === project.id ? (
                             <SpinnerLoader />
