@@ -58,135 +58,135 @@ const ProjectDetails = () => {
   const [currentDocType, setCurrentDocType] = useState('');
   const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
 
- const handleDownloadLeadTimePDF = () => {
-  try {
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
+  const handleDownloadLeadTimePDF = () => {
+    try {
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
 
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const M = 40; // margins
-    const title = `${project?.name || "Project"} — Lead Time Matrix`;
-    const generatedAt = new Date().toLocaleString();
-    const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const M = 40; // margins
+      const title = `${project?.name || "Project"} — Lead Time Matrix`;
+      const generatedAt = new Date().toLocaleString();
+      const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
 
-    doc.setFillColor(0, 0, 0);
-    doc.rect(0, 0, pageW, 64, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(255);
-    doc.text(title, M, 40);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Generated: ${generatedAt}`, pageW - M, 40, { align: "right" });
+      doc.setFillColor(0, 0, 0);
+      doc.rect(0, 0, pageW, 64, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(255);
+      doc.text(title, M, 40);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Generated: ${generatedAt}`, pageW - M, 40, { align: "right" });
 
 
-    const head = [["MANUFACTURER", "DESCRIPTION", "Estimated Time Of Departure", "Estimated Time Of Arrival", "ARRIVAL", "STATUS"]];
-    const body = (matrix || []).map((i) => [
-      i.itemName || "",
-      i.quantity || "",
-      i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
-      i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
-      i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
-      (i.status || "").toUpperCase(),
-    ]);
+      const head = [["MANUFACTURER", "DESCRIPTION", "Estimated Time Of Departure", "Estimated Time Of Arrival", "ARRIVAL", "STATUS"]];
+      const body = (matrix || []).map((i) => [
+        i.itemName || "",
+        i.quantity || "",
+        i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
+        i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
+        i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
+        (i.status || "").toUpperCase(),
+      ]);
 
-    autoTable(doc, {
-      head,
-      body,
-      startY: 88, // directly under header
-      margin: { left: M, right: M },
-      theme: "grid",
-      styles: {
-        font: "helvetica",
-        fontSize: 9,
-        cellPadding: 6,
-        textColor: [0, 0, 0],
-        lineColor: [0, 0, 0],
-        lineWidth: 0.5,
-        valign: "middle",
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-        halign: "left",
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      columnStyles: {
-        0: { cellWidth: 170 }, // Manufacturer
-        1: { cellWidth: 260 }, // Description
-        2: { cellWidth: 90, halign: "center" },  // ETD
-        3: { cellWidth: 90, halign: "center" },  // ETA
-        4: { cellWidth: 90, halign: "center" },  // Arrival
-        5: { cellWidth: 90, halign: "center", fontStyle: "bold" }, // Status
-      },
-      didParseCell(data) {
-        if (data.section === "body" && data.column.index === 5) {
-          data.cell.styles.halign = "center";
-        }
-      },
-      didDrawPage(data) {
-        // Footer
-        const y = pageH - 28;
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.5);
-        doc.line(M, y - 10, pageW - M, y - 10);
+      autoTable(doc, {
+        head,
+        body,
+        startY: 88, // directly under header
+        margin: { left: M, right: M },
+        theme: "grid",
+        styles: {
+          font: "helvetica",
+          fontSize: 9,
+          cellPadding: 6,
+          textColor: [0, 0, 0],
+          lineColor: [0, 0, 0],
+          lineWidth: 0.5,
+          valign: "middle",
+        },
+        headStyles: {
+          fillColor: [0, 0, 0],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "left",
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          0: { cellWidth: 170 }, // Manufacturer
+          1: { cellWidth: 260 }, // Description
+          2: { cellWidth: 90, halign: "center" },  // ETD
+          3: { cellWidth: 90, halign: "center" },  // ETA
+          4: { cellWidth: 90, halign: "center" },  // Arrival
+          5: { cellWidth: 90, halign: "center", fontStyle: "bold" }, // Status
+        },
+        didParseCell(data) {
+          if (data.section === "body" && data.column.index === 5) {
+            data.cell.styles.halign = "center";
+          }
+        },
+        didDrawPage(data) {
+          // Footer
+          const y = pageH - 28;
+          doc.setDrawColor(0);
+          doc.setLineWidth(0.5);
+          doc.line(M, y - 10, pageW - M, y - 10);
 
-        doc.setFontSize(9);
-        doc.setTextColor(100);
-        doc.setFont("helvetica", "normal");
-        doc.text("Bhouse — Lead Time Matrix", M, y);
+          doc.setFontSize(9);
+          doc.setTextColor(100);
+          doc.setFont("helvetica", "normal");
+          doc.text("Bhouse — Lead Time Matrix", M, y);
 
-        const pageStr = `Page ${data.pageNumber} of ${doc.getNumberOfPages()}`;
-        doc.text(pageStr, pageW - M, y, { align: "right" });
-      },
-    });
+          const pageStr = `Page ${data.pageNumber} of ${doc.getNumberOfPages()}`;
+          doc.text(pageStr, pageW - M, y, { align: "right" });
+        },
+      });
 
-    // ===== Summary (status counts) =====
-    const finalY = doc.lastAutoTable?.finalY || 100;
-    const statuses = ["Pending", "In Transit", "Delivered", "Installed", "Arrived"];
-    const counts = statuses.map((s) => [
-      s.toUpperCase(),
-      (matrix || []).filter((r) => (r.status || "") === s).length,
-    ]);
+      // ===== Summary (status counts) =====
+      const finalY = doc.lastAutoTable?.finalY || 100;
+      const statuses = ["Pending", "In Transit", "Delivered", "Installed", "Arrived"];
+      const counts = statuses.map((s) => [
+        s.toUpperCase(),
+        (matrix || []).filter((r) => (r.status || "") === s).length,
+      ]);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text("SUMMARY", M, finalY + 28);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text("SUMMARY", M, finalY + 28);
 
-    autoTable(doc, {
-      head: [["STATUS", "COUNT"]],
-      body: counts,
-      startY: finalY + 38,
-      theme: "grid",
-      margin: { left: M, right: M },
-      styles: {
-        font: "helvetica",
-        fontSize: 10,
-        cellPadding: 6,
-        textColor: [0, 0, 0],
-        lineColor: [0, 0, 0],
-        lineWidth: 0.5,
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-        halign: "left",
-      },
-      columnStyles: {
-        0: { cellWidth: 160 },
-        1: { cellWidth: 70, halign: "center" },
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-    });
+      autoTable(doc, {
+        head: [["STATUS", "COUNT"]],
+        body: counts,
+        startY: finalY + 38,
+        theme: "grid",
+        margin: { left: M, right: M },
+        styles: {
+          font: "helvetica",
+          fontSize: 10,
+          cellPadding: 6,
+          textColor: [0, 0, 0],
+          lineColor: [0, 0, 0],
+          lineWidth: 0.5,
+        },
+        headStyles: {
+          fillColor: [0, 0, 0],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "left",
+        },
+        columnStyles: {
+          0: { cellWidth: 160 },
+          1: { cellWidth: 70, halign: "center" },
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      });
 
-    doc.save(`${safeName}_lead_time_matrix.pdf`);
-  } catch (e) {
-    console.error("PDF generation failed:", e);
-  }
-};
+      doc.save(`${safeName}_lead_time_matrix.pdf`);
+    } catch (e) {
+      console.error("PDF generation failed:", e);
+    }
+  };
 
   const isZeroDate = (v) =>
     v === "0000-00-00" || v === "0000-00-00 00:00:00";
@@ -201,8 +201,8 @@ const ProjectDetails = () => {
     const rows = (matrix || []).map((i) => ({
       "Manufacturer Name": i.itemName || "",
       Description: i.quantity || "",
-      ETD: i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
-      ETA: i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
+      "Estimated Time Of Departure": i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
+      "Estimated Time Of Arrival": i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
       Arrival: i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
       Status: i.status || "",
     }));
@@ -214,6 +214,7 @@ const ProjectDetails = () => {
     const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
     XLSX.writeFile(wb, `${safeName}_lead_time_matrix.xlsx`);
   };
+
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState(
@@ -272,19 +273,19 @@ const ProjectDetails = () => {
       console.error("Failed to fetch documents", error);
     }
   };
-const refreshMatrixFromApi = async () => {
-  try {
-    const { data } = await axios.get(`${url}/items/${projectId}/`);
-    setMatrix(data);          
-  } catch (e) {
-    console.error("Failed to refresh preview data", e);
-  }
-};
+  const refreshMatrixFromApi = async () => {
+    try {
+      const { data } = await axios.get(`${url}/items/${projectId}/`);
+      setMatrix(data);
+    } catch (e) {
+      console.error("Failed to refresh preview data", e);
+    }
+  };
 
-const openPreview = async () => {
-  await refreshMatrixFromApi(); // ensure fresh server data
-  setIsPreviewAllOpen(true);
-};
+  const openPreview = async () => {
+    await refreshMatrixFromApi(); // ensure fresh server data
+    setIsPreviewAllOpen(true);
+  };
 
 
   const fetchDocs = async () => {
