@@ -80,7 +80,7 @@ const ProjectDetails = () => {
     doc.text(`Generated: ${generatedAt}`, pageW - M, 40, { align: "right" });
 
 
-    const head = [["MANUFACTURER", "DESCRIPTION", "ETD", "ETA", "ARRIVAL", "STATUS"]];
+    const head = [["MANUFACTURER", "DESCRIPTION", "Estimated Time Of Departure", "Estimated Time Of Arrival", "ARRIVAL", "STATUS"]];
     const body = (matrix || []).map((i) => [
       i.itemName || "",
       i.quantity || "",
