@@ -89,6 +89,37 @@ const AddProject = () => {
   }, [leadTimeMatrix]);
 
   const navigate = useNavigate();
+  const isSet = (v) => v !== null && v !== undefined && String(v).trim() !== "";
+
+  const validDateChoice = (dateVal, tbdFlag) =>
+    (isSet(dateVal) && !tbdFlag) || (!isSet(dateVal) && !!tbdFlag);
+
+  const validateLeadDates = (rows) => {
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i] || {};
+      const touched =
+        isSet(r.itemName) ||
+        isSet(r.quantity) ||
+        isSet(r.expectedDeliveryDate) ||
+        isSet(r.expectedArrivalDate) ||
+        isSet(r.arrivalDate) ||
+        r.tbdETD || r.tbdETA || r.tbdArrival;
+
+      if (!touched) continue; // allow blank rows
+
+      if (!validDateChoice(r.expectedDeliveryDate, r.tbdETD)) {
+        return `Row ${i + 1}: For ETD, select a date or mark TBD.`;
+      }
+      if (!validDateChoice(r.expectedArrivalDate, r.tbdETA)) {
+        return `Row ${i + 1}: For ETA, select a date or mark TBD.`;
+      }
+      if (!validDateChoice(r.arrivalDate, r.tbdArrival)) {
+        return `Row ${i + 1}: For Arrival, select a date or mark TBD.`;
+      }
+    }
+    return null;
+  };
+
 
   const validateStep1 = () => {
     const {
@@ -380,6 +411,14 @@ const AddProject = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const ltError = validateLeadDates(leadTimeMatrix);
+    if (ltError) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Lead Time Matrix",
+        text: ltError,
+      }); return;
+    }
 
     const formDataToSend = new FormData();
     if (selectedRoles.includes("Account Manager")) {

@@ -119,6 +119,40 @@ const EditProject = () => {
     const level = Number(currentRoleObj?.defaultPermissionLevel);
     setCanEditMultipleClients(currentRoleObj ? level !== 6 : true);
   };
+  const isSet = (v) => v !== null && v !== undefined && String(v).trim() !== "";
+  const validDateChoice = (dateVal, tbdFlag) =>
+    (isSet(dateVal) && !tbdFlag) || (!isSet(dateVal) && !!tbdFlag);
+  const validateItemRow = (row, idx) => {
+    const touched =
+      isSet(row.itemName) ||
+      isSet(row.quantity) ||
+      isSet(row.expectedDeliveryDate) ||
+      isSet(row.expectedArrivalDate) ||
+      isSet(row.arrivalDate) ||
+      row.tbdETD || row.tbdETA || row.tbdArrival;
+
+    if (!touched) return null;
+
+    if (!row.itemName?.trim())
+      return `Row ${idx + 1}: Manufacturer Name is required.`;
+
+    if (!validDateChoice(row.expectedDeliveryDate, row.tbdETD))
+      return `Row ${idx + 1}: For ETD, choose a date or mark TBD.`;
+
+    if (!validDateChoice(row.expectedArrivalDate, row.tbdETA))
+      return `Row ${idx + 1}: For ETA, choose a date or mark TBD.`;
+
+    if (!validDateChoice(row.arrivalDate, row.tbdArrival))
+      return `Row ${idx + 1}: For Arrival, choose a date or mark TBD.`;
+
+    return null;
+  };
+
+  // (optional) used at submit to detect any unsaved filled rows
+  const hasTouched = (r) =>
+    isSet(r.itemName) || isSet(r.quantity) ||
+    isSet(r.expectedDeliveryDate) || isSet(r.expectedArrivalDate) || isSet(r.arrivalDate) ||
+    r.tbdETD || r.tbdETA || r.tbdArrival;
 
 
   const fetchProjectDetails = async () => {
@@ -241,6 +275,11 @@ const EditProject = () => {
 
 
   const addNewItemToBackend = async (item, index) => {
+    const err = validateItemRow(item, index);
+    if (err) {
+      Swal.fire({ icon: "warning", title: "Invalid Lead Time Row", text: err });
+      return;
+    }
     try {
       const payload = buildItemPayload(item);
       delete payload.id; // new item
@@ -293,7 +332,7 @@ const EditProject = () => {
       return updated;
     });
   };
-const toDateOnly = (d) => (d ? d : null);
+  const toDateOnly = (d) => (d ? d : null);
   const buildItemPayload = (it) => ({
     id: it.id,
     projectId,
@@ -309,7 +348,12 @@ const toDateOnly = (d) => (d ? d : null);
   });
 
 
-  const updateItem = async (item) => {
+  const updateItem = async (item, index) => {
+    const err = validateItemRow(item, index);
+    if (err) {
+      Swal.fire({ icon: "warning", title: "Invalid Lead Time Row", text: err });
+      return;
+    }
     try {
       const payload = buildItemPayload(item);
       await axios.put(`${url}/items/project-items/${item.id}`, payload);
@@ -480,6 +524,22 @@ const toDateOnly = (d) => (d ? d : null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const unsavedTouched = leadTimeItems.some(r => !r.id && hasTouched(r));
+    if (unsavedTouched) {
+      Swal.fire({
+        icon: "warning",
+        title: "Unsaved Lead Time Rows",
+        text: "Please 'Add' or remove the new Lead Time Matrix rows before submitting.",
+      });
+      return;
+    }
+    for (let i = 0; i < leadTimeItems.length; i++) {
+      const msg = validateItemRow(leadTimeItems[i], i);
+      if (msg) {
+        Swal.fire({ icon: "warning", title: "Invalid Lead Time Matrix", text: msg });
+        return;
+      }
+    }
 
     const error = validateStep();
     if (error) {
@@ -1592,9 +1652,7 @@ const toDateOnly = (d) => (d ? d : null);
                                 <button
                                   className="add-user-btna"
                                   type="button"
-                                  onClick={() =>
-                                    updateItem(leadTimeItems[index])
-                                  }
+                                  onClick={() => updateItem(leadTimeItems[index], index)}
                                 >
                                   Update
                                 </button>
