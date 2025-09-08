@@ -156,18 +156,18 @@ const InvoiceManagement = ({ projectId }) => {
   const handleSaveNewInvoice = async () => {
     try {
       setIsLoading(true);
-  
+
       const projectLimit =
         projectDetails.totalValue - projectDetails.advancePayment;
-  
+
       const currentInvoiceTotal = invoices.reduce(
         (sum, invoice) => sum + Number(invoice.totalAmount || 0),
         0
       );
-  
+
       const newInvoiceAmount = Number(invoiceData.totalAmount || 0);
       const updatedTotal = currentInvoiceTotal + newInvoiceAmount;
-  
+
       // Always prevent invoice from exceeding balance due
       if (newInvoiceAmount > getBalance()) {
         Swal.fire({
@@ -177,7 +177,7 @@ const InvoiceManagement = ({ projectId }) => {
         });
         return;
       }
-  
+
       // Apply original validation only for non-pending status
       if (invoiceData.status !== "Pending") {
         if (updatedTotal > projectLimit) {
@@ -189,22 +189,22 @@ const InvoiceManagement = ({ projectId }) => {
           return;
         }
       }
-  
+
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
       formData.append("advancePaid", invoiceData.advancePaid);
       formData.append("status", invoiceData.status);
       formData.append("description", invoiceData.description || "");
-  
+
       if (invoiceData.invoiceFile) {
         formData.append("invoice", invoiceData.invoiceFile);
       }
-  
+
       const response = await axios.post(
         `${url}/projects/${projectId}/invoice`,
         formData
       );
-  
+
       toast.success("Invoice added!");
       setInvoices((prevInvoices) => [...prevInvoices, response.data]);
       setShowAddInvoiceModal(false);
@@ -219,7 +219,7 @@ const InvoiceManagement = ({ projectId }) => {
       setIsLoading(false);
     }
   };
-  
+
 
   const handleSaveUpdatedInvoice = async () => {
     try {
@@ -227,7 +227,7 @@ const InvoiceManagement = ({ projectId }) => {
       const currentInvoiceAmount = Number(selectedInvoice.totalAmount || 0);
       const balanceDue = getBalance();
       const maxAllowed = balanceDue + currentInvoiceAmount;
-  
+
       if (newInvoiceAmount > maxAllowed) {
         Swal.fire({
           icon: "warning",
@@ -236,24 +236,24 @@ const InvoiceManagement = ({ projectId }) => {
         });
         return;
       }
-  
+
       // Proceed with update
       const formData = new FormData();
       formData.append("totalAmount", invoiceData.totalAmount);
       formData.append("advancePaid", invoiceData.advancePaid);
       formData.append("status", invoiceData.status);
       formData.append("description", invoiceData.description || "");
-  
+
       if (invoiceData.invoiceFile) {
         formData.append("invoice", invoiceData.invoiceFile);
       }
-  
+
       setIsLoading(true);
       const response = await axios.put(
         `${url}/projects/${projectId}/invoice/${selectedInvoice.id}`,
         formData
       );
-  
+
       toast.success("Invoice updated!");
       setInvoices((prevInvoices) =>
         prevInvoices.map((invoice) =>
@@ -268,9 +268,9 @@ const InvoiceManagement = ({ projectId }) => {
       setIsLoading(false);
     }
   };
-  
-  
-  
+
+
+
   // Handle deleting an invoice
   const handleDeleteInvoice = async (invoiceId) => {
     try {
@@ -359,7 +359,17 @@ const InvoiceManagement = ({ projectId }) => {
                 <td>{invoice.totalAmount}</td>
                 <td>{invoice.advancePaid ?? "-"}</td>
                 <td>{invoice.status}</td>
-                <td>{new Date(invoice.createdAt).toLocaleString()}</td>
+                <td>
+                  {invoice?.createdAt
+                    ? new Date(invoice.createdAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                    : "—"}
+                </td>
 
                 {/* Description with tooltip on overflow */}
                 <td>
@@ -461,23 +471,23 @@ const InvoiceManagement = ({ projectId }) => {
             <h3>Add New Invoice</h3>
 
             <label>Total Amount</label>
-      <input
-  type="text"
-  name="totalAmount"
-  value={invoiceData.totalAmount}
-  onChange={handleInvoiceChange}
-  onInput={(e) => {
-    const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (regex.test(value) || value === '') {
-      // valid input — allow change
-    } else {
-      // invalid — remove last character
-      e.target.value = invoiceData.totalAmount; // prevent update
-    }
-  }}
-  maxLength={8}
-/>
+            <input
+              type="text"
+              name="totalAmount"
+              value={invoiceData.totalAmount}
+              onChange={handleInvoiceChange}
+              onInput={(e) => {
+                const value = e.target.value;
+                const regex = /^\d*\.?\d{0,2}$/;
+                if (regex.test(value) || value === '') {
+                  // valid input — allow change
+                } else {
+                  // invalid — remove last character
+                  e.target.value = invoiceData.totalAmount; // prevent update
+                }
+              }}
+              maxLength={8}
+            />
 
 
             <label>Status</label>
@@ -494,20 +504,20 @@ const InvoiceManagement = ({ projectId }) => {
             {invoiceData.status === "Partly Paid" && (
               <div>
                 <label>Paid Ammount</label>
-              <input
-  type="text"
-  name="advancePaid"
-  value={invoiceData.advancePaid}
-  onChange={handleInvoiceChange}
-  onInput={(e) => {
-    const value = e.target.value;
-    const regex = /^\d*\.?\d{0,2}$/;
-    if (!regex.test(value) && value !== '') {
-      e.target.value = invoiceData.advancePaid; // prevent invalid input
-    }
-  }}
-  maxLength={6}
-/>
+                <input
+                  type="text"
+                  name="advancePaid"
+                  value={invoiceData.advancePaid}
+                  onChange={handleInvoiceChange}
+                  onInput={(e) => {
+                    const value = e.target.value;
+                    const regex = /^\d*\.?\d{0,2}$/;
+                    if (!regex.test(value) && value !== '') {
+                      e.target.value = invoiceData.advancePaid; // prevent invalid input
+                    }
+                  }}
+                  maxLength={6}
+                />
 
               </div>
             )}

@@ -58,6 +58,19 @@ const ProjectDetails = () => {
   const [currentDocType, setCurrentDocType] = useState('');
   const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
 
+
+
+  const formatDateTimeIST = (dateLike) =>
+    new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    }).format(new Date(dateLike));
+
   const handleDownloadLeadTimePDF = () => {
     try {
       const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
@@ -66,9 +79,10 @@ const ProjectDetails = () => {
       const pageH = doc.internal.pageSize.getHeight();
       const M = 40; // margins
       const title = `${project?.name || "Project"} — Lead Time Matrix`;
-      const generatedAt = new Date().toLocaleString();
+      const generatedAt = formatDateTimeIST(new Date());
       const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
 
+      // Header
       doc.setFillColor(0, 0, 0);
       doc.rect(0, 0, pageW, 64, "F");
       doc.setFont("helvetica", "bold");
@@ -79,21 +93,28 @@ const ProjectDetails = () => {
       doc.setFontSize(10);
       doc.text(`Generated: ${generatedAt}`, pageW - M, 40, { align: "right" });
 
+      const head = [[
+        "MANUFACTURER",
+        "DESCRIPTION",
+        "Estimated Time Of Departure",
+        "Estimated Time Of Arrival",
+        "ARRIVAL",
+        "STATUS",
+      ]];
 
-      const head = [["MANUFACTURER", "DESCRIPTION", "Estimated Time Of Departure", "Estimated Time Of Arrival", "ARRIVAL", "STATUS"]];
       const body = (matrix || []).map((i) => [
         i.itemName || "",
         i.quantity || "",
-        i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
-        i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
-        i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
+        i.tbdETD ? "TBD" : toPrettyDate(i.expectedDeliveryDate, ""),
+        i.tbdETA ? "TBD" : toPrettyDate(i.expectedArrivalDate, ""),
+        i.tbdArrival ? "TBD" : toPrettyDate(i.arrivalDate, ""),
         (i.status || "").toUpperCase(),
       ]);
 
       autoTable(doc, {
         head,
         body,
-        startY: 88, // directly under header
+        startY: 88,
         margin: { left: M, right: M },
         theme: "grid",
         styles: {
@@ -113,11 +134,11 @@ const ProjectDetails = () => {
         },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         columnStyles: {
-          0: { cellWidth: 170 }, // Manufacturer
-          1: { cellWidth: 260 }, // Description
-          2: { cellWidth: 90, halign: "center" },  // ETD
-          3: { cellWidth: 90, halign: "center" },  // ETA
-          4: { cellWidth: 90, halign: "center" },  // Arrival
+          0: { cellWidth: 170 },                // Manufacturer
+          1: { cellWidth: 260 },                // Description
+          2: { cellWidth: 120, halign: "center" }, // ETD (slightly wider for month text)
+          3: { cellWidth: 120, halign: "center" }, // ETA
+          4: { cellWidth: 120, halign: "center" }, // Arrival
           5: { cellWidth: 90, halign: "center", fontStyle: "bold" }, // Status
         },
         didParseCell(data) {
@@ -197,13 +218,27 @@ const ProjectDetails = () => {
   };
   const toDateStr = (d) => (!d || isZeroDate(d) ? "" : String(d).slice(0, 10));
 
+  const toPrettyDate = (value, fallback = "") => {
+    if (value == null || (typeof isZeroDate === "function" && isZeroDate(value))) return fallback;
+
+    const s = String(value).trim();
+    if (!s || ["null", "undefined", "TBD"].includes(s)) return fallback;
+    const val = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00` : s;
+    const d = new Date(val);
+    if (Number.isNaN(d.getTime())) return fallback;
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+      timeZone: "Asia/Kolkata",
+    }).format(d);
+  };
+
   const handleDownloadLeadTimeExcel = () => {
     const rows = (matrix || []).map((i) => ({
       "Manufacturer Name": i.itemName || "",
       Description: i.quantity || "",
-      "Estimated Time Of Departure": i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate),
-      "Estimated Time Of Arrival": i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate),
-      Arrival: i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate),
+      "Estimated Time Of Departure": i.tbdETD ? "TBD" : toPrettyDate(i.expectedDeliveryDate, ""),
+      "Estimated Time Of Arrival": i.tbdETA ? "TBD" : toPrettyDate(i.expectedArrivalDate, ""),
+      Arrival: i.tbdArrival ? "TBD" : toPrettyDate(i.arrivalDate, ""),
       Status: i.status || "",
     }));
 
@@ -214,6 +249,7 @@ const ProjectDetails = () => {
     const safeName = (project?.name || "project").replace(/[^\w\-]+/g, "_");
     XLSX.writeFile(wb, `${safeName}_lead_time_matrix.xlsx`);
   };
+
 
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -385,6 +421,13 @@ const ProjectDetails = () => {
     fetchDocuments()
   }, [fileupload, currentDocType]);
 
+  const formatShortDate = (value) => {
+    if (!value) return "";
+    const isDateOnly = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const d = new Date(isDateOnly ? `${value}T00:00:00` : value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
   const openPunchComment = async (punchId) => {
     try {
@@ -556,26 +599,24 @@ const ProjectDetails = () => {
     }
   };
 
-  const formatDate = (date) => {
-    const d = new Date(date);
+  const formatDate = (value) => {
+    if (!value) return null;
 
-    const options = {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    const isDateOnly =
+      typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+    const d = new Date(isDateOnly ? `${value}T00:00:00` : value);
+    if (Number.isNaN(d.getTime())) return null;
+
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
-    };
-
-    // Format with lowercase am/pm
-    let formatted = d.toLocaleString('en-GB', options);
-
-    // Capitalize AM/PM
-    formatted = formatted.replace(/\b(am|pm)\b/, (match) => match.toUpperCase());
-
-    return formatted;
+      timeZone: "Asia/Kolkata", // ensure consistent IST display
+    });
   };
   const [selectedFiles, setSelectedFiles] = useState({
     proposals: [],
@@ -1489,8 +1530,13 @@ const ProjectDetails = () => {
                     </div>
 
                     <div className="info-group">
-                      <strong>Estimated Occupancy Date:</strong>
-                      {project.estimatedCompletion}
+                      <strong>Estimated Occupancy Date:</strong>{" "}
+                      {project.estimatedCompletion
+                        ? new Date(`${project.estimatedCompletion}T00:00:00`).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric", year: "numeric" }
+                        )
+                        : "—"}
                     </div>
                     <div className="info-group">
                       <strong>Total Value:</strong> ${" "}
@@ -1511,7 +1557,13 @@ const ProjectDetails = () => {
                       <strong>Hours:</strong> {project.deliveryHours || "N/A"}
                     </div>
                     <div className="info-group">
-                      <strong>Delivery Date:</strong> {project.deliveryDate || "N/A"}
+                      <strong>Delivery Date:</strong>{" "}
+                      {project.deliveryDate
+                        ? new Date(`${project.deliveryDate}T00:00:00`).toLocaleDateString(
+                          "en-US",
+                          { month: "short", day: "numeric", year: "numeric" }
+                        )
+                        : "N/A"}
                     </div>
 
                   </div>
@@ -1850,7 +1902,12 @@ const ProjectDetails = () => {
                                       {uploadedAt && (
                                         <>
                                           {" "}•{" "}
-                                          {new Date(uploadedAt).toLocaleString()}
+                                          {uploadedAt
+                                            ? new Date(uploadedAt).toLocaleString("en-US", {
+                                              month: "short", day: "numeric", year: "numeric",
+                                              hour: "2-digit", minute: "2-digit",
+                                            })
+                                            : "—"}
                                         </>
                                       )}
                                     </div>
@@ -2028,11 +2085,9 @@ const ProjectDetails = () => {
                 <div className="project-info-card">
                   <div className="leadtimematrixheading">
                     <h2>Project Lead Time Matrix</h2>
-                    <p >
-                      <b>Last Updated:{" "}</b>
-                      {project?.lastNotificationSentAt && !isNaN(new Date(project?.lastNotificationSentAt))
-                        ? formatDate(project?.lastNotificationSentAt)
-                        : "Not Updated"}
+                    <p>
+                      <b>Last Updated: </b>
+                      {formatDate(project?.lastNotificationSentAt) ?? "Not Updated"}
                     </p>
                     {Array.isArray(matrix) && matrix.length > 0 ? (
                       <div className="leadbuttons">
@@ -2153,44 +2208,6 @@ const ProjectDetails = () => {
                                   }}
                                 />
                               </td>
-                              {/* <td>
-                                <label
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "5px",
-                                  }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={item.tbd || false}
-                                    disabled={!isEditable}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked;
-                                      handleItemChange(index, "tbd", checked);
-                                      if (checked) {
-                                        handleItemChange(
-                                          index,
-                                          "expectedDeliveryDate",
-                                          null
-                                        );
-                                        handleItemChange(
-                                          index,
-                                          "expectedArrivalDate",
-                                          null
-                                        );
-                                        handleItemChange(
-                                          index,
-                                          "arrivalDate",
-                                          null
-                                        );
-                                      }
-                                    }}
-                                  />
-                                  TBD
-                                </label>
-                              </td> */}
-
                               {/* ETD */}
                               <td>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -2708,7 +2725,15 @@ const ProjectDetails = () => {
                             )}
                             <p>
                               <strong>Created At:</strong>{" "}
-                              {new Date(issue.createdAt).toLocaleString()}
+                              {issue?.createdAt
+                                ? new Date(issue.createdAt).toLocaleString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                                : "N/A"}
                             </p>
 
                             <p>
@@ -2793,9 +2818,10 @@ const ProjectDetails = () => {
                     <tr key={i.id || `${i.itemName}-${Math.random()}`}>
                       <td>{i.itemName || ""}</td>
                       <td className="ltm-desc">{i.quantity || ""}</td>
-                      <td>{(i.tbdETD ? "TBD" : toDateStr(i.expectedDeliveryDate))}</td>
-                      <td>{(i.tbdETA ? "TBD" : toDateStr(i.expectedArrivalDate))}</td>
-                      <td>{(i.tbdArrival ? "TBD" : toDateStr(i.arrivalDate))}</td>
+                      <td>{i.tbdETD ? "TBD" : toPrettyDate(i.expectedDeliveryDate, "—")}</td>
+                      <td>{i.tbdETA ? "TBD" : toPrettyDate(i.expectedArrivalDate, "—")}</td>
+                      <td>{i.tbdArrival ? "TBD" : toPrettyDate(i.arrivalDate, "—")}</td>
+
 
                       <td>{i.status || ""}</td>
                     </tr>

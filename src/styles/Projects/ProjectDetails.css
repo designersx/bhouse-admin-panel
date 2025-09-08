@@ -2,6 +2,7 @@
 .project-details-page .project-details-header {
   text-align: center;
 }
+.date-preview { font-size: 12px; opacity: .8; white-space: nowrap; }
 .leadbuttons{
   display: flex;
   gap: 10px;
