@@ -420,7 +420,14 @@ const Projects = () => {
                           {getAssignedUserNames(project.assignedTeamRoles)}
                         </td>
                         <td>{project.type}</td>
-                        <td className='estimate'>{project.estimatedCompletion}</td>
+                        <td className="estimate">
+                          {project.estimatedCompletion &&
+                            new Date(project.estimatedCompletion).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                        </td>
 
                         <td className='actionproject'>
                           {canEdit && (
