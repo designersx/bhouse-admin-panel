@@ -58,19 +58,6 @@ const ProjectDetails = () => {
   const [currentDocType, setCurrentDocType] = useState('');
   const [isPreviewAllOpen, setIsPreviewAllOpen] = useState(false);
 
-
-
-  const formatDateTimeIST = (dateLike) =>
-    new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "Asia/Kolkata",
-    }).format(new Date(dateLike));
-
   const handleDownloadLeadTimePDF = () => {
     try {
       const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
@@ -134,12 +121,12 @@ const ProjectDetails = () => {
         },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         columnStyles: {
-          0: { cellWidth: 170 },                // Manufacturer
-          1: { cellWidth: 260 },                // Description
-          2: { cellWidth: 120, halign: "center" }, // ETD (slightly wider for month text)
-          3: { cellWidth: 120, halign: "center" }, // ETA
-          4: { cellWidth: 120, halign: "center" }, // Arrival
-          5: { cellWidth: 90, halign: "center", fontStyle: "bold" }, // Status
+          0: { cellWidth: 120 },                // Manufacturer
+          1: { cellWidth: 220 },                // Description
+          2: { cellWidth: 100, halign: "center" }, // ETD (slightly wider for month text)
+          3: { cellWidth: 100, halign: "center" }, // ETA
+          4: { cellWidth: 100, halign: "center" }, // Arrival
+          5: { cellWidth: 70, halign: "center", fontStyle: "bold" }, // Status
         },
         didParseCell(data) {
           if (data.section === "body" && data.column.index === 5) {
@@ -427,6 +414,36 @@ const ProjectDetails = () => {
     const d = new Date(isDateOnly ? `${value}T00:00:00` : value);
     if (Number.isNaN(d.getTime())) return "";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+  const formatDateIST = (input, fallback = "—") => {
+    if (input == null) return fallback;
+    const s = String(input).trim();
+    const val = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00` : s;
+    const d = new Date(val);
+    if (Number.isNaN(d.getTime())) return fallback;
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "Asia/Kolkata",
+    }).format(d);
+  };
+
+  const formatDateTimeIST = (input, fallback = "—") => {
+    if (input == null) return fallback;
+    const s = String(input).trim();
+    const val = /^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T00:00:00` : s;
+    const d = new Date(val);
+    if (Number.isNaN(d.getTime())) return fallback;
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    }).format(d);
   };
 
   const openPunchComment = async (punchId) => {
@@ -2874,11 +2891,11 @@ const ProjectDetails = () => {
               .sort((a, b) => new Date(a) - new Date(b))
               .map((date) => (
                 <div key={date} className="comment-date-group">
-                  <p className="comment-date">{date}</p>
+                  {/* Group header formatted */}
+                  {/* <p className="comment-date">{formatDateIST(date)}</p> */}
+
                   {groupedComments[date]
-                    .sort(
-                      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-                    ) // Oldest to newest in each group
+                    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
                     .map((comment) => (
                       <div key={comment.id}>
                         <div className="whatsapp-comment-box">
@@ -2893,23 +2910,22 @@ const ProjectDetails = () => {
                               className="whatsapp-comment-user-avatar"
                             />
                             <div>
+                              {/* Name + role + timestamp on one line */}
                               <p className="whatsapp-comment-author">
-                                {comment?.name} ({comment?.userRole})
+                                {comment?.name}
+                                {comment?.userRole ? ` (${comment.userRole})` : ""} ·{" "}
+                                {formatDateTimeIST(comment.createdAt)}
                               </p>
                             </div>
                           </div>
-                          <p className="whatsapp-comment-text">
-                            {comment.comment}
-                          </p>
-                          <p className="whatsapp-comment-meta">
-                            {new Date(comment.createdAt).toLocaleTimeString()}
-                          </p>
+                          <p className="whatsapp-comment-text">{comment.comment}</p>
                         </div>
                       </div>
                     ))}
                   <div ref={scrollRef} />
                 </div>
               ))}
+
           </div>
         </div>
 
@@ -2925,6 +2941,7 @@ const ProjectDetails = () => {
           </button>
         </div>
       </Offcanvas>
+
       {/*item comment canvas*/}
       <Offcanvas
         isOpen={isItemCanvasOpen}
@@ -2944,11 +2961,11 @@ const ProjectDetails = () => {
               .sort((a, b) => new Date(a) - new Date(b))
               .map((date) => (
                 <div key={date} className="comment-date-group">
-                  <p className="comment-date">{date}</p>
+                  {/* Pretty group header */}
+                  {/* <p className="comment-date">{fmtDateIST(date)}</p> */}
+
                   {groupedItemComments[date]
-                    .sort(
-                      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-                    )
+                    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
                     .map((comment) => (
                       <div key={comment.id} className="whatsapp-comment-box">
                         <div className="whatsapp-comment-user-info">
@@ -2962,24 +2979,29 @@ const ProjectDetails = () => {
                             className="whatsapp-comment-user-avatar"
                           />
                           <div>
+                            {/* Name + role + timestamp together */}
                             <p className="whatsapp-comment-author">
                               {comment?.createdByName && comment?.userRole
                                 ? `${comment.createdByName} (${comment.userRole})`
-                                : "Customer"}
+                                : "Customer"}{" "}
+                              · {formatDateTimeIST(comment.createdAt)}
                             </p>
                           </div>
                         </div>
-                        <p className="whatsapp-comment-text">
-                          {comment.comment}
-                        </p>
-                        <p className="whatsapp-comment-meta">
-                          {new Date(comment.createdAt).toLocaleTimeString()}
-                        </p>
+
+                        <p className="whatsapp-comment-text">{comment.comment}</p>
+
+                        {/* Remove this meta line to avoid duplicate time
+            <p className="whatsapp-comment-meta">
+              {fmtDateTimeIST(comment.createdAt)}
+            </p>
+            */}
                       </div>
                     ))}
                   <div ref={scrollRef} />
                 </div>
               ))}
+
           </div>
         </div>
 
@@ -2998,6 +3020,7 @@ const ProjectDetails = () => {
           </button>
         </div>
       </Offcanvas>
+
       {/*punch comment canvas*/}
       <Offcanvas
         isOpen={isPunchCanvasOpen}
@@ -3017,7 +3040,7 @@ const ProjectDetails = () => {
               .sort((a, b) => new Date(a) - new Date(b)) // Oldest date group first
               .map((date) => (
                 <div key={date} className="comment-date-group">
-                  <p className="comment-date">{date}</p>
+                  {/* <p className="comment-date">{date}</p> */}
 
                   {groupedPunchComments[date]
                     .sort(
@@ -3044,16 +3067,16 @@ const ProjectDetails = () => {
                                 {comment.createdByType === 'customer'
                                   ? `Customer${comment?.name ? ' · ' + comment.name : ''}`
                                   : `${comment.name || ''}${comment.userRole ? ` (${comment.userRole})` : ''}`
-                                }
+                                } · {formatDateTimeIST(comment.createdAt)}
                               </p>
                             </div>
                           </div>
                           <p className="whatsapp-comment-text">
                             {comment.comment}
                           </p>
-                          <p className="whatsapp-comment-meta">
+                          {/* <p className="whatsapp-comment-meta">
                             {new Date(comment.createdAt).toLocaleTimeString()}
-                          </p>
+                          </p> */}
                         </div>
                       );
                     })}
